@@ -1,0 +1,372 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{29}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[KON({[n.\,d.]})]%
+        {KONECT}
+ \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \bibinfo{title}{KONECT}.
+\newblock \bibinfo{howpublished}{\url{http://konect.cc/networks/}}.
+\newblock
+
+
+\bibitem[Net({[n.\,d.]})]%
+        {NetworkRepository}
+ \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \bibinfo{title}{Network Repository}.
+\newblock \bibinfo{howpublished}{\url{https://networkrepository.com}}.
+\newblock
+
+
+\bibitem[SNA({[n.\,d.]})]%
+        {SNAP}
+ \bibinfo{year}{[n.\,d.]}\natexlab{}.
+\newblock \bibinfo{title}{SNAP}.
+\newblock \bibinfo{howpublished}{\url{https://snap.stanford.edu/}}.
+\newblock
+
+
+\bibitem[Ahmad et~al\mbox{.}(2020)]%
+        {akhlaque_vldb}
+\bibfield{author}{\bibinfo{person}{Akhlaque Ahmad}, \bibinfo{person}{Da Yan},
+  \bibinfo{person}{Xiao Chen}, \bibinfo{person}{Lyuheng Yuan},
+  \bibinfo{person}{Qin Zhang}, {and} \bibinfo{person}{Saugat Adhikari}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Maximum $k$-Plex Finding: Choices of Pruning
+  Techniques Matter!}
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{14},
+  \bibinfo{number}{9} (\bibinfo{year}{2020}).
+\newblock
+
+
+\bibitem[Bader and Hogue(2003)]%
+        {bader2003automated}
+\bibfield{author}{\bibinfo{person}{Gary~D Bader} {and}
+  \bibinfo{person}{Christopher~WV Hogue}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{An Automated Method for Finding Molecular Complexes
+  in Large Protein Interaction Networks}.
+\newblock \bibinfo{journal}{\emph{BMC bioinformatics}} \bibinfo{volume}{4},
+  \bibinfo{number}{1} (\bibinfo{year}{2003}), \bibinfo{pages}{2}.
+\newblock
+
+
+\bibitem[Balasundaram et~al\mbox{.}(2011)]%
+        {DBLP:journals/ior/BalasundaramBH11}
+\bibfield{author}{\bibinfo{person}{Balabhaskar Balasundaram},
+  \bibinfo{person}{Sergiy Butenko}, {and} \bibinfo{person}{Illya~V. Hicks}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Clique Relaxations in Social Network Analysis: The
+  Maximum \emph{k}-Plex Problem}.
+\newblock \bibinfo{journal}{\emph{Oper. Res.}} \bibinfo{volume}{59},
+  \bibinfo{number}{1} (\bibinfo{year}{2011}), \bibinfo{pages}{133--142}.
+\newblock
+
+
+\bibitem[Batagelj and Zaversnik(2003)]%
+        {bz}
+\bibfield{author}{\bibinfo{person}{Vladimir Batagelj} {and}
+  \bibinfo{person}{Matjaz Zaversnik}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{An O(m) Algorithm for Cores Decomposition of
+  Networks}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{cs.DS/0310049}
+  (\bibinfo{year}{2003}).
+\newblock
+\urldef\tempurl%
+\url{http://arxiv.org/abs/cs/0310049}
+\showURL{%
+\tempurl}
+
+
+\bibitem[Bu et~al\mbox{.}(2003)]%
+        {bu2003topological}
+\bibfield{author}{\bibinfo{person}{Dongbo Bu}, \bibinfo{person}{Yi Zhao},
+  \bibinfo{person}{Lun Cai}, \bibinfo{person}{Hong Xue},
+  \bibinfo{person}{Xiaopeng Zhu}, \bibinfo{person}{Hongchao Lu},
+  \bibinfo{person}{Jingfen Zhang}, \bibinfo{person}{Shiwei Sun},
+  \bibinfo{person}{Lunjiang Ling}, \bibinfo{person}{Nan Zhang},
+  {et~al\mbox{.}}} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Topological Structure Analysis of the
+  Protein-Protein Interaction Network in Budding Yeast}.
+\newblock \bibinfo{journal}{\emph{Nucleic acids research}}
+  \bibinfo{volume}{31}, \bibinfo{number}{9} (\bibinfo{year}{2003}),
+  \bibinfo{pages}{2443--2450}.
+\newblock
+
+
+\bibitem[Chang et~al\mbox{.}(2022)]%
+        {kPlexS}
+\bibfield{author}{\bibinfo{person}{Lijun Chang}, \bibinfo{person}{Mouyi Xu},
+  {and} \bibinfo{person}{Darren Strash}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Efficient Maximum k-Plex Computation over Large
+  Sparse Graphs}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{16},
+  \bibinfo{number}{2} (\bibinfo{year}{2022}), \bibinfo{pages}{127--139}.
+\newblock
+
+
+\bibitem[Chang and Yao(2024)]%
+        {kPlexT}
+\bibfield{author}{\bibinfo{person}{Lijun Chang} {and} \bibinfo{person}{Kai
+  Yao}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Maximum k-Plex Computation: Theory and Practice}.
+\newblock \bibinfo{journal}{\emph{Proc. {ACM} Manag. Data}}
+  \bibinfo{volume}{2}, \bibinfo{number}{1} (\bibinfo{year}{2024}),
+  \bibinfo{pages}{63:1--63:26}.
+\newblock
+
+
+\bibitem[Conte et~al\mbox{.}(2017)]%
+        {kdd17}
+\bibfield{author}{\bibinfo{person}{Alessio Conte}, \bibinfo{person}{Donatella
+  Firmani}, \bibinfo{person}{Caterina Mordente}, \bibinfo{person}{Maurizio
+  Patrignani}, {and} \bibinfo{person}{Riccardo Torlone}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Fast Enumeration of Large k-Plexes}. In
+  \bibinfo{booktitle}{\emph{{KDD}}}. \bibinfo{publisher}{{ACM}},
+  \bibinfo{pages}{115--124}.
+\newblock
+
+
+\bibitem[Conte et~al\mbox{.}(2018)]%
+        {d2k}
+\bibfield{author}{\bibinfo{person}{Alessio Conte}, \bibinfo{person}{Tiziano~De
+  Matteis}, \bibinfo{person}{Daniele~De Sensi}, \bibinfo{person}{Roberto
+  Grossi}, \bibinfo{person}{Andrea Marino}, {and} \bibinfo{person}{Luca
+  Versari}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{{D2K:} Scalable Community Detection in Massive
+  Networks via Small-Diameter k-Plexes}. In \bibinfo{booktitle}{\emph{{KDD}}}.
+  \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{1272--1281}.
+\newblock
+
+
+\bibitem[Gao et~al\mbox{.}(2018)]%
+        {BnB}
+\bibfield{author}{\bibinfo{person}{Jian Gao}, \bibinfo{person}{Jiejiang Chen},
+  \bibinfo{person}{Minghao Yin}, \bibinfo{person}{Rong Chen}, {and}
+  \bibinfo{person}{Yiyuan Wang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{An Exact Algorithm for Maximum k-Plexes in Massive
+  Graphs}. In \bibinfo{booktitle}{\emph{{IJCAI}}}.
+  \bibinfo{publisher}{ijcai.org}, \bibinfo{pages}{1449--1455}.
+\newblock
+
+
+\bibitem[Gao et~al\mbox{.}(2024)]%
+        {clong_vldb}
+\bibfield{author}{\bibinfo{person}{Shuohao Gao}, \bibinfo{person}{Kaiqiang Yu},
+  \bibinfo{person}{Shengxin Liu}, {and} \bibinfo{person}{Cheng Long}.}
+  \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Maximum k-Plex Search: An Alternated
+  Reduction-and-Bound Method}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{18},
+  \bibinfo{number}{2} (\bibinfo{year}{2024}), \bibinfo{pages}{363--376}.
+\newblock
+
+
+\bibitem[Hopcroft et~al\mbox{.}(2004)]%
+        {hopcroft2004tracking}
+\bibfield{author}{\bibinfo{person}{John Hopcroft}, \bibinfo{person}{Omar Khan},
+  \bibinfo{person}{Brian Kulis}, {and} \bibinfo{person}{Bart Selman}.}
+  \bibinfo{year}{2004}\natexlab{}.
+\newblock \showarticletitle{Tracking Evolving Communities in Large Linked
+  Networks}.
+\newblock \bibinfo{journal}{\emph{Proceedings of the National Academy of
+  Sciences}} \bibinfo{volume}{101}, \bibinfo{number}{suppl 1}
+  (\bibinfo{year}{2004}), \bibinfo{pages}{5249--5253}.
+\newblock
+
+
+\bibitem[Hu et~al\mbox{.}(2005)]%
+        {hu2005mining}
+\bibfield{author}{\bibinfo{person}{Haiyan Hu}, \bibinfo{person}{Xifeng Yan},
+  \bibinfo{person}{Yu Huang}, \bibinfo{person}{Jiawei Han}, {and}
+  \bibinfo{person}{Xianghong~Jasmine Zhou}.} \bibinfo{year}{2005}\natexlab{}.
+\newblock \showarticletitle{Mining Coherent Dense Subgraphs Across Massive
+  Biological Networks for Functional Discovery}.
+\newblock \bibinfo{journal}{\emph{Bioinformatics}} \bibinfo{volume}{21},
+  \bibinfo{number}{suppl\_1} (\bibinfo{year}{2005}),
+  \bibinfo{pages}{i213--i221}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2023)]%
+        {DiseMKP}
+\bibfield{author}{\bibinfo{person}{Hua Jiang}, \bibinfo{person}{Fusheng Xu},
+  \bibinfo{person}{Zhifei Zheng}, \bibinfo{person}{Bowen Wang}, {and}
+  \bibinfo{person}{Wei Zhou}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A Refined Upper Bound and Inprocessing for the
+  Maximum K-plex Problem}. In \bibinfo{booktitle}{\emph{{IJCAI}}}.
+  \bibinfo{publisher}{ijcai.org}, \bibinfo{pages}{5613--5621}.
+\newblock
+
+
+\bibitem[Jiang et~al\mbox{.}(2021)]%
+        {KpLeX-MKP}
+\bibfield{author}{\bibinfo{person}{Hua Jiang}, \bibinfo{person}{Dongming Zhu},
+  \bibinfo{person}{Zhichao Xie}, \bibinfo{person}{Shaowen Yao}, {and}
+  \bibinfo{person}{Zhang{-}Hua Fu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{A New Upper Bound Based on Vertex Partitioning for
+  the Maximum K-plex Problem}. In \bibinfo{booktitle}{\emph{{IJCAI}}}.
+  \bibinfo{publisher}{ijcai.org}, \bibinfo{pages}{1689--1696}.
+\newblock
+
+
+\bibitem[Lewis and Yannakakis(1980)]%
+        {DBLP:journals/jcss/LewisY80}
+\bibfield{author}{\bibinfo{person}{John~M. Lewis} {and}
+  \bibinfo{person}{Mihalis Yannakakis}.} \bibinfo{year}{1980}\natexlab{}.
+\newblock \showarticletitle{The Node-Deletion Problem for Hereditary Properties
+  is NP-Complete}.
+\newblock \bibinfo{journal}{\emph{J. Comput. Syst. Sci.}} \bibinfo{volume}{20},
+  \bibinfo{number}{2} (\bibinfo{year}{1980}), \bibinfo{pages}{219--230}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2014)]%
+        {li2014uncovering}
+\bibfield{author}{\bibinfo{person}{Junqiu Li}, \bibinfo{person}{Xingyuan Wang},
+  {and} \bibinfo{person}{Yaozu Cui}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{Uncovering the Overlapping Community Structure of
+  Complex Networks by Maximal Cliques}.
+\newblock \bibinfo{journal}{\emph{Physica A: Statistical Mechanics and its
+  Applications}}  \bibinfo{volume}{415} (\bibinfo{year}{2014}),
+  \bibinfo{pages}{398--406}.
+\newblock
+
+
+\bibitem[Pattillo et~al\mbox{.}(2013)]%
+        {pattillo2013clique}
+\bibfield{author}{\bibinfo{person}{Jeffrey Pattillo}, \bibinfo{person}{Nataly
+  Youssef}, {and} \bibinfo{person}{Sergiy Butenko}.}
+  \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{On Clique Relaxation Models in Network Analysis}.
+\newblock \bibinfo{journal}{\emph{European Journal of Operational Research}}
+  \bibinfo{volume}{226}, \bibinfo{number}{1} (\bibinfo{year}{2013}),
+  \bibinfo{pages}{9--18}.
+\newblock
+
+
+\bibitem[Seidman(1983)]%
+        {seidman1983network}
+\bibfield{author}{\bibinfo{person}{Stephen~B Seidman}.}
+  \bibinfo{year}{1983}\natexlab{}.
+\newblock \showarticletitle{Network structure and minimum degree}.
+\newblock \bibinfo{journal}{\emph{Social networks}} \bibinfo{volume}{5},
+  \bibinfo{number}{3} (\bibinfo{year}{1983}), \bibinfo{pages}{269--287}.
+\newblock
+
+
+\bibitem[Seidman and Foster(1978)]%
+        {seidman1978graph}
+\bibfield{author}{\bibinfo{person}{Stephen~B Seidman} {and}
+  \bibinfo{person}{Brian~L Foster}.} \bibinfo{year}{1978}\natexlab{}.
+\newblock \showarticletitle{A Graph-Theoretic Generalization of the Clique
+  Concept}.
+\newblock \bibinfo{journal}{\emph{Journal of Mathematical Sociology}}
+  \bibinfo{volume}{6}, \bibinfo{number}{1} (\bibinfo{year}{1978}),
+  \bibinfo{pages}{139--154}.
+\newblock
+
+
+\bibitem[Ucar et~al\mbox{.}(2006)]%
+        {ucar2006improving}
+\bibfield{author}{\bibinfo{person}{Duygu Ucar}, \bibinfo{person}{Sitaram Asur},
+  \bibinfo{person}{Umit Catalyurek}, {and} \bibinfo{person}{Srinivasan
+  Parthasarathy}.} \bibinfo{year}{2006}\natexlab{}.
+\newblock \showarticletitle{Improving Functional Modularity in Protein-Protein
+  Interactions Graphs using Hub-Induced Subgraphs}. In
+  \bibinfo{booktitle}{\emph{European Conference on Principles of Data Mining
+  and Knowledge Discovery}}. Springer, \bibinfo{pages}{371--382}.
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2023)]%
+        {Maple}
+\bibfield{author}{\bibinfo{person}{Zhengren Wang}, \bibinfo{person}{Yi Zhou},
+  \bibinfo{person}{Chunyu Luo}, {and} \bibinfo{person}{Mingyu Xiao}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{A Fast Maximum k-Plex Algorithm Parameterized by
+  the Degeneracy Gap}. In \bibinfo{booktitle}{\emph{{IJCAI}}}.
+  \bibinfo{publisher}{ijcai.org}, \bibinfo{pages}{5648--5656}.
+\newblock
+
+
+\bibitem[Wang et~al\mbox{.}(2022)]%
+        {www22maximal}
+\bibfield{author}{\bibinfo{person}{Zhengren Wang}, \bibinfo{person}{Yi Zhou},
+  \bibinfo{person}{Mingyu Xiao}, {and} \bibinfo{person}{Bakhadyr Khoussainov}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Listing Maximal k-Plexes in Large Real-World
+  Graphs}. In \bibinfo{booktitle}{\emph{{WWW}}}. \bibinfo{publisher}{{ACM}},
+  \bibinfo{pages}{1517--1527}.
+\newblock
+
+
+\bibitem[Xiao et~al\mbox{.}(2017)]%
+        {BS}
+\bibfield{author}{\bibinfo{person}{Mingyu Xiao}, \bibinfo{person}{Weibo Lin},
+  \bibinfo{person}{Yuanshun Dai}, {and} \bibinfo{person}{Yifeng Zeng}.}
+  \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{A Fast Algorithm to Compute Maximum \emph{k}-Plexes
+  in Social Network Analysis}. In \bibinfo{booktitle}{\emph{{AAAI}}}.
+  \bibinfo{publisher}{{AAAI} Press}, \bibinfo{pages}{919--925}.
+\newblock
+
+
+\bibitem[Zheng et~al\mbox{.}(2023)]%
+        {seesaw}
+\bibfield{author}{\bibinfo{person}{Jiongzhi Zheng}, \bibinfo{person}{Mingming
+  Jin}, \bibinfo{person}{Yan Jin}, {and} \bibinfo{person}{Kun He}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Two New Upper Bounds for the Maximum k-plex
+  Problem}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2301.07300}
+  (\bibinfo{year}{2023}).
+\newblock
+
+
+\bibitem[Zhou et~al\mbox{.}(2021)]%
+        {Maplex}
+\bibfield{author}{\bibinfo{person}{Yi Zhou}, \bibinfo{person}{Shan Hu},
+  \bibinfo{person}{Mingyu Xiao}, {and} \bibinfo{person}{Zhang{-}Hua Fu}.}
+  \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Improving Maximum k-plex Solver via Second-Order
+  Reduction and Graph Color Bounding}. In \bibinfo{booktitle}{\emph{{AAAI}}}.
+  \bibinfo{publisher}{{AAAI} Press}, \bibinfo{pages}{12453--12460}.
+\newblock
+
+
+\end{thebibliography}
