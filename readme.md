@@ -2,6 +2,7 @@
 
 ## To run a program
 
-``` make
+``` 
+make
 ./run graph k
 ```
