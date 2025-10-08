@@ -1349,7 +1349,7 @@ public:
                     v = u;
             }
             if(support(v)==0) cout<<v<<endl;
-            if (v != -1 && support(v) >= tisub) 
+            if (v != -1 && support(v) >= tisub+1) 
             {
                 tisub++;
                 IS.reset(v);
@@ -1357,6 +1357,7 @@ public:
             else
                 break;
         }
+        cout<<tisub<<endl;
         return tisub;
     }
     ui tryColor(Set &C)
