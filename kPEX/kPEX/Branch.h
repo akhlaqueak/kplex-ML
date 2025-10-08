@@ -1348,6 +1348,7 @@ public:
                 if (v == -1 or support(u) > support(v))
                     v = u;
             }
+            if(support(v)==0) cout<<v<<endl;
             if (v != -1 && support(v) >= tisub+1) 
             {
                 tisub++;
