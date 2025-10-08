@@ -1144,7 +1144,7 @@ public:
     {
         auto br_C = C;
         ui beta = lb - S.size();
-        while (beta > 0)
+        while (beta > 0 and !br_C.empty())
         {
             ui ub = tryColor(br_C);
             if (ub <= beta)
