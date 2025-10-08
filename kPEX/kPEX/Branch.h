@@ -541,7 +541,6 @@ public:
         array_n.clear();
         array_n.resize(g.size());
         one_loss_vertices_in_C = Set(g.size());
-        ISc = Set(g.size());
         one_loss_non_neighbor_cnt.resize(g.size());
         que.resize(g.size());
         peel_seq.resize(g.size());
