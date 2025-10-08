@@ -1357,7 +1357,6 @@ public:
             else
                 break;
         }
-        cout<<tisub<<endl;
         return tisub;
     }
     ui tryColor(Set &C)
