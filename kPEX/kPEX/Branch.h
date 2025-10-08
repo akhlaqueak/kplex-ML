@@ -1363,6 +1363,19 @@ public:
     {
         createIS(C, ISc);
         ui ub = TISUB(ISc);
+        // return ub;
+        ui vlc=0;
+        for(ui u: ISc)
+            if(support(u)>ub) vlc++;
+        for(ui u: C){
+            if(!ISc.test(u)){
+                ui nn=ISc.intersect(A[u]);
+                if(nn+vlc+1 <= ub){
+                    vlc+=nn+1;
+                    ISc.set(u);
+                }
+            }
+        }
         return ub;
         // ui vlc = 0;
         // // collect loose vertices i.e. v \in ISc | support(v) > ub
