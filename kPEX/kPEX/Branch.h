@@ -1146,7 +1146,7 @@ public:
         ui beta = lb - S.size();
         while (beta > 0)
         {
-            ui ub = tryColor(C);
+            ui ub = tryColor(br_C);
             if (ub <= beta)
             {
                 for (ui u : ISc)
