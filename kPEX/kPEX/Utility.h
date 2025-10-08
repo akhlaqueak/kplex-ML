@@ -1,7 +1,25 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
-#include <bits/stdc++.h>
+// stdc++.h substitute for macOS
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <string>
+#include <map>
+#include <set>
+#include <cmath>
+#include <queue>
+#include <stack>
+#include <cstring>
+#include <iomanip>
+#include <limits>
+#include <cassert>
+#include <numeric>
+#include <fstream>
+#include <sstream>
+using namespace std;
+
 #include <sys/time.h> // gettimeofday
 #include <unistd.h>
 #include <chrono>

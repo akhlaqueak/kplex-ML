@@ -32,7 +32,7 @@ private:
     vector<int> deg;      // deg[u] = degree of u in S+C
     vector<int> one_loss_non_neighbor_cnt;
     vector<int> que; // queue
-    Set one_loss_vertices_in_C;
+    Set one_loss_vertices_in_C, ISc;
     AdjacentMatrix non_A, A; // A is the adjacent matrix, A[u] is the neighbors of u, A[u][v] means u,v are adj; non_A = ~A
     Graph_adjacent *ptr_g;
 
@@ -120,34 +120,52 @@ public:
         // select pivot to generate 2 branches
         int pivot = -1;
 
-#ifdef BIN_BRANCHING
-        pivot = select_pivot_vertex_with_min_degree(C);
-        if (pivot == -1)
-            return;
-        generate_sub_branches(S, C, pivot);
-#elif defined(PIVOT_BRANCHING)
-        if (C.empty())
-            return;
-        if (B.empty() or S.test(B.back()) or (not C.test(B.back())))
-            branching_set_pivot(S, C);
-
-        pivot = B.back();
-        B.pop_back();
-        generate_sub_branches_add_first(S, C, pivot);
-#elif defined(S_BRANCHING)
-        // partition based branching
-        auto br_C = branching_set_part(S, C);
-        
-        for (int u : br_C)
+        if (PARA.branching == "Binary-Br")
         {
-            auto newS = S, newC=C;
-            newS.set(u);
-            v_just_add = u;
-            bnb(newS, newC);
-
-            C.set(u);
+            pivot = select_pivot_vertex_with_min_degree(C);
+            if (pivot == -1)
+                return;
+            generate_sub_branches(S, C, pivot);
         }
-#endif
+        else if (PARA.branching == "Pivot-Br")
+        {
+            if (C.empty())
+                return;
+            if (B.empty() or S.test(B.back()) or (not C.test(B.back())))
+                branching_set_pivot(S, C);
+
+            pivot = B.back();
+            B.pop_back();
+            generate_sub_branches_add_first(S, C, pivot);
+        }
+        else if (PARA.branching == "S-Br")
+        {
+            // partition based branching (S-Based Branching)
+            auto br_C = branching_set_part(S, C);
+
+            for (int u : br_C)
+            {
+                auto newS = S, newC = C;
+                newS.set(u);
+                v_just_add = u;
+                bnb(newS, newC);
+
+                C.set(u);
+            }
+        }
+        else if (PARA.branching == "R-Br")
+        {
+            // Color branching (R-Based Branching)
+            auto br_C = branching_set_color(S, C);
+            for (int u : br_C)
+            {
+                auto newS = S, newC = C;
+                newS.set(u);
+                v_just_add = u;
+                bnb(newS, newC);
+                C.set(u);
+            }
+        }
     }
 
     /**
@@ -442,10 +460,10 @@ public:
     /**
      * @return the vertex with minimum degree
      */
-    void branching_set_pivot(Set& S, Set &C)
+    void branching_set_pivot(Set &S, Set &C)
     {
-        for (int u: C)
-            deg[u] = S.size()-loss_cnt[u]+A[u].intersect(C);
+        for (int u : C)
+            deg[u] = S.size() - loss_cnt[u] + A[u].intersect(C);
         B.clear();
         int sel = -1;
 
@@ -458,7 +476,7 @@ public:
                 B.push_back(u);
                 return;
             }
-            if (sel == -1 || deg[u] < deg[sel] or (deg[u]==deg[sel] and loss_cnt[u]>loss_cnt[sel]))
+            if (sel == -1 || deg[u] < deg[sel] or (deg[u] == deg[sel] and loss_cnt[u] > loss_cnt[sel]))
                 sel = u;
         }
 
@@ -523,6 +541,7 @@ public:
         array_n.clear();
         array_n.resize(g.size());
         one_loss_vertices_in_C = Set(g.size());
+        ISc = Set(g.size());
         one_loss_non_neighbor_cnt.resize(g.size());
         que.resize(g.size());
         peel_seq.resize(g.size());
@@ -835,7 +854,7 @@ public:
      */
     void reduce_kPlexT(Set &S, Set &C)
     {
-        
+
         if (S.size() <= 1)
             return;
         Timer t;
@@ -915,7 +934,6 @@ public:
             bnb(S, C);
         }
     }
-
 
     /**
      * @brief generate two sub-branches: one includes pivot and the other excludes pivot
@@ -1121,19 +1139,55 @@ public:
     {
         return paramK - loss_cnt[u];
     }
+
+    vector<ui> branching_set_color(Set &S, Set &C)
+    {
+        auto br_C = C;
+        ui beta = lb - S.size();
+        while (beta > 0)
+        {
+            ui ub = tryColor(C);
+            if (ub <= beta)
+            {
+                for (ui u : ISc)
+                {
+                    br_C.reset(u);
+                }
+                beta -= ub;
+            }
+            else
+                break;
+        }
+        for (ui u : br_C)
+            if (beta-- > 0)
+                br_C.reset(u);
+            else
+                break;
+        vector<ui> br;
+        br.reserve(br_C.size());
+        for (auto u : br_C)
+        {
+            C.reset(u);
+            br.push_back(u);
+        }
+
+        sort(br.begin(), br.end(), [&](ui a, ui b)
+             { return peel_seq[a] > peel_seq[b]; });
+
+        return br;
+    }
     /**
      * @brief partition-based branching set
      */
     vector<ui> branching_set_part(Set &S, Set &C)
     {
-        Timer part_timer;
         // auto &loss = deg;
         auto br_C = C;
-        auto copy_S=S;
+        auto copy_S = S;
         ui beta = lb - S.size();
 
-        // for(int u:S)
-        //     loss_cnt[u] = non_A[u].intersect(S);
+        for(int u:S)
+            loss_cnt[u] = non_A[u].intersect(S);
 
         while (true)
         {
@@ -1144,7 +1198,8 @@ public:
                 if (loss_cnt[u] == paramK)
                     continue; // boundary vertex does not have nn_cnt=0
                 ui nn_cnt = br_C.intersect(non_A[u]);
-                if(nn_cnt==0) continue;
+                if (nn_cnt == 0)
+                    continue;
                 double cost = min(support(u), nn_cnt);
                 double dise = nn_cnt / cost;
                 if (Pi_u == -1 || (dise > dise_u and cost <= beta))
@@ -1152,8 +1207,9 @@ public:
             }
             if (Pi_u == -1 or cost_u > beta)
                 break;
-            for(int u: br_C)
-                if(non_A[Pi_u][u]) br_C.reset(u);
+            for (int u : br_C)
+                if (non_A[Pi_u][u])
+                    br_C.reset(u);
             copy_S.reset(Pi_u);
             beta -= cost_u;
 
@@ -1178,7 +1234,7 @@ public:
         }
 
         sort(br.begin(), br.end(), [&](ui a, ui b)
-             {return peel_seq[a] > peel_seq[b]; });
+             { return peel_seq[a] > peel_seq[b]; });
         return br;
     }
     /**
@@ -1269,49 +1325,99 @@ public:
         return ret;
     }
 
+    void createIS(Set &C, Set &ISc)
+    {
+        ISc.clear();
+        for (auto u : C)
+        {
+            if (ISc.intersect(A[u]) == 0)
+                ISc.set(u);
+        }
+    }
 
-    // void createIS(Set& C, ui Ra, ui Rb)
-	// {
-	// 	ISc.clear();
-	// 	for (ui i = Ra; i < Ra; i++)
-	// 	{
-	// 		bool flag = true;
-    //         ui u = C[i];
-	// 		for (ui v : ISc)
-	// 			if (A[u][v])
-	// 			{
-	// 				flag = false;
-	// 				break;
-	// 			}
-	// 		if (flag)
-	// 			ISc.push_back(u);
-	// 	}
-	// }
+    ui TISUB(Set IS)
+    {
+        ui tisub = 0;
+        ui sz = IS.size();
+        for (ui i = 0; i < sz; i++)
+        {
+            ui v = -1;
+            for (ui u : IS)
+            // find v with max support
+            {
+                if (v == -1 or support(u) > support(v))
+                    v = u;
+            }
+            if (v != -1 && support(v) >= tisub)
+            {
+                tisub++;
+                IS.reset(v);
+            }
+            else
+                break;
+        }
+        return tisub;
+    }
+    ui tryColor(Set &C)
+    {
+        createIS(C, ISc);
+        ui ub = TISUB(ISc);
+        return ub;
+        // ui vlc = 0;
+        // // collect loose vertices i.e. v \in ISc | support(v) > ub
+        // for (ui i = 0; i < ISc.size(); i++)
+        // {
+        //     if (support(S_end, SR[ISc[i]]) > ub)
+        //     {
+        //         std::swap(ISc[i], ISc[vlc]);
+        //         vlc++;
+        //     }
+        // }
+        // // ISc[0... vlc) we have loose vertices
 
-	// ui TISUB(ui S_end)
-	// {
-	// 	ui maxsup = 0;
-	// 	for (ui i = 0; i < ISc.size(); i++)
-	// 	{
-	// 		for (ui j = i + 1; j < ISc.size(); j++)
-	// 		{
-	// 			if (support(S_end, SR[ISc[j]]) > support(S_end, SR[ISc[i]]))
-	// 				std::swap(ISc[i], ISc[j]);
-	// 		}
-	// 		// not using <= condition because i is starting from 0...
-	// 		if (support(S_end, SR[ISc[i]]) > i)
-	// 			maxsup++;
-	// 		else
-	// 			break;
-	// 	}
-	// 	return maxsup;
-	// }
-	// ui tryColor(Set &C, ui Ra, ui Rb)
-	// {
+        // // Lookup inIS(&lookup, &ISc, true);
+        // bmp.setup(ISc, n);
+        // for (ui i = S_end; vlc < ub and i < R_end; i++)
+        // {
+        //     if (bmp.test(i)) // this loop running for C\ISc
+        //         continue;
+        //     ui vc = 0;
+        //     for (ui j = vlc; j < ISc.size(); j++) // this loop runs in ISc\LC
+        //     {
+        //         if (is_neigh(i, ISc[j]))
+        //         {
+        //             std::swap(ISc[vlc + vc], ISc[j]);
+        //             vc++;
+        //         }
+        //     }
+        //     if (vlc + vc + 1 <= ub)
+        //     {
+        //         vlc += vc;
+        //         ISc.push_back(i);
+        //         std::swap(ISc.back(), ISc[vlc++]);
+        //         bmp.set(i);
+        //     }
+        // }
 
-	// 	createIS(S_end, R_end);
-	// 	ui ub = TISUB(S_end);
-    // }
+        // for (ui i = S_end; i < R_end; i++)
+        // {
+        //     if (bmp.test(i) or support(S_end, SR[i]) >= ub) // this loop running for C\ISc
+        //         continue;
+        //     ui nv = 0;
+        //     for (ui j : ISc)
+        //     {
+        //         if (is_neigh(i, j))
+        //             nv++;
+        //     }
+
+        //     if (nv + support(S_end, SR[i]) <= ub)
+        //     {
+        //         ISc.push_back(i);
+        //         bmp.set(i);
+        //     }
+        // }
+        // return ub;
+    }
 };
 
 #endif

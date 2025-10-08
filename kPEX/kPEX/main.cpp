@@ -1,4 +1,5 @@
 #include "Graph.h"
+#include "Command.h"
 #include "Branch.h"
 
 #ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
@@ -219,6 +220,7 @@ void bnb()
 
 int main(int argc, char *argv[])
 {
+    PARA=CommandLine(argc, argv);
     if (argc < 3)
     {
         printf("2 params are required !!! \n");
