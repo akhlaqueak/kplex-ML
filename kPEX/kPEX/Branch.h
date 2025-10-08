@@ -1348,7 +1348,7 @@ public:
                 if (v == -1 or support(u) > support(v))
                     v = u;
             }
-            if (v != -1 && support(v) > tisub) // not >= because tisub begins from 0
+            if (v != -1 && support(v) >= tisub+1) 
             {
                 tisub++;
                 IS.reset(v);
