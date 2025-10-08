@@ -1,8 +1,12 @@
-all : 
-	g++ -flto -Ofast -DNDEBUG -march=native -o Maple main.cpp Graph.cpp -w -std=c++17
+all : 	
+	g++ -flto -Ofast -std=c++17 -DNDEBUG -march=native -o UMKP Graph.cpp -w
+
+CTCP : 	
+	g++ -flto -Ofast -std=c++17 -DNDEBUG -march=native -o UMKP Graph.cpp -w -D_SECOND_ORDER_PRUNING_
+
 clean:
-	rm -rf Maple
+	rm -rf UMKP
 debug:
-	g++ -g -DNDEBUG -o Maple main.cpp Graph.cpp
+	g++ -std=c++17 -g -DNDEBUG -o UMKP main.cpp Graph.cpp
 prof:
-	g++ -pg -DNDEBUG -march=native -o Maple-pg main.cpp Graph.cpp -w
+	g++ -std=c++17 -pg -DNDEBUG -march=native -o UMKP-pg main.cpp Graph.cpp -w

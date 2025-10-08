@@ -17,7 +17,7 @@ public:
 
 	ui *pre_s; // pre for doubly-linked list
 	ui *next_s; // next for doubly-linked list
-	ui sz;
+
 public:
 	ListLinearHeap(ui _n, ui _key_cap) {
 		n = _n;
@@ -52,7 +52,7 @@ public:
 		if(pre_s == nullptr) pre_s = new ui[n];
 		if(next_s == nullptr) next_s = new ui[n];
 		if(head_s == nullptr) head_s = new ui[key_cap+1];
-		sz=n;
+
 		//assert(_key_cap <= key_cap);
 		min_key = max_key = _key_cap;
 		for(ui i = 0;i <= _key_cap;i ++) head_s[i] = n;
@@ -95,7 +95,7 @@ public:
 	bool pop_min(ui &id, ui &key) {// return true if success, return false otherwise
 		while(min_key <= max_key&&head_s[min_key] == n) ++ min_key;
 		if(min_key > max_key) return false;
-		sz--;
+
 		id = head_s[min_key];
 		key = min_key;
 
