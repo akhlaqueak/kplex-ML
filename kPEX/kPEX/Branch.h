@@ -1186,7 +1186,7 @@ public:
         auto copy_S = S;
         ui beta = lb - S.size();
 
-        for(int u:S)
+        for (int u : S)
             loss_cnt[u] = non_A[u].intersect(S);
 
         while (true)
@@ -1348,8 +1348,9 @@ public:
                 if (v == -1 or support(u) > support(v))
                     v = u;
             }
-            if(support(v)==0) cout<<v<<endl;
-            if (v != -1 && support(v) >= tisub+1) 
+            if (support(v) == 0)
+                cout << v << endl;
+            if (v != -1 && support(v) >= tisub + 1)
             {
                 tisub++;
                 IS.reset(v);
@@ -1359,22 +1360,34 @@ public:
         }
         return tisub;
     }
-    ui tryColor(Set &C)
+    ui tryColor(Set C)
     {
         createIS(C, ISc);
         ui ub = TISUB(ISc);
         // return ub;
-        ui vlc=0;
-        for(ui u: ISc)
-            if(support(u)>ub) vlc++;
-        for(ui u: C){
-            if(!ISc.test(u)){
-                ui nn=ISc.intersect(A[u]);
-                if(nn+vlc+1 <= ub){
-                    vlc+=nn+1;
-                    ISc.set(u);
-                }
+        ui vlc = 0;
+        for (ui u : ISc)
+        {
+            if (support(u) > ub)
+                vlc++;
+            C.reset(u);
+        }
+        for (ui u : C)
+        {
+            ui nn = ISc.intersect(A[u]);
+            if (nn + vlc + 1 <= ub)
+            {
+                vlc += nn + 1;
+                ISc.set(u);
+                C.reset(u);
             }
+        }
+
+        for (ui u : C)
+        {
+            ui nn = ISc.intersect(A[u]);
+            if (nn + support(u) <= ub)
+                ISc.set(u);
         }
         return ub;
         // ui vlc = 0;
