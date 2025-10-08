@@ -1164,7 +1164,7 @@ public:
             else
                 break;
         vector<ui> br;
-        br.reserve(br_C.size());
+        // br.reserve(br_C.size());
         for (auto u : br_C)
         {
             C.reset(u);
