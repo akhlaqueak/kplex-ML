@@ -1349,7 +1349,7 @@ public:
                     v = u;
             }
             if(support(v)==0) cout<<v<<endl;
-            if (v != -1 && support(v) >= tisub+1) 
+            if (v != -1 && support(v) >= tisub) 
             {
                 tisub++;
                 IS.reset(v);
