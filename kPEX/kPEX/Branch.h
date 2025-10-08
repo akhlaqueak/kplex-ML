@@ -1164,8 +1164,7 @@ public:
             else
                 break;
         vector<ui> br;
-        cout<<br_C.size()<<endl;
-        // br.reserve(br_C.size());
+        br.reserve(br_C.size());
         for (auto u : br_C)
         {
             C.reset(u);
