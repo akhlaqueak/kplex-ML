@@ -1385,6 +1385,7 @@ public:
 
         for (ui u : C)
         {
+            if(support(u)>ub) continue;
             ui nn = ISc.intersect(A[u]);
             if (nn + support(u) <= ub)
                 ISc.set(u);
