@@ -428,6 +428,21 @@ Graph::Graph(kPEXGraph &g)
 	edges = new ui[m];
 	std::copy(g.pstart, g.pstart + n + 1, pstart);
 	std::copy(g.edge_to, g.edge_to + m, edges);
+
+	pend = pend_buf = nullptr;
+	kplex.clear();
+	for(ui u: solution) kplex.push_back(u);
+
+	s_degree = s_edges = NULL;
+	s_pstart = s_pend = NULL;
+	s_peel_sequence = s_core = NULL;
+	s_vis = NULL;
+	s_heap = NULL;
+
+	s_edgelist_pointer = NULL;
+	s_tri_cnt = s_edge_list = NULL;
+	s_active_edgelist = NULL;
+	s_deleted = NULL;
 }
 void Graph::read()
 {
@@ -501,14 +516,10 @@ void Graph::search()
 	ui *core = new ui[n];
 	ui *degree = new ui[n];
 	char *vis = new char[n];
-	kplex.clear();
-	for (ui u : solution)
-		kplex.push_back(u);
 
-	for(ui i=0;i<n;i++) 
+	// for(ui i=0;i<n;i++) 
 	// if(!is_sorted(edges[pstart[i]], edges[pstart[i+1]])) cout<<"NO ";
-	cout<<pstart[i]<<" "<<pstart[i+1]<<endl;
-		ListLinearHeap *heap = new ListLinearHeap(n, n - 1);
+	ListLinearHeap *heap = new ListLinearHeap(n, n - 1);
 
 	const ui UB = degen(n, peel_sequence, core, pstart, edges, degree, vis, heap, false);
 
