@@ -259,6 +259,8 @@ Graph::Graph(const char *_dir, const int _K)
 	n = m = 0;
 
 	twoHopG = PARA.GetOptionValue("-twoHopG", "true") == "true";
+	topCTCP = PARA.GetOptionValue("-topCTCP", "true") == "true";
+	kpex_heur = PARA.GetOptionValue("-kpexHeur", "false") == "true";
 	bool verify = PARA.GetOptionValue("-verify", "false") == "true";
 
 	pstart = nullptr;
@@ -625,8 +627,8 @@ void Graph::search()
 		{
 			ui u, key;
 			linear_heap->pop_min(u, key);
-			if (key != 0)
-				printf("u = %u, key = %u\n", u, key);
+			// if (key != 0)
+			// 	printf("u = %u, key = %u\n", u, key);
 			if (key < kplex.size() + 1 - K)
 			{
 				if (degree[u] != 0)
@@ -726,7 +728,7 @@ void Graph::search()
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.get_time()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.get_time()/1000000.0);
 
-		best_n_edges = write_one_kplex(kplex);
+		// best_n_edges = write_one_kplex(kplex);
 
 		delete kplex_solver;
 		delete linear_heap;
