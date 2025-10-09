@@ -2038,7 +2038,7 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 
 		auto is_neigh = [&](ui u, ui v)
 		{
-			return binary_search(pstart[u], pend[u], v);
+			return binary_search(edges+pstart[u], edges+pend[u], v);
 		};
 		auto get_nn_cnt = [&](ui u)
 		{
