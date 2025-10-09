@@ -38,7 +38,7 @@ private:
 public:
 	ui best_n_edges = 0;
 	bool first_kplex = true;
-	bool topCTCP, twoHopG;
+	bool topCTCP, twoHopG, kpex_heur;
 
 	Graph(const char *_dir, const int _K);
 	~Graph();

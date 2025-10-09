@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
 	Graph *graph = new Graph(filename, k);
 	graph->twoHopG = cmd.GetOptionValue("-twoHopG", "true") == "true";
 	graph->topCTCP = cmd.GetOptionValue("-topCTCP", "true") == "true";
+	graph->kpex_heur = cmd.GetOptionValue("-kpexHeur", "true") == "true";
 	graph->read();
 
 	if (verify)
@@ -309,8 +310,10 @@ void Graph::search()
 		ui *edgelist_pointer = new ui[m];
 
 		shrink_graph(n, m, peel_sequence, core, out_mapping, nullptr, rid, pstart, edges, true);
-		// ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
-		kpex_heuristic(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
+		if (kpex_heur)
+			kpex_heuristic(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
+		else
+			ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
 
 		if (kplex.size() > old_size)
 		{
@@ -1944,6 +1947,7 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 	vector<ui> vs;
 	vector<ui> remaining;
 	remaining.reserve(n);
+	ui *nn_locs = new ui[n];
 	memset(vis, 0, sizeof(char) * n);
 	for (ui i = n; i > 0; i--)
 	{
@@ -2035,10 +2039,13 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 
 		for (ui j = 0; j < vs.size(); j++)
 			vis[vs[j]] = 0;
-
-		auto is_neigh = [&](ui u, ui v)
+		// cout<<u<<": "; for(ui i=)
+		auto is_neigh = [&](ui uu, ui v)
 		{
-			return binary_search(edges+pstart[v], edges+pend[v], u);
+			if (uu == u)
+				return std::find(edges + pstart[uu], edges + pend[uu], v) != edges + pend[uu];
+			else
+				return std::find(edges_s + pstart_s[uu], edges_s + pend_s[uu], v) != edges_s + pend_s[uu];
 		};
 		auto get_nn_cnt = [&](ui u)
 		{
@@ -2054,11 +2061,12 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 		for (ui u : kplex)
 			nn.push_back(get_nn_cnt(u));
 
-		for (auto it = std::rbegin(remaining); it != std::rend(remaining); ++it)
+		while (!remaining.empty())
 		{
 			bool ok = true;
-			ui u = *it, nn_cnt = 0;
-			ui *nn_locs = rid;
+			ui u = remaining.back();
+			remaining.pop_back();
+			ui nn_cnt = 0;
 			for (ui i = 0; i < kplex.size(); i++)
 			{
 				ui w = kplex[i];
@@ -2077,11 +2085,13 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 					break;
 				}
 			}
-			if(!ok) continue;
-			// u can be added to kplex now. 
+			if (!ok)
+				continue;
+			// u can be added to kplex now.
 			kplex.push_back(u);
-			nn.push_back(nn_cnt+1); //+1 because u is also added to kplex now
-			for(ui i=0;i<nn_cnt;i++) nn[nn_locs[i]]++;
+			nn.push_back(nn_cnt + 1); //+1 because u is also added to kplex now
+			for (ui i = 0; i < nn_cnt; i++)
+				nn[nn_locs[i]]++;
 		}
 	}
 	for (ui i = 0; i < n; i++)

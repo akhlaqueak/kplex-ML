@@ -7,6 +7,6 @@ CTCP :
 clean:
 	rm -rf UMKP
 debug:
-	g++ -std=c++17 -g -DNDEBUG -o UMKP Graph.cpp -gdwarf-4
+	g++ -std=c++17 -g -o UMKP Graph.cpp -gdwarf-4
 prof:
 	g++ -std=c++17 -pg -DNDEBUG -march=native -o UMKP-pg Graph.cpp -w
