@@ -1,9 +1,6 @@
 #ifndef _GRAPH_H_
 #define _GRAPH_H_
 
-#include "Utility.h"
-#include "Timer.h"
-#include "LinearHeap.h"
 
 class Graph
 {
@@ -42,7 +39,7 @@ public:
 
 	Graph(const char *_dir, const int _K);
 	~Graph();
-
+	Graph(kPEXGraph& g);
 	void read();
 	void read_csv();
 	void read_graph();

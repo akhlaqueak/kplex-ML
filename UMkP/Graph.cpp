@@ -1,48 +1,254 @@
-#include "Graph.h"
-double threshold = 1e9;
-Timer thresh, branchings;
-
-#include "Command.h"
-CommandLine cmd;
+#include "kPEXGraph.h"
 #include "KPlex_BB_matrix.h"
 #include "CTPrune.h"
-#define K_THRESH 10
-using namespace std;
-#include <numeric>
-#include <fstream>
-#include "Utility.h"
-#include "Timer.h"
+#include "Graph.h"
+#include "Branch.h"
 
-#define LEN_LIMIT (1 << 10)
-char filename[LEN_LIMIT];
+#ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
+#include "2th-Reduction-CTCP.h"
+#else // use CF-CTCP
+#include "2th-Reduction.h"
+#endif
+
+string file_path;
+kPEXGraph g;
+set<ui> solution;
+double algorithm_start_time, total_heuris_time;
+double FastHeuris_time;
+double StrongHeuris_time;
+double strong_reduce_time;
+int FastHeuris_lb;
+int input_n;
+
+void print_solution()
+{
+	if (solution.size() < 2 * paramK - 1)
+	{
+		printf("***We can't find a plex larger than 2k-2!! The following is a heuristic solution.\n");
+		if (solution.size())
+		{
+			print_set(solution);
+		}
+		return;
+	}
+#ifndef NO_DUMP
+	// if defined NO_DUMP, then we do not output the detailed solution
+	printf("Maximum solution(size= %d ):\n", (int)solution.size());
+	print_set(solution);
+#endif // NO_DUMP
+	fflush(stdout);
+}
+
+void print_heuris_log()
+{
+	puts("*************Heuristic result*************");
+	after_maxkp_time = get_system_time_microsecond();
+
+	total_heuris_time = get_system_time_microsecond() - algorithm_start_time;
+	printf("list triangles time: %.4lf s, strong reduce time: %.4lf s\n", list_triangle_time / 1e6, strong_reduce_time / 1e6);
+	printf("total-heuristic-time= %.4lf s, FastHeuris-time= %.4lf s, StrongHeuris-time= %.4lf s\n",
+		   total_heuris_time / 1e6, FastHeuris_time / 1e6, StrongHeuris_time / 1e6);
+	printf("lb= %d , FastHeuris-lb= %d \n", lb, FastHeuris_lb);
+	if (solution.size() >= 2 * paramK - 1)
+		assert(solution.size() == lb);
+
+	if (g.n <= lb)
+	{
+		printf("The heuristic solution is the ground truth!\n");
+		print_solution();
+		puts("------------------{whole procedure: kPEX}---------------------");
+		printf("\n>>Heursitic MaxKPlex_Size: %u t_time: %.4lf\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+		// printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+		exit(0);
+	}
+}
+
+/**
+ * @brief the heuristic stage without StrongHeuris
+ */
+void FastHeuris()
+{
+	Timer t("FastHeuris");
+	// degeneracy + weak reduce
+	{
+#ifndef NO_SQRT
+		lb = g.sqrt_degeneracy(&solution);
+		printf("sqrt lb= %d, use time %.4lf s\n", lb, t.get_time() / 1e6);
+#endif
+		lb = max(lb, 2 * paramK - 2); // we only care the solutions with at least 2k-1 vertices
+		lb = max(lb, g.degeneracy_and_reduce(lb, &solution));
+		printf("After degeneracy and weak reduce, n= %u , m= %u , lb= %d , use time %.4lf s\n", g.n, g.m / 2, lb, t.get_time() / 1e6);
+		if (lb >= g.n)
+		{
+			g.n = 0;
+			FastHeuris_lb = lb;
+			FastHeuris_time = t.get_time();
+			print_heuris_log();
+			exit(0);
+		}
+	}
+	FastHeuris_lb = lb;
+
+	// strong reduce: CF-CTCP
+	{
+		Timer start_strong_reduce;
+		Reduction reduce(&g);
+		ui pre_n = g.n;
+		reduce.strong_reduce(lb);
+		printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+		strong_reduce_time += start_strong_reduce.get_time();
+
+		if (lb >= g.n)
+		{
+			g.n = 0;
+			FastHeuris_time = t.get_time();
+			print_heuris_log();
+			exit(0);
+		}
+	}
+	FastHeuris_time = t.get_time();
+}
+
+/**
+ * @brief we make more efforts to get better lb and then reduce graph
+ */
+void StrongHeuris()
+{
+	int iteration_cnt = 1;
+	double time_limit = FastHeuris_time;
+	time_limit = max(time_limit, 0.5 * 1e6);
+	if (paramK >= 15)
+	{
+		time_limit = max(time_limit, 1e3 * 1e6);
+	}
+	Timer t_extend("StrongHeuris");
+	while (1)
+	{
+#ifdef NO_STRONG_HEURIS
+		break;
+#endif
+		int extend_lb = 0;
+		if (solution.size() < 2 * paramK - 2) // this means we probably find no larger plex
+		{
+			break;
+		}
+		extend_lb = g.strong_heuris(lb, solution, time_limit);
+		printf("%dth-StrongHeuris lb= %d\n", iteration_cnt++, extend_lb);
+		if (extend_lb <= lb)
+			break;
+		lb = extend_lb;
+		g.weak_reduce(lb);
+
+		// strong reduce
+		{
+			Timer start_strong_reduce;
+			Reduction reduce(&g);
+			ui pre_n = g.n;
+			reduce.strong_reduce(lb);
+			printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+			strong_reduce_time += start_strong_reduce.get_time();
+
+			if (lb >= g.n)
+			{
+				g.n = 0;
+				StrongHeuris_time = t_extend.get_time();
+				print_heuris_log();
+				exit(0);
+			}
+		}
+	}
+	StrongHeuris_time = t_extend.get_time();
+}
+
+/**
+ * @brief the newly proprosed heuris in kPlexT
+ */
+void EgoHeuris()
+{
+	Timer t("ego-degen");
+	lb = g.ego_degen(&solution);
+	g.weak_reduce(lb);
+	t.print_time();
+	// strong reduce
+	{
+		Timer start_strong_reduce;
+		Reduction reduce(&g);
+		ui pre_n = g.n;
+		reduce.strong_reduce(lb);
+		printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+		strong_reduce_time += start_strong_reduce.get_time();
+		if (lb >= g.n)
+		{
+			g.n = 0;
+			print_heuris_log();
+			exit(0);
+		}
+	}
+}
+
+/**
+ * @brief stage-I: we conduct heuristic and preprocessing stage
+ * i.e., KPHeuris
+ */
+void heuris()
+{
+	input_n = g.n;
+
+#ifdef EGO
+	EgoHeuris();
+	return;
+#endif
+
+	FastHeuris();
+	StrongHeuris(); // generate n subgraphs and compute larger lb
+}
+
+/**
+ * @brief branch and bound searching
+ */
+void bnb()
+{
+	Graph_reduced *G;
+	G = new Graph_reduced_adjacent_list(g);
+	Branch branch(*G, lb);
+	branch.IE_framework();						  // generate n subgraphs
+	if (solution.size() < branch.solution.size()) // record the max plex
+	{
+		solution.clear();
+		for (int v : branch.solution)
+			solution.insert(v);
+	}
+}
 
 int main(int argc, char *argv[])
 {
-	cmd = CommandLine(argc, argv);
-
-	bool dense_search = cmd.GetOptionValue("-dense", "false") == "true";
-	bool verify = cmd.GetOptionValue("-verify", "false") == "true";
-
-	printf("\n-----------------------------------------------------------------------------------------\n");
-	strncpy(filename, argv[1], LEN_LIMIT);
-	int k = atoi(argv[2]);
-	Graph *graph = new Graph(filename, k);
-	graph->twoHopG = cmd.GetOptionValue("-twoHopG", "true") == "true";
-	graph->topCTCP = cmd.GetOptionValue("-topCTCP", "true") == "true";
-	graph->kpex_heur = cmd.GetOptionValue("-kpexHeur", "true") == "true";
-	graph->read();
-
-	if (verify)
+	PARA = CommandLine(argc, argv);
+	if (argc < 3)
 	{
-		graph->verify_kplex();
-		return 0;
+		printf("2 params are required !!! \n");
+		printf("usage: ./kPEX graph_path k\n");
+		exit(1);
 	}
-	graph->search();
-	if (dense_search)
-		graph->search_dense();
+	file_path = string(argv[1]);
+	paramK = atoi(argv[2]);
+	g.readFromFile(file_path);
 
-	// delete graph; // there are some bugs in releasing memory
-	printf("-----------------------------------------------------------------------------------------\n\n");
+	algorithm_start_time = get_system_time_microsecond();
+
+	// KPHeuris
+	puts("------------------{start KPHeuris}---------------------");
+	Timer prepro("heuristic and preprocess");
+	heuris();
+	prepro.print_time();
+	print_heuris_log();
+
+	Graph G(g);
+	G.search();
+
+	ui heuris_size = solution.size();
+
+	bool dense_search = PARA.GetOptionValue("-dense", "false") == "true";
+	bool verify = PARA.GetOptionValue("-verify", "false") == "true";
 }
 
 Graph::Graph(const char *_dir, const int _K)
@@ -211,6 +417,18 @@ void Graph::read_csv()
 	}
 	printf("n=%llu, m=%llu\n", n, m);
 }
+Graph::Graph(kPEXGraph &g)
+{
+	n = g.n;
+	m = g.m;
+	K = PARA.K;
+	dir = PARA.dir;
+	printf("reduced graph n= %d m= %d lb= %d\n", n, m / 2, lb);
+	pstart = new ept[n + 1];
+	edges = new ui[m];
+	std::copy(g.pstart, g.pstart + n + 1, pstart);
+	std::copy(g.edge_to, g.edge_to + m, edges);
+}
 void Graph::read()
 {
 	if (dir.find(".csv") != std::string::npos)
@@ -278,29 +496,21 @@ void Graph::verify_kplex()
 void Graph::search()
 {
 	Timer t;
-	ui max_degree = 0;
-	for (ui i = 0; i < n; i++)
-	{
-		if (pstart[i + 1] - pstart[i] > max_degree)
-			max_degree = pstart[i + 1] - pstart[i];
-	}
-	heuristic_kplex_max_degree(10);
 	ui oldn = n;
 	ui *peel_sequence = new ui[n];
 	ui *core = new ui[n];
 	ui *degree = new ui[n];
 	char *vis = new char[n];
+	kplex.clear();
+	for (ui u : solution)
+		kplex.push_back(u);
 
-	ListLinearHeap *heap = new ListLinearHeap(n, n - 1);
+	for(ui i=0;i<n;i++) 
+	// if(!is_sorted(edges[pstart[i]], edges[pstart[i+1]])) cout<<"NO ";
+	cout<<pstart[i]<<" "<<pstart[i+1]<<endl;
+		ListLinearHeap *heap = new ListLinearHeap(n, n - 1);
 
-	const ui UB = degen(n, peel_sequence, core, pstart, edges, degree, vis, heap, true);
-
-	// delete heap;
-	// delete[] vis;
-	// delete[] degree;
-
-	if (kplex.size() < 2 * K - 2)
-		kplex.resize(2 * K - 2); // screen out trivial cases
+	const ui UB = degen(n, peel_sequence, core, pstart, edges, degree, vis, heap, false);
 
 	if (kplex.size() < UB)
 	{
@@ -310,10 +520,6 @@ void Graph::search()
 		ui *edgelist_pointer = new ui[m];
 
 		shrink_graph(n, m, peel_sequence, core, out_mapping, nullptr, rid, pstart, edges, true);
-		if (kpex_heur)
-			kpex_heuristic(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
-		else
-			ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
 
 		if (kplex.size() > old_size)
 		{
@@ -325,15 +531,10 @@ void Graph::search()
 			}
 		}
 
-		if (topCTCP and kplex.size() + 1 > 2 * K)
-			CTPrune::core_truss_copruning(n, m, kplex.size() + 1 - K, kplex.size() + 1 - 2 * K, peel_sequence, out_mapping, rid, pstart, edges, degree, true);
-		delete[] core;
-		core = NULL;
-
 		if (n <= kplex.size())
 		{
 			write_one_kplex(kplex);
-			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
+			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.get_time() / 1000000.0);
 			return;
 		}
 
@@ -410,7 +611,8 @@ void Graph::search()
 		{
 			ui u, key;
 			linear_heap->pop_min(u, key);
-			// if(key != 0) printf("u = %u, key = %u\n", u, key);
+			if (key != 0)
+				printf("u = %u, key = %u\n", u, key);
 			if (key < kplex.size() + 1 - K)
 			{
 				if (degree[u] != 0)
@@ -427,8 +629,6 @@ void Graph::search()
 			if (m == 0)
 				break;
 			assert(degree[u] == key);
-			if (thresh.elapsed() / 1e6 >= threshold)
-				break;
 
 			ui ids_n = 0;
 
@@ -450,14 +650,11 @@ void Graph::search()
 							max_n_prune = ids_n;
 						// cout<<"Density"<<density<<" ";
 					}
-					if (K < K_THRESH && ids_n > kplex.size() && vp.size() * 2 < m)
-						subgraph_prune(ids, ids_n, vp, rid, Qv, Qe, exists);
 					if (kplex.size() != pre_size)
 					{
 						for (ui &u : kplex)
 							u = out_mapping[u];
 					}
-
 				} while (kplex.size() != pre_size);
 			}
 			else
@@ -512,8 +709,8 @@ void Graph::search()
 			++search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune / prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
-		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
-		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
+		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.get_time()).c_str());
+		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.get_time()/1000000.0);
 
 		best_n_edges = write_one_kplex(kplex);
 
@@ -534,10 +731,10 @@ void Graph::search()
 	delete[] core;
 	delete[] peel_sequence;
 
-	printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1e6);
+	printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.get_time() / 1e6);
 
-	// printf("\tMaxKPlex_Size: %lu t_Total: %f t_Seesaw: %f\n", kplex.size(), t.elapsed()/1000000.0, 0);
-	// printf("\tMaximum kPlex Size: %lu, Total Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+	// printf("\tMaxKPlex_Size: %lu t_Total: %f t_Seesaw: %f\n", kplex.size(), t.get_time()/1000000.0, 0);
+	// printf("\tMaximum kPlex Size: %lu, Total Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.get_time()).c_str());
 	// printf("*** Node count: %lld\n",nodeCnt);
 	// printf("*** Gamma avg: %.4lf\n",(edgeCnt+0.1)/(nodeCnt+0.1));
 	// printf("*** Sub avg: %.4lf\n",(subSum+0.1)/(subCnt+0.1));
@@ -721,10 +918,10 @@ void Graph::search_dense()
 			++search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune / prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
-		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
-		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
+		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.get_time()).c_str());
+		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.get_time()/1000000.0);
 
-		printf(">>%s-dense \tMaxKPlex_Size: %lu t_Total: %f n_mkp: %d initial_edges: %d densest_kplex_edges: %d\n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size() + 1, t.elapsed() / 1e6, kplex_solver->all_kplexes.size(), init_edges, best_n_edges);
+		printf(">>%s-dense \tMaxKPlex_Size: %lu t_Total: %f n_mkp: %d initial_edges: %d densest_kplex_edges: %d\n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size() + 1, t.get_time() / 1e6, kplex_solver->all_kplexes.size(), init_edges, best_n_edges);
 
 		for (auto &kp : kplex_solver->all_kplexes)
 			for (auto &v : kp)
@@ -748,10 +945,10 @@ void Graph::search_dense()
 	delete[] core;
 	delete[] peel_sequence;
 
-	// printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f #edges: %d\n", dir.substr(dir.find_last_of("/")+1).c_str(), kplex.size(), t.elapsed()/1e6, best_n_edges);
+	// printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f #edges: %d\n", dir.substr(dir.find_last_of("/")+1).c_str(), kplex.size(), t.get_time()/1e6, best_n_edges);
 
-	// printf("\tMaxKPlex_Size: %lu t_Total: %f t_Seesaw: %f\n", kplex.size(), t.elapsed()/1000000.0, 0);
-	// printf("\tMaximum kPlex Size: %lu, Total Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+	// printf("\tMaxKPlex_Size: %lu t_Total: %f t_Seesaw: %f\n", kplex.size(), t.get_time()/1000000.0, 0);
+	// printf("\tMaximum kPlex Size: %lu, Total Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.get_time()).c_str());
 	// printf("*** Node count: %lld\n",nodeCnt);
 	// printf("*** Gamma avg: %.4lf\n",(edgeCnt+0.1)/(nodeCnt+0.1));
 	// printf("*** Sub avg: %.4lf\n",(subSum+0.1)/(subCnt+0.1));
@@ -1284,7 +1481,7 @@ void Graph::heuristic_kplex_max_degree(ui processed_threshold)
 	delete[] next;
 	delete[] degree;
 
-	printf("*** Heuristic kplex size: %lu, time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+	printf("*** Heuristic kplex size: %lu, time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.get_time()).c_str());
 }
 
 // degeneracy-based k-plex
@@ -1363,7 +1560,7 @@ ui Graph::degen(ui n, ui *peel_sequence, ui *core, ept *pstart, ui *edges, ui *d
 		}
 
 		if (output)
-			printf("*** Degeneracy k-plex size: %u, max_core: %u, UB: %u, Time: %s (microseconds)\n", new_size - idx, max_core, UB, Utility::integer_to_string(t.elapsed()).c_str());
+			printf("*** Degeneracy k-plex size: %u, max_core: %u, UB: %u, Time: %s (microseconds)\n", new_size - idx, max_core, UB, Utility::integer_to_string(t.get_time()).c_str());
 
 		if (output && new_size - idx > kplex.size())
 		{
@@ -1918,7 +2115,7 @@ void Graph::ego_degen(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges, ui 
 #endif
 
 	if (output)
-		printf("*** EGo-Degen kPlex size: %lu, Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+		printf("*** EGo-Degen kPlex size: %lu, Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.get_time()).c_str());
 }
 void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges, ui *degree, ui *rid, char *vis, ListLinearHeap *heap, ui *edgelist_pointer, bool output)
 {
@@ -1940,7 +2137,8 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 	if (edgelist_pointer == nullptr)
 		edgelist_pointer = new ui[m];
 	ept *pstart_s = pend_buf;
-	ui *pend_s = rid;
+	ui *pend_s = new ui[n + 1];
+	// ui *pend_s = rid;
 	ui *edges_s = edgelist_pointer;
 
 	vector<ui> Q;
@@ -2030,7 +2228,7 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 				found = true;
 				continue;
 			}
-
+			remaining.push_back(v);
 			vis[v] = 0;
 			for (ept j = pstart_s[v]; j < pend_s[v]; j++)
 				if (vis[edges_s[j]])
@@ -2040,12 +2238,11 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 		for (ui j = 0; j < vs.size(); j++)
 			vis[vs[j]] = 0;
 		// cout<<u<<": "; for(ui i=)
-		auto is_neigh = [&](ui uu, ui v)
+		auto is_neigh = [&](ui u, ui v)
 		{
-			if (uu == u)
-				return std::find(edges + pstart[uu], edges + pend[uu], v) != edges + pend[uu];
-			else
-				return std::find(edges_s + pstart_s[uu], edges_s + pend_s[uu], v) != edges_s + pend_s[uu];
+			if (rid[u] > rid[v])
+				swap(u, v);
+			return std::find(edges + pstart[u], edges + pend[u], v) != edges + pend[u];
 		};
 		auto get_nn_cnt = [&](ui u)
 		{
@@ -2058,40 +2255,43 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 
 		vector<ui> &nn = Q;
 		nn.clear();
-		for (ui u : kplex)
-			nn.push_back(get_nn_cnt(u));
-
-		while (!remaining.empty())
+		if (found)
 		{
-			bool ok = true;
-			ui u = remaining.back();
-			remaining.pop_back();
-			ui nn_cnt = 0;
-			for (ui i = 0; i < kplex.size(); i++)
+			for (ui u : kplex)
+				nn.push_back(get_nn_cnt(u));
+
+			while (!remaining.empty())
 			{
-				ui w = kplex[i];
-				if (!is_neigh(u, w))
+				bool ok = true;
+				ui u = remaining.back();
+				remaining.pop_back();
+				ui nn_cnt = 0;
+				for (ui i = 0; i < kplex.size(); i++)
 				{
-					nn_locs[nn_cnt++] = i;
-					if (nn[i] == K)
+					ui w = kplex[i];
+					if (!is_neigh(u, w))
+					{
+						nn_locs[nn_cnt++] = i;
+						if (nn[i] == K)
+						{
+							ok = false;
+							break;
+						}
+					}
+					if (nn_cnt == K)
 					{
 						ok = false;
 						break;
 					}
 				}
-				if (nn_cnt == K)
-				{
-					ok = false;
-					break;
-				}
+				if (!ok)
+					continue;
+				// u can be added to kplex now.
+				kplex.push_back(u);
+				nn.push_back(nn_cnt + 1); //+1 because u is also added to kplex now
+				for (ui i = 0; i < nn_cnt; i++)
+					nn[nn_locs[i]]++;
 			}
-			if (!ok)
-				continue;
-			// u can be added to kplex now.
-			kplex.push_back(u);
-			nn.push_back(nn_cnt + 1); //+1 because u is also added to kplex now
-			for (ui i = 0; i < nn_cnt; i++)
-				nn[nn_locs[i]]++;
 		}
 	}
 	for (ui i = 0; i < n; i++)
@@ -2105,5 +2305,5 @@ void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges
 #endif
 
 	if (output)
-		printf("*** EGo-Degen kPlex size: %lu, Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+		printf("*** EGo-Degen kPlex size: %lu, Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.get_time()).c_str());
 }

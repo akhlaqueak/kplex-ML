@@ -2,7 +2,6 @@
 #define _KPLEX_BB_MATRIX_
 
 #include "Utility.h"
-#include "Timer.h"
 // #define _SECOND_ORDER_PRUNING_
 
 #define CSIZE (R_end - S_end)
@@ -86,14 +85,14 @@ public:
 		max_level = 0;
 		best_n_edges = 0;
 		all_kplex_search = _ds;
-		branching = cmd.GetOptionValue("-branching", "Default-Br");
-		bounding = cmd.GetOptionValue("-bounding", "None");
-		UBR2 = cmd.GetOptionValue("-UBR2", "true") == "true";
-		BR1 = cmd.GetOptionValue("-BR1", "true") == "true";
-		BR2 = cmd.GetOptionValue("-BR2", "true") == "true";
-		RR1 = cmd.GetOptionValue("-RR1", "true") == "true";
-		RR2 = cmd.GetOptionValue("-RR2", "true") == "true";
-		RR3 = cmd.GetOptionValue("-RR3", "true") == "true";
+		branching = PARA.GetOptionValue("-branching", "Default-Br");
+		bounding = PARA.GetOptionValue("-bounding", "None");
+		UBR2 = PARA.GetOptionValue("-UBR2", "true") == "true";
+		BR1 = PARA.GetOptionValue("-BR1", "true") == "true";
+		BR2 = PARA.GetOptionValue("-BR2", "true") == "true";
+		RR1 = PARA.GetOptionValue("-RR1", "true") == "true";
+		RR2 = PARA.GetOptionValue("-RR2", "true") == "true";
+		RR3 = PARA.GetOptionValue("-RR3", "true") == "true";
 	}
 
 	~KPLEX_BB_MATRIX()
@@ -275,7 +274,7 @@ public:
 		initialization(R_end, false);
 		if (R_end)
 			BB_search(0, R_end, 1, 0);
-		printf("Maximum %u-plex size: %u, time excluding reading: %s (micro seconds)\n", K, best_solution_size, Utility::integer_to_string(t.elapsed()).c_str());
+		printf("Maximum %u-plex size: %u, time excluding reading: %s (micro seconds)\n", K, best_solution_size, Utility::integer_to_string(t.get_time()).c_str());
 		return 0;
 	}
 
