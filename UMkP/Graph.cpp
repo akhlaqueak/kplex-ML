@@ -258,6 +258,9 @@ Graph::Graph(const char *_dir, const int _K)
 
 	n = m = 0;
 
+	twoHopG = PARA.GetOptionValue("-twoHopG", "true") == "true";
+	bool verify = PARA.GetOptionValue("-verify", "false") == "true";
+
 	pstart = nullptr;
 	pend = pend_buf = nullptr;
 	edges = nullptr;
