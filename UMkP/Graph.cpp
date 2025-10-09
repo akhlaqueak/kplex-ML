@@ -309,7 +309,8 @@ void Graph::search()
 		ui *edgelist_pointer = new ui[m];
 
 		shrink_graph(n, m, peel_sequence, core, out_mapping, nullptr, rid, pstart, edges, true);
-		ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
+		// ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
+		kpex_heuristic(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
 
 		if (kplex.size() > old_size)
 		{
@@ -657,7 +658,7 @@ void Graph::search_dense()
 			if (key < kplex.size() + 1 - K)
 			{
 				if (degree[u] != 0)
-				{ 
+				{
 					// degree[u] == 0 means u is deleted. it could be the case that degree[u] == 0, but key[u] > 0, as key[u] is not fully updated in linear_heap
 					Qv[0] = u;
 					Qv_n = 1;
@@ -720,7 +721,7 @@ void Graph::search_dense()
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
 
-		printf(">>%s-dense \tMaxKPlex_Size: %lu t_Total: %f n_mkp: %d initial_edges: %d densest_kplex_edges: %d\n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size()+1, t.elapsed() / 1e6, kplex_solver->all_kplexes.size(), init_edges, best_n_edges);
+		printf(">>%s-dense \tMaxKPlex_Size: %lu t_Total: %f n_mkp: %d initial_edges: %d densest_kplex_edges: %d\n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size() + 1, t.elapsed() / 1e6, kplex_solver->all_kplexes.size(), init_edges, best_n_edges);
 
 		for (auto &kp : kplex_solver->all_kplexes)
 			for (auto &v : kp)
@@ -1902,6 +1903,186 @@ void Graph::ego_degen(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges, ui 
 		}
 		for (ui j = 0; j < vs.size(); j++)
 			vis[vs[j]] = 0;
+	}
+	for (ui i = 0; i < n; i++)
+		pend_buf[i] = pend[i];
+	for (ui i = 0; i < n; i++)
+		for (ept j = pstart[i]; j < pend[i]; j++)
+			edges[pend_buf[edges[j]]++] = i;
+#ifndef NDEBUG
+	for (ui i = 0; i < n; i++)
+		assert(pend_buf[i] == pstart[i + 1]);
+#endif
+
+	if (output)
+		printf("*** EGo-Degen kPlex size: %lu, Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
+}
+void Graph::kpex_heuristic(ui n, ui m, ui *peel_sequence, ept *pstart, ui *edges, ui *degree, ui *rid, char *vis, ListLinearHeap *heap, ui *edgelist_pointer, bool output)
+{
+	Timer t;
+	if (pend == nullptr)
+		pend = new ept[n + 1];
+	for (ui i = 0; i < n; i++)
+		rid[peel_sequence[i]] = i;
+	for (ui i = 0; i < n; i++)
+	{
+		ept &end = pend[i] = pstart[i];
+		for (ept j = pstart[i]; j < pstart[i + 1]; j++)
+			if (rid[edges[j]] > rid[i])
+				edges[end++] = edges[j];
+	}
+
+	if (pend_buf == nullptr)
+		pend_buf = new ept[n + 1];
+	if (edgelist_pointer == nullptr)
+		edgelist_pointer = new ui[m];
+	ept *pstart_s = pend_buf;
+	ui *pend_s = rid;
+	ui *edges_s = edgelist_pointer;
+
+	vector<ui> Q;
+	vector<ui> vs;
+	vector<ui> remaining;
+	remaining.reserve(n);
+	memset(vis, 0, sizeof(char) * n);
+	for (ui i = n; i > 0; i--)
+	{
+		ui u = peel_sequence[i - 1];
+		if (pend[u] - pstart[u] < kplex.size())
+			continue;
+
+		vs.clear();
+		for (ui j = pstart[u]; j < pend[u]; j++)
+		{
+			vs.push_back(edges[j]);
+			vis[edges[j]] = 1;
+			degree[edges[j]] = 0;
+		}
+		for (ui j = 0; j < vs.size(); j++)
+			for (ui k = pstart[vs[j]]; k < pend[vs[j]]; k++)
+				if (vis[edges[k]])
+				{
+					++degree[vs[j]];
+					++degree[edges[k]];
+				}
+		pend_s[vs[0]] = pstart_s[vs[0]] = 0;
+		for (ui j = 1; j < vs.size(); j++)
+			pend_s[vs[j]] = pstart_s[vs[j]] = pstart_s[vs[j - 1]] + degree[vs[j - 1]];
+		for (ui j = 0; j < vs.size(); j++)
+			for (ui k = pstart[vs[j]]; k < pend[vs[j]]; k++)
+				if (vis[edges[k]])
+				{
+					edges_s[pend_s[vs[j]]++] = edges[k];
+					edges_s[pend_s[edges[k]]++] = vs[j];
+				}
+
+		ui threshold = (kplex.size() > K ? kplex.size() - K : 0); // all vertices with degree < threshold can be pruned
+		Q.clear();
+		for (ui j = 0; j < vs.size(); j++)
+			if (degree[vs[j]] < threshold)
+			{
+				Q.push_back(vs[j]);
+				vis[vs[j]] = 0;
+			}
+		for (ui j = 0; j < Q.size(); j++)
+			for (ui k = pstart_s[Q[j]]; k < pend_s[Q[j]]; k++)
+				if (vis[edges_s[k]])
+				{
+					if ((degree[edges_s[k]]--) == threshold)
+					{
+						Q.push_back(edges_s[k]);
+						vis[edges_s[k]] = 0;
+					}
+				}
+		ui cnt = 0;
+		for (ui j = 0; j < vs.size(); j++)
+			if (vis[vs[j]])
+				vs[cnt++] = vs[j];
+		assert(cnt + Q.size() == vs.size());
+		vs.resize(cnt);
+		if (cnt == 0)
+			continue;
+
+		heap->init(vs.size(), vs.size() - 1, vs.data(), degree);
+		bool found = false;
+
+		for (ui ii = 0; ii < vs.size(); ii++)
+		{
+			ui v, key;
+			heap->pop_min(v, key);
+			if (found)
+			{
+				kplex.push_back(v);
+				continue;
+			}
+			if (vs.size() - ii + 1 <= kplex.size())
+				break;
+
+			if (key + K >= vs.size() - ii)
+			{
+				kplex.clear();
+				kplex.push_back(u);
+				kplex.push_back(v);
+				found = true;
+				continue;
+			}
+
+			vis[v] = 0;
+			for (ept j = pstart_s[v]; j < pend_s[v]; j++)
+				if (vis[edges_s[j]])
+					heap->decrement(edges_s[j], 1);
+		}
+
+		for (ui j = 0; j < vs.size(); j++)
+			vis[vs[j]] = 0;
+
+		auto is_neigh = [&](ui u, ui v)
+		{
+			return binary_search(pstart[u], pend[u], v);
+		};
+		auto get_nn_cnt = [&](ui u)
+		{
+			ui nn_cnt = 0;
+			for (ui v : kplex)
+				if (!is_neigh(u, v))
+					nn_cnt++;
+			return nn_cnt;
+		};
+
+		vector<ui> &nn = Q;
+		nn.clear();
+		for (ui u : kplex)
+			nn.push_back(get_nn_cnt(u));
+
+		for (auto it = std::rbegin(remaining); it != std::rend(remaining); ++it)
+		{
+			bool ok = true;
+			ui u = *it, nn_cnt = 0;
+			ui *nn_locs = rid;
+			for (ui i = 0; i < kplex.size(); i++)
+			{
+				ui w = kplex[i];
+				if (!is_neigh(u, w))
+				{
+					nn_locs[nn_cnt++] = i;
+					if (nn[i] == K)
+					{
+						ok = false;
+						break;
+					}
+				}
+				if (nn_cnt == K)
+				{
+					ok = false;
+					break;
+				}
+			}
+			if(!ok) continue;
+			// u can be added to kplex now. 
+			kplex.push_back(u);
+			nn.push_back(nn_cnt+1); //+1 because u is also added to kplex now
+			for(ui i=0;i<nn_cnt;i++) nn[nn_locs[i]]++;
+		}
 	}
 	for (ui i = 0; i < n; i++)
 		pend_buf[i] = pend[i];
