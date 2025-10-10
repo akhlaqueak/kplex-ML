@@ -14,7 +14,7 @@ run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="$(IFS=_; echo "$*").txt"
-    srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive $prog ~/graphs/test25/$1 $2 -algorithm $3 -branching $4 > $outfile 2>&1 &
+    srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/test25/$1 $2 -algorithm $3 -branching $4 > $outfile 2>&1 &
 }
 
 run_jobs() {
@@ -22,9 +22,8 @@ run_jobs() {
         for k in $krange; do
             for c in "${configs[@]}"; do
                 read -r first rest <<< "$c"
-                new_c="$first $ds $k $rest"
-                echo "$new_c"
-                # run_with_output ./kPEX $ds $k $alg $br
+                c="$first $ds $k $rest"
+                run_with_output $c
             done
         done
     done
@@ -159,7 +158,7 @@ get_results_dense() {
     done
     cat $result
 }
-get_results_dense
+
 
 get_kpsize() {
     # solutions='kplex-full kplex-doubt kPlexS Maple'
