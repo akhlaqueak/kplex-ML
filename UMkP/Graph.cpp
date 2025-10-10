@@ -243,6 +243,10 @@ int main(int argc, char *argv[])
 	print_heuris_log();
 
 	Graph G(g);
+	G.twoHopG = PARA.GetOptionValue("-twoHopG", "true") == "true";
+	G.topCTCP = PARA.GetOptionValue("-topCTCP", "true") == "true";
+	G.kpex_heur = PARA.GetOptionValue("-kpexHeur", "false") == "true";
+
 	G.search();
 
 	ui heuris_size = solution.size();

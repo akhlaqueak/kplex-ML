@@ -66,7 +66,7 @@ public:
 		n = 0;
 		matrix = nullptr;
 		matrix_size = 0;
-
+		forward_sol = false;
 #ifdef _SECOND_ORDER_PRUNING_
 		cn = nullptr;
 		removed_edges_n = 0;
