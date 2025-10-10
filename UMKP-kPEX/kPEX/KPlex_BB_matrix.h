@@ -209,7 +209,7 @@ public:
 				matrix[u * n + v] = 1;
 		}
 
-		sparse = ne / n / (n - 1) < 0.5;
+		sparse = ne / n / (n - 1) < 0.9;
 		// sparse=false;
 
 #ifndef NDEBUG

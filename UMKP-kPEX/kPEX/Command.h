@@ -22,6 +22,23 @@ public:
     RR3 = GetOptionValue("-RR3", "true") == "true";
 
     cout<<"----------------------Parameters-----------------------\n";
+    vector<string> branchings={"Default-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br"};
+    if(find(branchings.begin(), branchings.end(), branching)==branchings.end()) {
+      cout<<"Not a valid selection for branching, using Default-Br"<<endl;
+      cout<<"Valid branching methods: "; for(auto& b: branchings) cout<<b<<" ";
+      cout<<endl;
+      branching = "Default-Br";
+    }
+
+    vector<string> boundings={"None", "S-Bound", "R-Bound", "SR-Bound", "AltRB"};
+    if(find(boundings.begin(), boundings.end(), bounding)==boundings.end()) {
+      cout<<"Not a valid selection for bounding, using 'None'"<<endl;
+      cout<<"Valid bounding methods: "; for(auto& b: boundings) cout<<b<<" ";
+      cout<<endl;
+      branching = "None";
+    }
+
+
     cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<alg<<endl;
     cout<<"K: "<<argv[2]<<endl;
