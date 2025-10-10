@@ -14,7 +14,7 @@ private:
 	char *matrix;
 	long long matrix_size;
 	set<int> solution;
-
+	ui root_v;
 #ifdef _SECOND_ORDER_PRUNING_
 	ui *cn;
 	std::queue<std::pair<ui, ui>> Qe;
@@ -209,7 +209,8 @@ public:
 				matrix[u * n + v] = 1;
 		}
 
-		sparse = ne / n / (n - 1) < 0.9;
+		sparse = ne / n / (n - 1) < 0.5;
+		// sparse=false;
 
 #ifndef NDEBUG
 		// printf("load graph of size n=%lld, m=%lu\n", n, vp.size());
@@ -217,10 +218,11 @@ public:
 #endif
 	}
 
-	void kPlex(ui lb, ui UB_, set<int> &solution, ui root_v)
+	void kPlex(ui lb, ui _UB_, set<int> &solution, ui root_v)
 	{
 		this->lb = lb;
-		_UB_ = UB_;
+		this->_UB_ = _UB_;
+		this->root_v = root_v;
 		if (K <= 1)
 		{
 			printf("For the special case of computing maximum clique, please invoke SOTA maximum clique solver!\n");
@@ -230,36 +232,11 @@ public:
 		ui R_end;
 		initialization(R_end, false);
 		if (R_end && lb < _UB_)
-			BB_search(0, R_end, 1, root_v, true);
+			BB_search(0, R_end, 1);
 		if (this->solution.size() > solution.size())
 			solution = this->solution;
 	}
 
-	int main(int argc, char *argv[])
-	{
-		if (argc < 3)
-		{
-			printf("Usage: [1]exe [2]dir [3]k\n");
-			return 0;
-		}
-		readGraph_binary(argv[1]);
-		printf("Finish reading graph\n");
-		K = atoi(argv[2]);
-		if (K == 1)
-		{
-			printf("For the special case of computing maximum clique, please invoke SOTA maximum clique solver!\n");
-			return 0;
-		}
-		lb = 1;
-		_UB_ = n;
-		ui R_end;
-		Timer t;
-		initialization(R_end, false);
-		if (R_end)
-			BB_search(0, R_end, 1, 0);
-		printf("Maximum %u-plex size: %u, time excluding reading: %s (micro seconds)\n", K, lb, Utility::integer_to_string(t.get_time()).c_str());
-		return 0;
-	}
 
 private:
 	void readGraph_binary(char *dir)
@@ -465,7 +442,7 @@ private:
 		return true;
 	}
 
-	void BB_search(ui S_end, ui R_end, ui level, ui root_v, bool root_level = true)
+	void BB_search(ui S_end, ui R_end, ui level)
 	{
 		if (S_end > lb)
 			store_solution(S_end);
@@ -525,7 +502,7 @@ private:
 #endif
 
 		// choosing 0 as branching vertex
-		if (root_level && SR_rid[root_v] < R_end && !move_u_to_S_with_prune(root_v, S_end, R_end, level))
+		if (S_end==0 && SR_rid[root_v] < R_end && !move_u_to_S_with_prune(root_v, S_end, R_end, level))
 		{
 			// printf("here1\n");
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
@@ -693,7 +670,7 @@ private:
 			ui pre_best_solution_size = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 			ui u = SR[S_end];
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
-				BB_search(S_end, R_end, level + 1, false);
+				BB_search(S_end, R_end, level + 1);
 
 			// the second branch exclude u from G
 			// This version of 2nd branch restores u through remove_u function
@@ -711,7 +688,7 @@ private:
 				if (succeed && lb > pre_best_solution_size)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
 				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
-					BB_search(S_end, R_end, level + 1, false);
+					BB_search(S_end, R_end, level + 1);
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 			return;
@@ -751,7 +728,7 @@ private:
 
 				if (lb >= _UB_)
 					return;
-				if (root_level)
+				if (level==1)
 					found_larger = false;
 				if (found_larger)
 					continue;
@@ -766,7 +743,7 @@ private:
 				}
 #endif
 				if (move_u_to_S_with_prune(u, S_end, R_end, level))
-					BB_search(S_end, R_end, level + 1, false, false);
+					BB_search(S_end, R_end, level + 1);
 				restore_SR_and_edges(S_end, R_end, t_old_S_end, t_old_R_end, level, t_old_removed_edges_n);
 			}
 
@@ -795,7 +772,7 @@ private:
 			}
 #endif
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
-				BB_search(S_end, R_end, level + 1, false);
+				BB_search(S_end, R_end, level + 1);
 
 			// the second branch exclude u from G
 			// This version of 2nd branch restores u through remove_u function
@@ -817,7 +794,7 @@ private:
 				if (succeed && lb > pre_best_solution_size)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
 				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
-					BB_search(S_end, R_end, level + 1, false);
+					BB_search(S_end, R_end, level + 1);
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 		}
@@ -912,34 +889,7 @@ private:
 	{
 		return K - (S_end - degree_in_S[u]);
 	}
-	// ui bound(ui S_end, ui R_end, ui u, std::vector<ui>& R) {
-	// 	char *t_matrix=matrix+u*n;
-	// 	vp2.clear();
-	// 	vp2.reserve(S_end);
-	// 	for(ui i = 0;i < S_end;i ++) vp2.push_back(std::make_pair(support(S_end, SR[i]), SR[i]));
-	// 	for(ui i=0;i<S_end;i++)if(!t_matrix[SR[i]])vp2[i].first--;
-	// 	// for(ui i = 0;i < S_end;i ++) vp.push_back(std::make_pair(-(degree_in_S[SR[i]]-neiInP[SR[i]]), SR[i]));
-	// 	sort(vp2.begin(), vp2.end());
-	// 	ui UB = S_end+1, cursor = 0;
-	// 	for(ui i = 0;i < (ui)vp2.size(); i++) {
-	// 		ui u = vp2[i].second;
-	// 		if(vp2[i].first == 0) continue;// boundary vertex
-	// 		ui count = 0;
-	// 		char *t_matrix = matrix + u*n;
-	// 		for(ui j = cursor;j < R.size();j ++) if(!t_matrix[R[j]]) {
-	// 			if(j != cursor + count) std::swap(R[j], R[cursor+count]);
-	// 			++ count;
-	// 		}
-	// 		UB += std::min(count, vp2[i].first);
 
-	// 		if(UB <= lb)
-	// 			cursor += count;
-	// 		else
-	// 			return UB;
-	// 	}
-	// 	UB+=(R.size()-cursor);
-	// 	return UB;
-	// }
 	bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level)
 	{
 		while (true)

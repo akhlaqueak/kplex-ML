@@ -11,7 +11,7 @@ public:
 
   CommandLine(int _argc, char **_argv) : argc(_argc), argv(_argv)
   {
-    alg = GetOptionValue("-alg", "UMKP");
+    alg = GetOptionValue("-algorithm", "UMKP");
     branching = GetOptionValue("-branching", "Default-Br");
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
@@ -22,7 +22,9 @@ public:
     RR3 = GetOptionValue("-RR3", "true") == "true";
 
     cout<<"----------------------Parameters-----------------------\n";
+    cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<alg<<endl;
+    cout<<"K: "<<argv[2]<<endl;
     cout<<"Branching: "<<branching<<endl;
     cout<<"Bounding: "<<bounding<<endl;
     cout<<"UBR2: "<<UBR2<<endl;
