@@ -10,48 +10,50 @@
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 #SBATCH --mail-type=END
 
-run_with_output() {
-    prog="$1"     # first argument is the program name
-    shift         # remove program name from the list
-    outfile="$(IFS=_; echo "$*").txt"
-    srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
-}
-MAX_JOBS=1000
-run_jobs() {
-    local count=0
-    for ds in $datasets; do
-        for k in $krange; do
-            for c in "${configs[@]}"; do
-                read -r first rest <<< "$c"
-                c="$first $ds $k $rest"
-                run_with_output $c
-                ((count++))
+# run_with_output() {
+#     prog="$1"     # first argument is the program name
+#     shift         # remove program name from the list
+#     outfile="$(IFS=_; echo "$*").txt"
+#     # srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
+#     echo "srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1" >> configs.txt
+# }
+# MAX_JOBS=1000
+# run_jobs() {
+#     local count=0
+#     for ds in $datasets; do
+#         for k in $krange; do
+#             for c in "${configs[@]}"; do
+#                 read -r first rest <<< "$c"
+#                 c="$first $ds $k $rest"
+#                 run_with_output $c
+#                 # ((count++))
 
-                # If at concurrency limit, wait for *one* job to finish
-                if ((count >= MAX_JOBS)); then
-                    wait -n      # waits for any one background srun to end
-                    ((count--))  # free one slot
-                    sleep 1
-                fi
-            done
-        done
-    done
+#                 # # If at concurrency limit, wait for *one* job to finish
+#                 # if ((count >= MAX_JOBS)); then
+#                 #     wait -n      # waits for any one background srun to end
+#                 #     ((count--))  # free one slot
+#                 #     sleep 1
+#                 # fi
+#             done
+#         done
+#     done
 
-    wait  # wait for remaining sruns to complete
-}
+#     wait  # wait for remaining sruns to complete
+# }
 
-datasets=`ls ~/graphs/large-collection/*.bin | awk -F/ '{print $NF}'`
-krange='2 3 4 5 6 7 8 9 10 15 20'
-configs=(
-   "UMKP"
-   "UMKPEX -bounding AltRB"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
-)
-run_jobs
+# datasets=`ls ~/graphs/large-collection/*.bin | awk -F/ '{print $NF}'`
+# krange='2 3 4 5 6 7 8 9 10 15 20'
+# configs=(
+#    "UMKP"
+#    "UMKPEX -bounding AltRB"
+#    "UMKPEX -algorithm kPEX"
+#    "UMKPEX -algorithm kPEX -branching S-Br"
+#    "UMKPEX -algorithm kPEX -branching R-Br"
+#    "UMKPEX -algorithm kPEX -branching Pivot-Br"
+# )
+# run_jobs
 
+srun --ntasks=$SLURM_NTASKS bash worker.sh
 
     get_results() {
         for k in $krange; do
