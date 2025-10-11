@@ -9,7 +9,7 @@
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 #SBATCH --mail-type=END
-#SBATCH --mail-user=akhlaque.ak@gmail.com
+
 run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list

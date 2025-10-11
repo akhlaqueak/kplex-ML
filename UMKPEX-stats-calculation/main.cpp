@@ -57,6 +57,7 @@ void print_heuris_log()
 
     if (g.n <= lb)
     {
+            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
         puts("------------------{whole procedure: kPEX}---------------------");
@@ -83,7 +84,6 @@ void FastHeuris()
         printf("After degeneracy and weak reduce, n= %u , m= %u , lb= %d , use time %.4lf s\n", g.n, g.m / 2, lb, t.get_time() / 1e6);
         if (lb >= g.n)
         {
-            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []";
             g.n = 0;
             FastHeuris_lb = lb;
             FastHeuris_time = t.get_time();
@@ -104,6 +104,7 @@ void FastHeuris()
 
         if (lb >= g.n)
         {
+            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
             g.n = 0;
             FastHeuris_time = t.get_time();
             print_heuris_log();
@@ -250,7 +251,7 @@ int main(int argc, char *argv[])
     g.degeneracy_and_reduce(lb);
     if(max_core_g+paramK<=lb) 
     {
-        cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []";
+        cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
         return 0;
     }
 
