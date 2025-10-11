@@ -1,3 +1,4 @@
+
 #include "Graph.h"
 #include "Command.h"
 #include "KPlex_BB_matrix.h"
@@ -20,6 +21,7 @@ double StrongHeuris_time;
 double strong_reduce_time;
 int FastHeuris_lb;
 int input_n;
+
 
 void print_solution()
 {
@@ -81,6 +83,7 @@ void FastHeuris()
         printf("After degeneracy and weak reduce, n= %u , m= %u , lb= %d , use time %.4lf s\n", g.n, g.m / 2, lb, t.get_time() / 1e6);
         if (lb >= g.n)
         {
+            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []";
             g.n = 0;
             FastHeuris_lb = lb;
             FastHeuris_time = t.get_time();
@@ -241,22 +244,38 @@ int main(int argc, char *argv[])
     Timer prepro("heuristic and preprocess");
     heuris();
     prepro.print_time();
-    print_heuris_log();
+    // print_heuris_log();
 
     ui heuris_size = solution.size();   
+    g.degeneracy_and_reduce(lb);
+    if(max_core_g+paramK<=lb) 
+    {
+        cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []";
+        return 0;
+    }
+
+    cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "<<max_core_g<<" [";
+    // cout<<"max_d: "<<max_d_g;
+    // cout<<" max_core: "<<max_core_g;
+    // cout<<" [";
+    for(auto& p: cores){
+        printf("(%d,%d)", p.first, p.second);
+        if(p!=cores.back())printf(",");
+    }
+    cout<<"]"<<endl;
     // recursive branch and bound
-    puts("------------------{start BRB_Rec}---------------------");
-    bnb();
+    // puts("------------------{start BRB_Rec}---------------------");
+    // bnb();
 
-    print_solution();
+    // print_solution();
 
-    puts("------------------{whole procedure: kPEX}---------------------");
-    double bnb_time = (get_system_time_microsecond() - algorithm_start_time-total_heuris_time);
+    // puts("------------------{whole procedure: kPEX}---------------------");
+    // double bnb_time = (get_system_time_microsecond() - algorithm_start_time-total_heuris_time);
 
-    double after_maxkp_percent = (get_system_time_microsecond() - after_maxkp_time)/bnb_time;
-    // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-    // printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf after_maxkp_percent: %.4lf change_after_heur: %d\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6, after_maxkp_percent, solution.size()-heuris_size);
-    printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    // double after_maxkp_percent = (get_system_time_microsecond() - after_maxkp_time)/bnb_time;
+    // // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    // // printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf after_maxkp_percent: %.4lf change_after_heur: %d\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6, after_maxkp_percent, solution.size()-heuris_size);
+    // printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
 
     return 0;
 }
