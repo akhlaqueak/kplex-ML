@@ -14,7 +14,7 @@ run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="$(IFS=_; echo "$*").txt"
-    srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/test25/$*  > $outfile 2>&1 &
+    srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
 }
 
 run_jobs() {
