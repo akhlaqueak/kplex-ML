@@ -53,63 +53,20 @@ run_jobs
 
 
     get_results() {
-        result=results.out
-        rm $result
-        echo -en "," >>$result
-        WORD_COUNT=$(echo "$solutions" | wc -w)
         for k in $krange; do
-            echo -en "**k=$k**," >>$result
-            for ((i = 1; i < $WORD_COUNT; i++)); do
-                echo -en "," >>$result
-            done
-            # echo -en "|," >>$result
-        done
-        echo >>$result
-
-        echo -en "datasets," >>$result
-        for k in $krange; do
-            for sol in $solutions; do
-                echo -en "${sol#*-}," >>$result
-            done
-            # echo -en "|," >>$result
-        done
-        echo >>$result
-
-        for fn in $datasets; do
-            # echo -en "$fn," >>$result
-            for k in $krange; do
-
-                line=()
-                outfile=''
-                for sol in $solutions; do
-                    outfile=$fn-$sol-$k.out
-                    op=$(grep ">>" $outfile | head -1)
-                    if [ -z "${op}" ]; then
-                        line+=('9999999999')
-                    else
-                        op=($op)
-                        line+=(${op[-3]})
-                    fi
+            echo " -------------k=$k-----------------"
+            for ds in $datasets; do
+                echo -en ${ds/.bin}
+                for c in "${configs[@]}"; do
+                    read -r first rest <<< "$c"
+                    c="$ds $k${rest:+ $rest}"
+                    outfile="${c// /_}.txt"
+                    awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile"
                 done
-                m=$(printf "%s\n" "${line[@]}" | sort -rn | tail -n1)
-                secm=$(printf "%s\n" "${line[@]}" | sort -rn | tail -n2 | head -n1)
-                echo ${line[@]}
-                for i in "${line[@]}"; do
-                    if [ $i == '9999999999' ]; then
-                        echo -en '×,' >>$result
-                    elif [ $i == $m ]; then
-                        echo $i | bc -l | xargs printf "*%.1f," >>$result
-                    elif [ $i == $secm ]; then
-                        echo $i | bc -l | xargs printf "^%.1f," >>$result
-                    else
-                        echo $i | bc -l | xargs printf "%.1f," >>$result
-                    fi
-                done
-                # echo -en "|," >>$result
+            echo 
             done
-            echo >>$result
         done
-        cat $result
+
     }
     get_results
 

@@ -625,7 +625,7 @@ private:
 				return;
 			}
 
-			if (PARA.bounding == "AltRB" and !alt_RB(S_end, R_end, level))
+			if (PARA.bounding == "AltRB" and CSIZE>3*beta and !alt_RB(S_end, R_end, level))
 			{
 				// printf("here2\n");
 				restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
