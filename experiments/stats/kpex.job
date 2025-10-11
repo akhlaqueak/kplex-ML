@@ -17,9 +17,11 @@ run_with_output() {
     srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:30:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
 }
 
-count=0
 MAX_JOBS=1000
+
 run_jobs() {
+    local count=0
+
     for ds in $datasets; do
         for k in $krange; do
             for c in "${configs[@]}"; do
@@ -27,14 +29,17 @@ run_jobs() {
                 c="$first $ds $k $rest"
                 run_with_output $c
                 ((count++))
-                if ((count % MAX_JOBS == 0)); then
-                    wait  # Wait for current batch to finish
-                    count=0
+
+                # If at concurrency limit, wait for *one* job to finish
+                if ((count >= MAX_JOBS)); then
+                    wait -n      # waits for any one background srun to end
+                    ((count--))  # free one slot
                 fi
             done
         done
     done
-    wait
+
+    wait  # wait for remaining sruns to complete
 }
 
 datasets=`ls ~/graphs/large-collection/*.bin | awk -F/ '{print $NF}'`
