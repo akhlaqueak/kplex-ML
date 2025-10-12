@@ -2,7 +2,6 @@
 
 #SBATCH --job-name=serial             ### Name of the job
 #SBATCH --ntasks=48                    ### Number of Tasks
-#SBATCH --nodes=2
 #SBATCH --cpus-per-task=1              ### Number of Tasks per CPU
 #SBATCH --mem-per-cpu=10G                        ### Memory required, 4 gigabyte
 #SBATCH --partition=medium             ### Cheaha Partition
