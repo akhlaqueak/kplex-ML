@@ -15,6 +15,7 @@ run_with_output() {
     shift         # remove program name from the list
     outfile="logs/$(IFS=_; echo "$*").txt"
     grep -q ">>" $outfile || {
+    # echo $outfile >> test.txt
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:00:05 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
     }
 }
