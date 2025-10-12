@@ -8,7 +8,7 @@
 #SBATCH --time=20:00:00                 ### Estimated Time of Completion, 1 hour
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
-#SBATCH --mail-type=END
+
 
 # run_with_output() {
 #     prog="$1"     # first argument is the program name
