@@ -281,7 +281,13 @@ void Graph::search()
 	for (ui i = 0; i < n; i++)
 	{
 		if (pstart[i + 1] - pstart[i] > max_degree)
-			max_degree = pstart[i + 1] - pstart[i];
+		max_degree = pstart[i + 1] - pstart[i];
+	}
+	
+	if(n<10) 		
+	{
+		printf("!!! Warning: Trivial Case !!!\n");
+		return;
 	}
 	heuristic_kplex_max_degree(10);
 	ui oldn = n;
