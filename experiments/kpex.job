@@ -9,6 +9,8 @@
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
+MAX_JOBS=2000
+count=0
 
 run_with_output() {
     prog="$1"     # first argument is the program name
@@ -17,19 +19,16 @@ run_with_output() {
     grep -q ">>" $outfile || {
     # echo $outfile >> test.txt
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:00:05 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
+        ((count++))
     }
 }
-MAX_JOBS=2000
 run_jobs() {
-    local count=0
     for ds in $datasets; do
         for k in $krange; do
             for c in "${configs[@]}"; do
                 read -r first rest <<< "$c"
                 c="$first $ds $k $rest"
                 run_with_output $c
-                ((count++))
-
                 # If at concurrency limit, wait for *one* job to finish
                 if ((count >= MAX_JOBS)); then
                     wait 
