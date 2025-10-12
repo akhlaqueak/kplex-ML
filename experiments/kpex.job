@@ -18,7 +18,7 @@ run_with_output() {
     outfile="logs/$(IFS=_; echo "$*").txt"
     grep -q ">>" $outfile || {
     # echo $outfile >> test.txt
-        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:00:05 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
+        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
         ((count++))
     }
 }

@@ -41,25 +41,26 @@
 #     wait  # wait for remaining sruns to complete
 # }
 
-# datasets=`ls ~/graphs/large-collection/*.bin | awk -F/ '{print $NF}'`
-# krange='2 3 4 5 6 7 8 9 10 15 20'
-# configs=("UMKPEX")
-# run_jobs
+datasets=`ls ~/graphs/large-collection/*.bin | awk -F/ '{print $NF}'`
+krange='2 3 4 5 6 7 8 9 10 15 20'
+configs=("UMKPEX")
+run_jobs
 
 srun --ntasks=$SLURM_NTASKS bash worker.sh
 
     get_results() {
         for k in $krange; do
-            echo " -------------k=$k-----------------"
             for ds in $datasets; do
-                echo -en ${ds/.bin}
+                echo -en ${ds/.bin} $k >> output.txt
                 for c in "${configs[@]}"; do
                     read -r first rest <<< "$c"
                     c="$ds $k${rest:+ $rest}"
                     outfile="${c// /_}.txt"
-                    awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile"
+                    awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1 } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
+
+                    # awk '/STATS:/ {printf " %s", $1; found=1} END{if(!found) printf " x"}' "$outfile"
                 done
-            echo 
+            echo >> output.txt
             done
         done
 
