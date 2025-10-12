@@ -13,11 +13,10 @@
 run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
-    outfile="$(IFS=_; echo "$*").txt"
+    outfile="logs/$(IFS=_; echo "$*").txt"
     grep -q ">>" $outfile || {
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:00:05 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
     }
-    # echo "timeout 30m ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1" >> config.txt
 }
 MAX_JOBS=2000
 run_jobs() {
