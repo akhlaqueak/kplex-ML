@@ -52,8 +52,23 @@
 #    "UMKPEX -algorithm kPEX -branching Pivot-Br"
 # )
 # run_jobs
+# Load GNU Parallel (available on Cheaha)
+module load parallel
 
-srun --ntasks=$SLURM_NTASKS bash worker.sh
+echo "Job started at $(date)"
+echo "Running from: $(pwd)"
+echo "Nodes allocated:"
+scontrol show hostnames $SLURM_JOB_NODELIST
+echo "--------------------------------------"
+
+# Run commands from the local config.txt in this directory
+# --lb : load balancing (start new jobs as soon as slots free)
+# --delay 0.1 : small delay to avoid bursts
+# --joblog : record progress to a shared scratch location
+srun --ntasks=$SLURM_NTASKS parallel -j $SLURM_NTASKS --delay 0.1 --lb --joblog progress.log < config.txt
+
+echo "Job finished at $(date)"
+
 
     get_results() {
         for k in $krange; do
