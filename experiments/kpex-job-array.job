@@ -6,6 +6,7 @@
 #SBATCH --mem=10G                  # 10 GB memory per task
 #SBATCH --output=logs-array/array-%A.out
 #SBATCH --error=logs-array/array-%A.err
+#SBATCH --partition=medium             ### Cheaha Partition
 
 #------------------------------------------------------------
 # Environment setup
