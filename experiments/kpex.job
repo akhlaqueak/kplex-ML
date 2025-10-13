@@ -9,7 +9,7 @@
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
-MAX_JOBS=2000
+MAX_JOBS=1000
 count=0
 
 run_with_output() {
@@ -17,8 +17,8 @@ run_with_output() {
     shift         # remove program name from the list
     outfile="logs/$(IFS=_; echo "$*").txt"
     if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
-        # srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
-        echo "srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1" >> config.txt
+        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
+        # echo "srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1" >> config.txt
         ((count++))
     fi
 }
