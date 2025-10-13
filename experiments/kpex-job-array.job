@@ -1,20 +1,29 @@
 #!/bin/bash
 #SBATCH -J massive_array_run
-#SBATCH -n 192                     # 192 total CPUs (threads)
+#SBATCH -n 192                     # total concurrent tasks (CPUs)
 #SBATCH -c 1                       # 1 CPU per task
-#SBATCH -t 00:10:00                # each job runs for up to 10 minutes
-#SBATCH --mem=10G                  # 10 GB per process
-#SBATCH -a 1-85755%192             # 85,755 total, 192 concurrent
+#SBATCH -t 00:10:00                # 10 min walltime per task
+#SBATCH --mem=10G                  # 10 GB memory per task
 #SBATCH --output=logs-array/array-%A_%a.out
 #SBATCH --error=logs-array/array-%A_%a.err
 
+#------------------------------------------------------------
+# Environment setup
+#------------------------------------------------------------
 module load openmpi
 mkdir -p logs-array
 
+#------------------------------------------------------------
+# Select the command corresponding to this array index
+#------------------------------------------------------------
 CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" config.txt)
-[[ -z "$CMD" ]] && { echo "Empty line for task $SLURM_ARRAY_TASK_ID"; exit 0; }
+[[ -z "$CMD" ]] && { echo "Empty or invalid line for task $SLURM_ARRAY_TASK_ID"; exit 0; }
 
 echo "[Task $SLURM_ARRAY_TASK_ID on $(hostname)] running: $CMD"
+echo "Array range: $SLURM_ARRAY_TASK_MIN-$SLURM_ARRAY_TASK_MAX"
 
-# Run each command directly; Slurm already applies 10-min limit per array task
+#------------------------------------------------------------
+# Execute the command
+#------------------------------------------------------------
+# Each array element runs independently with 1 CPU, 10 GB memory, 10 min limit
 bash -c "$CMD"
