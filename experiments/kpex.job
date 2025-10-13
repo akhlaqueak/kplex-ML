@@ -9,7 +9,7 @@
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
-MAX_JOBS=1000
+MAX_JOBS=2000
 count=0
 
 run_with_output() {

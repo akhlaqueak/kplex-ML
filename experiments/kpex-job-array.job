@@ -4,8 +4,8 @@
 #SBATCH -c 1                       # 1 CPU per task
 #SBATCH -t 00:10:00                # 10 min walltime per task
 #SBATCH --mem=10G                  # 10 GB memory per task
-#SBATCH --output=logs-array/array-%A_%a.out
-#SBATCH --error=logs-array/array-%A_%a.err
+#SBATCH --output=logs-array/array-%A.out
+#SBATCH --error=logs-array/array-%A.err
 
 #------------------------------------------------------------
 # Environment setup
@@ -26,5 +26,5 @@ echo "Array range: $SLURM_ARRAY_TASK_MIN-$SLURM_ARRAY_TASK_MAX"
 # Execute the command
 #------------------------------------------------------------
 # Each array element runs independently with 1 CPU, 10 GB memory, 10 min limit
-bash -c "$CMD"
+bash -c "stdbuf -oL -eL $CMD"
 
