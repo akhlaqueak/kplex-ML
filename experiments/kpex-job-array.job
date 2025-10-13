@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#SBATCH -J massive_array_run
+#SBATCH -n 192                      # total CPU threads you need
+#SBATCH -c 1                        # 1 CPU per task
+#SBATCH -t 12:00:00                 # walltime
+#SBATCH --mem=10G                    # memory per task
+#SBATCH -a 1-85755%192              # 70,000 jobs total, 192 running at once
+#SBATCH --output=logs-array/array-%A_%a.out
+#SBATCH --error=logs-array/array-%A_%a.err
+
+# Load your environment
+module load openmpi
+
+# Make sure logs-array directory exists
+mkdir -p logs-array
+
+# Pick the correct line (command) from config.txt
+CMD=$(sed -n "${SLURM_ARRAY_TASK_ID}p" config.txt)
+
+echo "[Task $SLURM_ARRAY_TASK_ID on $(hostname)] running: $CMD"
+
+# Execute the command (1 task per CPU)
+srun --exclusive -n1 bash -c "$CMD"
