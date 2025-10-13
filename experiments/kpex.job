@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=1              ### Number of Tasks per CPU
 #SBATCH --mem-per-cpu=10G                        ### Memory required, 4 gigabyte
 #SBATCH --partition=medium             ### Cheaha Partition
-#SBATCH --time=2:00:00                 ### Estimated Time of Completion, 1 hour
+#SBATCH --time=12:00:00                 ### Estimated Time of Completion, 1 hour
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
@@ -16,11 +16,10 @@ run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="logs/$(IFS=_; echo "$*").txt"
-    grep -q ">>" $outfile || {
-    # echo $outfile >> test.txt
+    if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
         ((count++))
-    }
+    fi
 }
 run_jobs() {
     for ds in $datasets; do
