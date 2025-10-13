@@ -19,7 +19,7 @@ run_with_output() {
     if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
         # srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1 &
         echo "srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$*  > $outfile 2>&1" >> config.txt
-        # ((count++))
+        ((count++))
     fi
 }
 run_jobs() {
@@ -30,10 +30,10 @@ run_jobs() {
                 c="$first $ds $k $rest"
                 run_with_output $c
                 # If at concurrency limit, wait for *one* job to finish
-                # if ((count >= MAX_JOBS)); then
-                #     wait 
-                #     count=0
-                # fi
+                if ((count >= MAX_JOBS)); then
+                    wait 
+                    count=0
+                fi
             done
         done
     done

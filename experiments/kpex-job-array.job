@@ -6,7 +6,7 @@
 #SBATCH --mem=10G                  # 10 GB memory per task
 #SBATCH --output=logs-array/array-%A_%a.out
 #SBATCH --error=logs-array/array-%A_%a.err
-#SBATCH --array=1-10000%192
+#SBATCH --array=0-10000%192
 #------------------------------------------------------------
 # Environment setup
 #------------------------------------------------------------
