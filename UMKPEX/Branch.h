@@ -177,6 +177,7 @@ public:
 
         while (G_input.size() > lb)
         {
+            cout<< "No. of vertices: "<< G_input.size()<<endl;
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
             print_progress_bar(percentage);
             double start_induce = get_system_time_microsecond();

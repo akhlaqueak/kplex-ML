@@ -59,16 +59,21 @@ echo "Job finished at $(date)"
 
 get_results() {
     for k in $krange; do
-        echo " -------------k=$k-----------------"
+        # echo " -------------k=$k-----------------"
         for ds in $datasets; do
-            echo -en ${ds/.bin}
+            echo -en ${ds/.bin} $k >> output.txt
+            outfile="stats/${ds}_$k.txt"
+
+            awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
+
             for c in "${configs[@]}"; do
                 read -r first rest <<< "$c"
                 c="$ds $k${rest:+ $rest}"
-                outfile="${c// /_}.txt"
-                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile"
+                outfile="logs/${c// /_}.txt"
+                # echo $outfile
+                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
             done
-        echo 
+        echo >> output.txt
         done
     done
 
