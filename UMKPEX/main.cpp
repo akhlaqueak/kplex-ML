@@ -2,7 +2,7 @@
 #include "Command.h"
 #include "KPlex_BB_matrix.h"
 
-#define enable_CTCP
+// #define enable_CTCP
 #ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
 #include "2th-Reduction-CTCP.h"
 #else // use CF-CTCP
