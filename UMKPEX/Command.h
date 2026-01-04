@@ -16,7 +16,7 @@ public:
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
     ctcp = GetOptionValue("-ctcp", "CF-CTCP");
-    heuristic = GetOptionValue("-hueristic", "kPEX-Heur");
+    heuristic = GetOptionValue("-heuristic", "kPEX-Heur");
 
     cout<<"----------------------Parameters-----------------------\n";
     vector<string> branchings={"Default-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br"};
