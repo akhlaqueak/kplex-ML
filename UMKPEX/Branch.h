@@ -183,7 +183,7 @@ public:
             int u = G_input.get_min_degree_v();
             int previous_lb = lb;
 
-            cout << "========== Processing: " << u << "Graph size: " << G_input.size() << endl;
+            // cout << "========== Processing: " << u << "Graph size: " << G_input.size() << endl;
             auto &vis = bool_array;
             vis.set(u);
 
