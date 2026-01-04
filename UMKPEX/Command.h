@@ -3,7 +3,7 @@ class CommandLine
 {
 public:
 
-	string branching, bounding, alg, ctcp, heuristic;
+	string branching, bounding, algorithm, ctcp, heuristic;
 	bool UBR2;
 	// bool BR1, BR2, RR1, RR2, RR3;
 
@@ -11,7 +11,7 @@ public:
 
   CommandLine(int _argc, char **_argv) : argc(_argc), argv(_argv)
   {
-    alg = GetOptionValue("-algorithm", "UMKP+");
+    algorithm = GetOptionValue("-algorithm", "UMKP+");
     branching = GetOptionValue("-branching", "Default-Br");
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
@@ -52,16 +52,16 @@ public:
     }
 
     vector<string> algos={"UMKP", "UMKP+", "kPEX"};
-    if(find(algos.begin(), algos.end(), alg)==algos.end()) {
+    if(find(algos.begin(), algos.end(), algorithm)==algos.end()) {
       cout<<"Not a valid selection for algorithm, using 'kPEX'"<<endl;
       cout<<"Valid algorithms: "; for(auto& b: algos) cout<<b<<" ";
       cout<<endl;
-      alg = "kPEX";
+      algorithm = "kPEX";
     }
 
 
     cout<<"Dataset: "<<argv[1]<<endl;
-    cout<<"Algorithm: "<<alg<<endl;
+    cout<<"Algorithm: "<<algorithm<<endl;
     cout<<"K: "<<argv[2]<<endl;
     cout<<"Branching: "<<branching<<endl;
     cout<<"Bounding: "<<bounding<<endl;

@@ -165,7 +165,7 @@ public:
     {
         // BBMatrix stuff
         KPLEX_BB_MATRIX bb_solver(paramK);
-        if (PARA.alg == "UMKP+")
+        if (PARA.algorithm == "UMKP+")
             bb_solver.allocateMemory(G_input.n);
 
         double start_IE = get_system_time_microsecond();
@@ -211,7 +211,7 @@ public:
                     higher_order_reduce_time += tt.get_time();
                 }
 
-                if (PARA.alg == "UMKP+")
+                if (PARA.algorithm == "UMKP+")
                 {
                     bb_solver.load_graph(g);
                     bb_solver.kPlex(lb, g.size(), solution, id_u);
