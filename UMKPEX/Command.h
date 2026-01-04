@@ -5,7 +5,7 @@ public:
 
 	string branching, bounding, alg, ctcp, heuristic;
 	bool UBR2;
-	bool BR1, BR2, RR1, RR2, RR3;
+	// bool BR1, BR2, RR1, RR2, RR3;
 
 
 
@@ -15,11 +15,6 @@ public:
     branching = GetOptionValue("-branching", "Default-Br");
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
-    BR1 = GetOptionValue("-BR1", "true") == "true";
-    BR2 = GetOptionValue("-BR2", "true") == "true";
-    RR1 = GetOptionValue("-RR1", "true") == "true";
-    RR2 = GetOptionValue("-RR2", "true") == "true";
-    RR3 = GetOptionValue("-RR3", "true") == "true";
     ctcp = GetOptionValue("-ctcp", "CF-CTCP");
     heuristic = GetOptionValue("-huer", "kPEX-Heur");
 
@@ -51,10 +46,19 @@ public:
     vector<string> ctcps={"CTCP", "CF-CTCP"};
     if(find(ctcps.begin(), ctcps.end(), bounding)==ctcps.end()) {
       cout<<"Not a valid selection for CTCP method, using 'CF-CTCP'"<<endl;
-      cout<<"Valid bounding methods: "; for(auto& b: ctcps) cout<<b<<" ";
+      cout<<"Valid CTCP methods: "; for(auto& b: ctcps) cout<<b<<" ";
       cout<<endl;
       ctcp = "CF-CTCP";
     }
+
+    vector<string> algos={"UMKP", "UMKP+", "kPEX"};
+    if(find(algos.begin(), algos.end(), bounding)==algos.end()) {
+      cout<<"Not a valid selection for algorithm, using 'kPEX'"<<endl;
+      cout<<"Valid algorithms: "; for(auto& b: algos) cout<<b<<" ";
+      cout<<endl;
+      alg = "kPEX";
+    }
+
 
     cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<alg<<endl;
@@ -62,6 +66,8 @@ public:
     cout<<"Branching: "<<branching<<endl;
     cout<<"Bounding: "<<bounding<<endl;
     cout<<"UBR2: "<<UBR2<<endl;
+    cout<<"CTCP Method: "<<ctcp<<endl;
+    cout<<"Heuristic: "<<heuristic<<endl;
     cout<<"----------------------**********-----------------------\n";
   }
 

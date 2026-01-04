@@ -1024,13 +1024,13 @@ private:
 			{
 				if (level_id[v] == level)
 					continue;
-				if ((PARA.RR1 and S_end - degree_in_S[v] >= K) || (PARA.RR2 and S_end - degree_in_S[u] == K))
+				if ((S_end - degree_in_S[v] >= K) || (S_end - degree_in_S[u] == K))
 				{
 					level_id[v] = level;
 					Qv.push(v);
 				}
 			}
-			else if (PARA.RR2 and S_end - degree_in_S[v] == K)
+			else if (S_end - degree_in_S[v] == K)
 			{
 				char *tt_matrix = matrix + v * n;
 				for (ui j = S_end; j < R_end; j++)
@@ -1142,7 +1142,7 @@ private:
 						{
 							if (i < S_end)
 								terminate = true; // UB1
-							else if (PARA.RR3 and level_id[w] > level)
+							else if (level_id[w] > level)
 							{ // RR3
 								level_id[w] = level;
 								Qv.push(w);
