@@ -3,7 +3,7 @@ class CommandLine
 {
 public:
 
-	string branching, bounding, alg;
+	string branching, bounding, alg, ctcp, heuristic;
 	bool UBR2;
 	bool BR1, BR2, RR1, RR2, RR3;
 
@@ -20,6 +20,8 @@ public:
     RR1 = GetOptionValue("-RR1", "true") == "true";
     RR2 = GetOptionValue("-RR2", "true") == "true";
     RR3 = GetOptionValue("-RR3", "true") == "true";
+    ctcp = GetOptionValue("-ctcp", "CF-CTCP");
+    heuristic = GetOptionValue("-huer", "kPEX-Heur");
 
     cout<<"----------------------Parameters-----------------------\n";
     vector<string> branchings={"Default-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br"};
@@ -35,9 +37,24 @@ public:
       cout<<"Not a valid selection for bounding, using 'None'"<<endl;
       cout<<"Valid bounding methods: "; for(auto& b: boundings) cout<<b<<" ";
       cout<<endl;
-      branching = "None";
+      bounding = "None";
     }
 
+    vector<string> heuristics={"kPEX-Heur", "EGO-Heur", "Degen-Heur"};
+    if(find(heuristics.begin(), heuristics.end(), bounding)==heuristics.end()) {
+      cout<<"Not a valid selection for Heuristic, using 'kPEX-Heur'"<<endl;
+      cout<<"Valid Heuristic methods: "; for(auto& b: heuristics) cout<<b<<" ";
+      cout<<endl;
+      heuristic = "None";
+    }
+
+    vector<string> ctcps={"CTCP", "CF-CTCP"};
+    if(find(ctcps.begin(), ctcps.end(), bounding)==ctcps.end()) {
+      cout<<"Not a valid selection for CTCP method, using 'CF-CTCP'"<<endl;
+      cout<<"Valid bounding methods: "; for(auto& b: ctcps) cout<<b<<" ";
+      cout<<endl;
+      ctcp = "CF-CTCP";
+    }
 
     cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<alg<<endl;

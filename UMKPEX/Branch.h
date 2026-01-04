@@ -33,7 +33,6 @@ private:
     vector<int> array1_N;
 
     // information of log
-    ll dfs_cnt;
     double part_PI_time; // time of Partition
     double run_time;     // sum of bnb time
     double fast_reduce_time;
@@ -52,7 +51,7 @@ private:
 public:
     set<int> solution;
     Branch(Graph_reduced &input, int _lb) : G_input(input), lb(_lb), bool_array(input.n),
-                                            dfs_cnt(0), run_time(0), fast_reduce_time(0), core_reduce_time(0),
+                                            run_time(0), fast_reduce_time(0), core_reduce_time(0),
                                             part_PI_time(0), IE_induce_time(0),
                                             matrix_init_time(0), IE_graph_cnt(0), IE_graph_size(0), CTCP_time(0),
                                             higher_order_reduce_time(0),
@@ -177,7 +176,6 @@ public:
 
         while (G_input.size() > lb)
         {
-            cout<< "No. of vertices: "<< G_input.size()<<endl;
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
             print_progress_bar(percentage);
             double start_induce = get_system_time_microsecond();
@@ -185,6 +183,7 @@ public:
             int u = G_input.get_min_degree_v();
             int previous_lb = lb;
 
+            cout << "========== Processing: " << u << "Graph size: " << G_input.size() << endl;
             auto &vis = bool_array;
             vis.set(u);
 
@@ -235,7 +234,11 @@ public:
                 IE_induce_time += get_system_time_microsecond() - start_induce;
                 subgraph_pruned_cnt++;
             }
-
+            cout << "========== Time Processing: " << u << "Time: " << get_system_time_microsecond() - start_induce << endl;
+            cout << "========== DFS Count: " << dfs_cnt << endl;
+            dfs_cnt = 0;
+            cout << " AltRB hits: " << altrb_cnt << endl;
+            altrb_cnt = 0;
             double start_CTCP = get_system_time_microsecond();
             G_input.remove_v(u, lb, lb > previous_lb ? true : false);
             CTCP_time += get_system_time_microsecond() - start_CTCP;
@@ -517,6 +520,8 @@ public:
         puts("");
         printf("average g_i size: %.2lf ", IE_graph_size * 1.0 / IE_graph_cnt);
         printf("g_i pruned: %lld g_i searched: %lld ", subgraph_pruned_cnt, subgraph_search_cnt);
+        printf("AltRB count=%d", AltRB_cnt);
+        printf("AltRB_iteration count=%d", AltRB_iteration_cnt);
         printf("avg-AltRB-iteration=%.2lf", AltRB_iteration_cnt * 1.0 / AltRB_cnt);
         puts("");
         puts("*************bnb result*************");

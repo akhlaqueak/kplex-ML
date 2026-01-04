@@ -4,6 +4,8 @@
 #include "Utility.h"
 #include "Graph.h"
 // #define _SECOND_ORDER_PRUNING_
+ui altrb_cnt=0;
+ll dfs_cnt=0;
 
 #define CSIZE (R_end - S_end)
 class KPLEX_BB_MATRIX
@@ -449,7 +451,7 @@ private:
 			store_solution(R_end);
 		if (R_end <= lb + 1 || lb >= _UB_)
 			return;
-
+		dfs_cnt++;
 #ifndef NDEBUG
 		for (ui i = 0; i < R_end; i++)
 		{
@@ -628,6 +630,7 @@ private:
 			if (PARA.bounding == "AltRB" and !alt_RB(S_end, R_end, level))
 			{
 				// printf("here2\n");
+				altrb_cnt++;
 				restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 				return;
 			}

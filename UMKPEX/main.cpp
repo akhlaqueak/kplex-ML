@@ -2,7 +2,7 @@
 #include "Command.h"
 #include "KPlex_BB_matrix.h"
 
-// #define enable_CTCP
+#define enable_CTCP
 #ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
 #include "2th-Reduction-CTCP.h"
 #else // use CF-CTCP
@@ -10,7 +10,6 @@
 #endif
 #include "Branch.h"
 set<ui> solution;
-
 
 string file_path;
 Graph g;
@@ -195,10 +194,10 @@ void heuris()
 {
     input_n = g.n;
 
-#ifdef EGO
-    EgoHeuris();
-    return;
-#endif
+    if(PARA.heuristic=="EGO-Heur"){
+        EgoHeuris();
+        return;
+    }
 
     FastHeuris();
     StrongHeuris(); // generate n subgraphs and compute larger lb
