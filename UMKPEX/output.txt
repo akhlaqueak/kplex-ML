@@ -1,0 +1,63 @@
+----------------------Parameters-----------------------
+Dataset: ds/johnson8-4-4.bin
+Algorithm: UMKP+
+K: 15
+Branching: Default-Br
+Bounding: AltRB
+UBR2: 1
+----------------------**********-----------------------
+File: johnson8-4-4 n= 70 m= 1855 k= 15
+Graph init ok
+------------------{start KPHeuris}---------------------
+sqrt lb= 55, use time 0.0001 s
+After degeneracy and weak reduce, n= 70 , m= 1855 , lb= 56 , use time 0.0002 s
+Afer strong reduce, n= 70 , m= 1855, use time 0.0003 s
+StrongHeuris find a larger plex: 57 , already extend 6 times
+1th-StrongHeuris lb= 57
+Afer strong reduce, n= 70 , m= 1855, use time 0.0002 s
+2th-StrongHeuris lb= 57
+heuristic and preprocess use time: 0.0023 s
+*************Heuristic result*************
+list triangles time: 0.0005 s, strong reduce time: 0.0005 s
+total-heuristic-time= 0.0023 s, FastHeuris-time= 0.0006 s, StrongHeuris-time= 0.0017 s
+lb= 57 , FastHeuris-lb= 56 
+------------------{start BRB_Rec}---------------------
+reduced graph n= 70 m= 1855 lb= 57
+========== Processing: 69Graph size: 70
+!!! BB_Search found a kplex of size: 58, n_edges: 2538 
+!!! BB_Search found a kplex of size: 59, n_edges: 2630 
+!!! BB_Search found a kplex of size: 60, n_edges: 2736 
+========== Time Processing: 69Time: 33335
+========== DFS Count: 1902
+ AltRB hits: 310
+========== Processing: 66Graph size: 69
+========== Time Processing: 66Time: 3929
+========== DFS Count: 205
+ AltRB hits: 47
+========== Processing: 59Graph size: 68
+========== Time Processing: 59Time: 1530
+========== DFS Count: 73
+ AltRB hits: 22
+========== Processing: 54Graph size: 67
+========== Time Processing: 54Time: 2663
+========== DFS Count: 160
+ AltRB hits: 26
+========== Processing: 41Graph size: 66
+========== Time Processing: 41Time: 806
+========== DFS Count: 41
+ AltRB hits: 8
+========== Processing: 28Graph size: 65
+========== Time Processing: 28Time: 409
+========== DFS Count: 19
+ AltRB hits: 2
+dfs_cnt= 0
+fast reduce-time: 0.0000 s  partition-time: 0.0000 s  core reduce-time: 0.0000 s  IE induce-time: 0.0010 s  
+matrix init-time: 0.0001 s  CTCP-time: 0.0007 s  high-order-reduce-time: 0.0001 s  reduce-kPlexT-time: 0.0000 s  
+average g_i size: 67.50 g_i pruned: 0 g_i searched: 6 AltRB count=0AltRB_iteration count=0avg-AltRB-iteration=nan
+*************bnb result*************
+ground truth= 60 , exact searching use time= 0.0434 s
+Maximum solution(size= 60 ):
+0 1 2 3 4 5 7 8 9 10 12 13 14 16 17 18 19 20 21 23 24 25 26 27 28 29 31 32 33 34 35 36 38 39 40 41 42 44 45 46 47 48 49 50 51 52 54 55 56 57 58 59 60 61 63 64 66 67 68 69
+------------------{whole procedure: kPEX}---------------------
+
+>>ds/johnson8-4-4.bin MaxKPlex_Size: 60 t_time: 0.0459
