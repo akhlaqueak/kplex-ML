@@ -86,11 +86,34 @@ soc-youtube'
 
 krange='2 3 4 5 6 7 8 9 10 15 20'
 configs=(
-   "UMKPEX-CTCP -algorithm UMKP+ -heuristic EGO-Heur"
+   "UMKPEX-CTCP -algorithm UMKP+ -heuristic EGO-Heur -ctcp CTCP"
    "UMKPEX-CTCP -algorithm UMKP+ -heuristic EGO-Heur -bounding AltRB"
-   "UMKPEX -algorithm UMKP+ -heuristic EGO-Heur"
+   "UMKPEX -algorithm UMKP+ -heuristic EGO-Heur -ctcp CF-CTCP"
 )
 run_jobs
 
+get_results() {
+    rm output.txt
+    for k in $krange; do
+        echo " -------------k=$k-----------------" >> output.txt
+        for ds in $datasets; do
+            echo -en ${ds/.bin} $k >> output.txt
+            # outfile="smalltest/${ds}_$k.txt"
+
+            # awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
+
+            for c in "${configs[@]}"; do
+                read -r first rest <<< "$c"
+                c="$ds.bin $k${rest:+ $rest}"
+                outfile="smalltest/${c// /_}.txt"
+                # echo $outfile
+                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
+            done
+        echo >> output.txt
+        done
+    done
+
+}
+get_results
 
 echo "Job finished at $(date)"
