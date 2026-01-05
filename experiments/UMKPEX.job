@@ -16,7 +16,7 @@ count=0
 run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
-    outfile="logs/$(IFS=_; echo "$*").txt"
+    outfile="smalltest/$(IFS=_; echo "$*").txt"
     if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
         ((count++))
