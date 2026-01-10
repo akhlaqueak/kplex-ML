@@ -109,7 +109,10 @@ public:
         // select pivot to generate 2 branches
         int pivot = -1;
 
-        if (PARA.branching == "Default-Br")
+        if (PARA.branching == "Adaptive-Br")
+            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
+
+        if (PARA.branching == "Binary-Br")
         {
             pivot = select_pivot_vertex_with_min_degree(C);
             if (pivot == -1)

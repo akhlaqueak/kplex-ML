@@ -11,20 +11,33 @@ public:
 
   CommandLine(int _argc, char **_argv) : argc(_argc), argv(_argv)
   {
-    algorithm = GetOptionValue("-algorithm", "UMKP+");
-    branching = GetOptionValue("-branching", "Default-Br");
+    algorithm = GetOptionValue("-algorithm", "kPEX");
+    branching = GetOptionValue("-branching", "None");
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
     ctcp = GetOptionValue("-ctcp", "CF-CTCP");
     heuristic = GetOptionValue("-heuristic", "kPEX-Heur");
 
     cout<<"----------------------Parameters-----------------------\n";
-    vector<string> branchings={"Default-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br"};
+    vector<string> algos={"UMKP+", "kPEX"};
+    if(find(algos.begin(), algos.end(), algorithm)==algos.end()) {
+      cout<<"Not a valid selection for algorithm, using 'kPEX'"<<endl;
+      cout<<"Valid algorithms: "; for(auto& b: algos) cout<<b<<" ";
+      cout<<endl;
+      algorithm = "kPEX";
+    }
+    vector<string> branchings={"Adaptive-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br", "Binary-Br"};
     if(find(branchings.begin(), branchings.end(), branching)==branchings.end()) {
-      cout<<"Not a valid selection for branching, using Default-Br"<<endl;
       cout<<"Valid branching methods: "; for(auto& b: branchings) cout<<b<<" ";
       cout<<endl;
-      branching = "Default-Br";
+      if(algorithm=="kPEX"){
+        cout<<"Not a valid selection for branching, using Binary-Br"<<endl;
+        branching="Binary-Br";
+      }
+      else{
+        cout<<"Not a valid selection for branching, using Adaptive-Br"<<endl;
+        branching = "Adaptive-Br";
+      }
     }
 
     vector<string> boundings={"None", "S-Bound", "R-Bound", "SR-Bound", "AltRB"};
@@ -40,7 +53,7 @@ public:
       cout<<"Not a valid selection for Heuristic, using 'kPEX-Heur'"<<endl;
       cout<<"Valid Heuristic methods: "; for(auto& b: heuristics) cout<<b<<" ";
       cout<<endl;
-      heuristic = "None";
+      heuristic = "kPEX-Heur";
     }
 
     vector<string> ctcps={"CTCP", "CF-CTCP"};
@@ -49,14 +62,6 @@ public:
       cout<<"Valid CTCP methods: "; for(auto& b: ctcps) cout<<b<<" ";
       cout<<endl;
       ctcp = "CF-CTCP";
-    }
-
-    vector<string> algos={"UMKP", "UMKP+", "kPEX"};
-    if(find(algos.begin(), algos.end(), algorithm)==algos.end()) {
-      cout<<"Not a valid selection for algorithm, using 'kPEX'"<<endl;
-      cout<<"Valid algorithms: "; for(auto& b: algos) cout<<b<<" ";
-      cout<<endl;
-      algorithm = "kPEX";
     }
 
 
