@@ -109,8 +109,6 @@ public:
         // select pivot to generate 2 branches
         int pivot = -1;
 
-        if (PARA.branching == "Adaptive-Br")
-            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
 
         if (PARA.branching == "Binary-Br")
         {
@@ -976,9 +974,16 @@ public:
         Set P(sz);
         P.flip();
         ui seq = 0;
+        double n_edges = 0;
         auto &deg = array_n; // we reuse the array to decrease time cost
-        for (int u : P)
+        for (int u : P){
             deg[u] = A[u].size();
+            n_edges+=deg[u];
+        }
+		bool sparse = n_edges / sz / (sz - 1) < 0.90;
+        if (PARA.branching == "Adaptive-Br")
+            PARA.branching = sparse && paramK <= 5 ? "S-Br" : "Pivot-Br";
+            
         while (!P.empty())
         {
             int min_u = -1;
