@@ -17,10 +17,10 @@ run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="smalltest/$(IFS=_; echo "$*").txt"
-    if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
+    # if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
         srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
         ((count++))
-    fi
+    # fi
 }
 run_jobs() {
     for ds in $datasets; do
