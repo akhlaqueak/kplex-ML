@@ -982,8 +982,8 @@ public:
         }
 		bool sparse = n_edges / sz / (sz - 1) < 0.90;
         if (PARA.branching == "Adaptive-Br")
-            PARA.branching = sparse && paramK <= 5 ? "S-Br" : "Pivot-Br";
-            
+            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
+
         while (!P.empty())
         {
             int min_u = -1;

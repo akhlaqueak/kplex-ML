@@ -86,11 +86,10 @@ soc-youtube'
 
 krange='2 3 4 5 6 7 8 9 10 15 20'
 configs=(
-   "UMKP -branching R-Br" 
+   "UMKPEX -branching Adaptive-Br"
+   "UMKP -branching S-Br" 
+   "UMKP -branching Pivot-Br"
 )
-#    "UMKP -branching S-Br" 
-#    "UMKPEX -branching Adaptive-Br"
-#    "UMKP -branching Pivot-Br"
 run_jobs
 
 get_results() {
