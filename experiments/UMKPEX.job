@@ -86,10 +86,9 @@ soc-youtube'
 
 krange='2 3 4 5 6 7 8 9 10 15 20'
 configs=(
-   "UMKP"
-   "UMKP -branching S-Br"
-   "UMKP -branching R-Br"
-   "UMKP -branching P-Br"
+   "UMKPEX -algorithm UMKP+ -branching S-Br"
+   "UMKPEX -algorithm UMKP+ -branching R-Br"
+   "UMKPEX -algorithm UMKP+ -branching P-Br"
 )
 #    "UMKP -branching S-Br" 
 #    "UMKP -branching Pivot-Br"
