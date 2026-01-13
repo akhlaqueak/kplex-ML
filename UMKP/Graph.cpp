@@ -286,7 +286,7 @@ void Graph::search()
 	
 	if(n<10) 		
 	{
-		printf(">> Solved in Preprocessing !!!\n");
+		printf("!!! Solved in Preprocessing !!!\n");
 		return;
 	}
 	heuristic_kplex_max_degree(10);
@@ -309,7 +309,7 @@ void Graph::search()
 
 	if (kplex.size() >= UB)
 	{
-		printf(">> Solved in Preprocessing !!!\n");
+		printf("!!! Solved in Preprocessing !!!\n");
 	}
 	else
 	{
