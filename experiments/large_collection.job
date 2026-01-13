@@ -1,88 +1,90 @@
 #!/bin/bash
+#SBATCH --job-name=UMKP_batch
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=156
+#SBATCH --mem-per-cpu=10G
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
 
-#SBATCH --job-name=serial             ### Name of the job
-#SBATCH --ntasks=156                    ### Number of Tasks
-#SBATCH --cpus-per-task=1              ### Number of Tasks per CPU
-#SBATCH --mem-per-cpu=10G                        ### Memory required, 4 gigabyte
-#SBATCH --partition=medium             ### Cheaha Partition
-#SBATCH --time=12:00:00                 ### Estimated Time of Completion, 1 hour
-#SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
-#SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
+set -euo pipefail
 
-MAX_JOBS=2000
-count=0
-LOGS=test; mkdir $LOGS
+# ------------------ configuration ------------------
+MAX_JOBS=156                 # number of parallel tasks
 TIME=00:00:10
-run_with_output() {
-    prog="$1"     # first argument is the program name
-    shift         # remove program name from the list
-    outfile="$LOGS/$(IFS=_; echo "$*").txt"
-    if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
-        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=$TIME --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
-        ((count++))
-    fi
-}
-run_jobs() {
-    TIME=$1
-    for ds in $datasets; do
-        for k in $krange; do
-            for c in "${configs[@]}"; do
-                read -r first rest <<< "$c"
-                c="$first $ds.bin $k $rest"
-                run_with_output $c
-                # If at concurrency limit, wait for *one* job to finish
-                if ((count >= $MAX_JOBS)); then
-                    wait 
-                    count=0
-                fi
-            done
-        done
-    done
+LOGS=test
+DATA_DIR="$HOME/graphs/large-collection"
+PROG="./UMKP"
+# ---------------------------------------------------
 
-    wait  # wait for remaining sruns to complete
-}
+mkdir -p "$LOGS"
 
-datasets=$(printf '%s\n' ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
+# Collect datasets safely (no extension, no path)
+datasets=()
+for f in "$DATA_DIR"/*.bin; do
+    datasets+=( "$(basename "$f" .bin)" )
+done
 
-krange='2 3 4 5 6 7 8 9 10 15 20'
+krange=(2 3 4 5 6 7 8 9 10 15 20)
+
 configs=(
-   "UMKPEX -algorithm UMKP+ -branching S-Br"
-   "UMKPEX -algorithm UMKP+ -branching R-Br"
-   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
-   "UMKP -branching S-Br" 
-   "UMKP -branching R-Br" 
-   "UMKP -branching Pivot-Br"
+    "UMKP -branching Default-Br"
 )
-configs=("UMKP -branching Default-Br")
 
-run_jobs 00:00:10
+count=0
 
-get_results() {
-    rm output.txt
-    for k in $krange; do
-        echo " -------------k=$k-----------------" >> output.txt
-        for ds in $datasets; do
-            echo -en ${ds/.bin} $k >> output.txt
-            # outfile="$LOGS/${ds}_$k.txt"
+run_task() {
+    local prog="$1"; shift
+    local args=("$@")
 
-            # awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
+    local outfile="$LOGS/$(printf '%s_' "${args[@]}" | sed 's/_$//').txt"
 
-            for c in "${configs[@]}"; do
-                read -r first rest <<< "$c"
-                c="$ds.bin $k${rest:+ $rest}"
-                outfile="$LOGS/${c// /_}.txt"
-                # echo $outfile
-                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
-            done
-        echo >> output.txt
+    # Skip if already completed
+    if grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null; then
+        return
+    fi
+
+    srun --exclusive -n1 -c1 --time="$TIME" \
+         "$prog" "${args[@]}" > "$outfile" 2>&1 &
+
+    ((count++))
+
+    # throttle to MAX_JOBS
+    while (( count >= MAX_JOBS )); do
+        wait -n
+        ((count--))
+    done
+}
+
+# ------------------ launch tasks ------------------
+for ds in "${datasets[@]}"; do
+    for k in "${krange[@]}"; do
+        for cfg in "${configs[@]}"; do
+            read -r prog rest <<< "$cfg"
+            run_task "$PROG" "$ds.bin" "$k" $rest
         done
     done
+done
 
-}
-get_results
+wait
+echo "All tasks completed at $(date)"
 
+# ------------------ collect results ------------------
+rm -f output.txt
+
+for k in "${krange[@]}"; do
+    echo "------------- k=$k -------------" >> output.txt
+    for ds in "${datasets[@]}"; do
+        echo -n "$ds $k" >> output.txt
+        for cfg in "${configs[@]}"; do
+            read -r _ rest <<< "$cfg"
+            fname="$LOGS/${ds}.bin_${k}${rest:+_$rest}.txt"
+            awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$fname" >> output.txt
+        done
+        echo >> output.txt
+    done
+done
+
+echo "Results written to output.txt"
 echo "Job finished at $(date)"
