@@ -286,6 +286,7 @@ void Graph::search()
 	
 	if(n<10) 		
 	{
+		printf("!!! Solved in Preprocessing !!!\n");
 		printf("!!! Warning: Trivial Case !!!\n");
 		return;
 	}
@@ -335,6 +336,7 @@ void Graph::search()
 		if (n <= kplex.size())
 		{
 			write_one_kplex(kplex);
+			printf("!!! Solved in Preprocessing !!!\n");
 			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
 			return;
 		}
