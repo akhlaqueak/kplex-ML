@@ -57,8 +57,9 @@ configs=(
    "UMKP -branching R-Br" 
    "UMKP -branching Pivot-Br"
 )
+configs=("UMKP")
+
 run_jobs 00:00:10
-run_jobs 00:01:00
 
 get_results() {
     rm output.txt
