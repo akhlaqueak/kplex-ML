@@ -57,7 +57,7 @@ configs=(
    "UMKP -branching R-Br" 
    "UMKP -branching Pivot-Br"
 )
-configs=("UMKP")
+configs=("UMKP -branching Default-Br")
 
 run_jobs 00:00:10
 
