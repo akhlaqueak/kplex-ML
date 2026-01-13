@@ -286,8 +286,7 @@ void Graph::search()
 	
 	if(n<10) 		
 	{
-		printf("!!! Solved in Preprocessing !!!\n");
-		printf("!!! Warning: Trivial Case !!!\n");
+		printf(">> Solved in Preprocessing !!!\n");
 		return;
 	}
 	heuristic_kplex_max_degree(10);
@@ -308,7 +307,12 @@ void Graph::search()
 	if (kplex.size() < 2 * K - 2)
 		kplex.resize(2 * K - 2); // screen out trivial cases
 
-	if (kplex.size() < UB)
+	if (kplex.size() >= UB)
+	{
+		printf(">> Solved in Preprocessing !!!\n");
+		return;
+	}
+
 	{
 		ui old_size = kplex.size();
 		ui *out_mapping = new ui[n];
@@ -340,7 +344,13 @@ void Graph::search()
 			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
 			return;
 		}
-
+		if(m<=500)
+		{
+			write_one_kplex(kplex);
+			printf("!!! Small Instance  !!!\n");
+			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
+			return;
+		}
 		ui *degree = new ui[n];
 		for (ui i = 0; i < n; i++)
 			degree[i] = pstart[i + 1] - pstart[i];
