@@ -286,7 +286,7 @@ void Graph::search()
 	
 	if(n<10) 		
 	{
-		printf("!!! Solved in Preprocessing !!!\n");
+		printf("!!! Small Graph !!!\n");
 		return;
 	}
 	heuristic_kplex_max_degree(10);
@@ -346,7 +346,7 @@ void Graph::search()
 		if(m<=500)
 		{
 			write_one_kplex(kplex);
-			printf("!!! Small Instance  !!!\n");
+			printf("!!! Small Instance !!!\n");
 			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
 			return;
 		}
