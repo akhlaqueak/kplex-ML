@@ -31,7 +31,7 @@ run_jobs() {
                 c="$first $ds.bin $k $rest"
                 run_with_output $c
                 # If at concurrency limit, wait for *one* job to finish
-                if ((count >= MAX_JOBS)); then
+                if ((count >= $MAX_JOBS)); then
                     wait 
                     count=0
                 fi
