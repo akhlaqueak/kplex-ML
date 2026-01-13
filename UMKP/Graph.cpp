@@ -310,9 +310,8 @@ void Graph::search()
 	if (kplex.size() >= UB)
 	{
 		printf(">> Solved in Preprocessing !!!\n");
-		return;
 	}
-
+	else
 	{
 		ui old_size = kplex.size();
 		ui *out_mapping = new ui[n];
