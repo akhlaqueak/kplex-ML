@@ -8,16 +8,20 @@
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
 
-set -euo pipefail
+# NOTE: do NOT use -u in batch scripts
+set -eo pipefail
 
 LOGS=test
 mkdir -p "$LOGS"
+
 DATA_DIR="$HOME/graphs/large-collection"
 TIME="00:00:10"
 
+# Match parallelism to allocation
 MAX_JOBS="${SLURM_NTASKS:-156}"
 count=0
 
+# -------- collect datasets safely --------
 shopt -s nullglob
 datasets=()
 for f in "$DATA_DIR"/*.bin; do
@@ -26,7 +30,7 @@ done
 shopt -u nullglob
 
 if (( ${#datasets[@]} == 0 )); then
-    echo "No datasets found, exiting."
+    echo "ERROR: no .bin files found in $DATA_DIR" >&2
     exit 1
 fi
 
@@ -45,11 +49,12 @@ configs=(
    "UMKP -branching Pivot-Br"
 )
 
-configs=("UMKP -branching Default-Br")
+# -------- helper: sanitize filenames --------
 sanitize() {
     echo "$*" | sed 's/[[:space:]]\+/_/g; s/[^A-Za-z0-9._-]/_/g'
 }
 
+# -------- run one job --------
 run_with_output() {
     local prog="$1"; shift
     local args=( "$@" )
@@ -59,17 +64,19 @@ run_with_output() {
     local outfile="$LOGS/${tag}.txt"
 
     if ! ( grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null ); then
-        srun --exclusive -n1 -c1 --time="$TIME" "$prog" "${args[@]}" > "$outfile" 2>&1 &
+        srun --exclusive -n1 -c1 --time="$TIME" \
+             "$prog" "${args[@]}" > "$outfile" 2>&1 &
         ((count++))
     fi
 
-    # PORTABLE throttling (no wait -n)
+    # ---- SLURM-BASED throttling (Bash 4.2 safe) ----
     while (( count >= MAX_JOBS )); do
         sleep 1
-        count=$(jobs -r | wc -l)
+        count=$(squeue -h -j "$SLURM_JOB_ID" -t R | wc -l)
     done
 }
 
+# -------- launch jobs --------
 for ds in "${datasets[@]}"; do
     for k in "${krange[@]}"; do
         for c in "${configs[@]}"; do
@@ -80,4 +87,23 @@ for ds in "${datasets[@]}"; do
 done
 
 wait
+echo "All jobs finished at $(date)"
+
+# -------- collect results --------
+rm -f output.txt
+for k in "${krange[@]}"; do
+    echo "-------------k=$k-----------------" >> output.txt
+    for ds in "${datasets[@]}"; do
+        echo -n "$ds $k" >> output.txt
+        for c in "${configs[@]}"; do
+            read -r -a base <<< "$c"
+            tag="$(sanitize "${base[*]} ${DATA_DIR}/${ds}.bin $k")"
+            awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' \
+                "$LOGS/${tag}.txt" >> output.txt
+        done
+        echo >> output.txt
+    done
+done
+
+echo "Results written to output.txt"
 echo "Job finished at $(date)"
