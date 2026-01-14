@@ -48,6 +48,7 @@ configs=(
    "UMKP -branching R-Br"
    "UMKP -branching Pivot-Br"
 )
+configs=("UMKP")
 
 # -------- helper: sanitize filenames --------
 sanitize() {
