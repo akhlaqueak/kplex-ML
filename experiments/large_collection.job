@@ -10,47 +10,72 @@
 
 set -euo pipefail
 
-# ---------------- configuration ----------------
+# ------------- configuration -------------
 LOGS=test
 DATA_DIR="$HOME/graphs/large-collection"
-TIME=00:00:10
+TIME="00:00:10"
 PROG="./UMKP"
-MAX_TASKS=156
-# -----------------------------------------------
+# use allocated ntasks if available, otherwise fallback to 156
+MAX_TASKS="${SLURM_NTASKS:-156}"
+# ------------------------------------------
 
 mkdir -p "$LOGS"
 
 # Collect datasets safely (no path, no .bin)
+shopt -s nullglob
 datasets=()
 for f in "$DATA_DIR"/*.bin; do
     datasets+=( "$(basename "$f" .bin)" )
 done
+shopt -u nullglob
+
+if (( ${#datasets[@]} == 0 )); then
+    echo "ERROR: no .bin files found in $DATA_DIR" >&2
+    exit 1
+fi
 
 krange=(2 3 4 5 6 7 8 9 10 15 20)
 
+# configs: strings containing additional args for PROG
 configs=(
-    "UMKP -branching Default-Br"
+    "-branching Default-Br"
 )
 
+# current running count of background tasks
 count=0
+
+# sanitize a string for safe filename usage
+sanitize_name() {
+    local s="$*"
+    # replace spaces with underscore, then replace anything not alnum . _ - with _
+    s="${s// /_}"
+    s="$(echo "$s" | sed 's/[^A-Za-z0-9._-]/_/g')"
+    printf '%s' "$s"
+}
 
 run_task() {
     local prog="$1"; shift
-    local args=("$@")
+    local args=( "$@" )
 
-    local outfile="$LOGS/$(printf '%s_' "${args[@]}" | sed 's/_$//').txt"
+    # build a safe outfile name from arguments
+    local name
+    name="$(printf '%s_' "${args[@]}")"
+    name="${name%_}"
+    name="$(sanitize_name "$name")"
+    local outfile="$LOGS/${name}.txt"
 
-    # skip completed runs
+    # skip completed runs (robust to missing file)
     if grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null; then
         return
     fi
 
+    # actually launch the task: one task, one CPU, exclusive within allocation
     srun --exclusive -n1 -c1 --time="$TIME" \
          "$prog" "${args[@]}" > "$outfile" 2>&1 &
 
     ((count++))
 
-    # throttle to exactly 156 tasks
+    # throttle to MAX_TASKS (wait for one to finish)
     while (( count >= MAX_TASKS )); do
         wait -n
         ((count--))
@@ -61,12 +86,15 @@ run_task() {
 for ds in "${datasets[@]}"; do
     for k in "${krange[@]}"; do
         for cfg in "${configs[@]}"; do
-            read -r prog rest <<< "$cfg"
-            run_task "$PROG" "$ds.bin" "$k" $rest
+            # split cfg into words while preserving multiword pieces
+            read -r -a extra <<< "$cfg"
+            # pass extra as separate args (quoted)
+            run_task "$PROG" "${ds}.bin" "$k" "${extra[@]}"
         done
     done
 done
 
+# wait for remaining background tasks to finish
 wait
 echo "All tasks finished at $(date)"
 
@@ -78,8 +106,14 @@ for k in "${krange[@]}"; do
     for ds in "${datasets[@]}"; do
         echo -n "$ds $k" >> output.txt
         for cfg in "${configs[@]}"; do
-            read -r _ rest <<< "$cfg"
-            fname="$LOGS/${ds}.bin_${k}${rest:+_$rest}.txt"
+            read -r -a extra <<< "$cfg"
+            # construct trimmed filename using same sanitization rules
+            fname="${ds}.bin_${k}"
+            for token in "${extra[@]}"; do
+                fname+="_${token}"
+            done
+            fname="$(sanitize_name "$fname")"
+            fname="$LOGS/${fname}.txt"
             awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$fname" >> output.txt
         done
         echo >> output.txt
