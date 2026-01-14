@@ -10,17 +10,14 @@
 
 set -euo pipefail
 
-# ---------------- config ----------------
 LOGS=test
 mkdir -p "$LOGS"
 DATA_DIR="$HOME/graphs/large-collection"
 TIME="00:00:10"
 
-# Use SLURM allocation for max parallel jobs; fallback to 156 if not set
 MAX_JOBS="${SLURM_NTASKS:-156}"
-# ----------------------------------------
+count=0
 
-# Safely collect datasets (no path, no .bin), handle no matches
 shopt -s nullglob
 datasets=()
 for f in "$DATA_DIR"/*.bin; do
@@ -29,14 +26,12 @@ done
 shopt -u nullglob
 
 if (( ${#datasets[@]} == 0 )); then
-    echo "ERROR: no .bin files found in $DATA_DIR" >&2
+    echo "No datasets found, exiting."
     exit 1
 fi
 
-# krange as an array
 krange=(2 3 4 5 6 7 8 9 10 15 20)
 
-# configs contain program + args (unchanged)
 configs=(
    "UMKPEX -algorithm UMKP+ -branching S-Br"
    "UMKPEX -algorithm UMKP+ -branching R-Br"
@@ -49,77 +44,40 @@ configs=(
    "UMKP -branching R-Br"
    "UMKP -branching Pivot-Br"
 )
+
 configs=("UMKP -branching Default-Br")
-
-count=0
-
-# sanitize args -> safe filename token
 sanitize() {
-    local s="$*"
-    s="${s// /_}"
-    s="$(echo "$s" | sed 's/[^A-Za-z0-9._-]/_/g')"
-    printf '%s' "$s"
+    echo "$*" | sed 's/[[:space:]]\+/_/g; s/[^A-Za-z0-9._-]/_/g'
 }
 
-# run one job with output redirected to a sane logfile
 run_with_output() {
-    # args: program followed by its args (passed as separate parameters)
     local prog="$1"; shift
     local args=( "$@" )
 
-    # build logfile name from args (same scheme used later by get_results)
     local tag
     tag="$(sanitize "${prog} ${args[*]}")"
     local outfile="$LOGS/${tag}.txt"
 
-    # run only if outfile does not already contain success markers
     if ! ( grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null ); then
-        # launch a single-CPU exclusive srun within the allocation
         srun --exclusive -n1 -c1 --time="$TIME" "$prog" "${args[@]}" > "$outfile" 2>&1 &
         ((count++))
     fi
 
-    # throttle: wait for one background task to finish when at limit
+    # PORTABLE throttling (no wait -n)
     while (( count >= MAX_JOBS )); do
-        wait -n
-        ((count--))
+        sleep 1
+        count=$(jobs -r | wc -l)
     done
 }
 
-run_jobs() {
-    local TIME_ARG="$1"   # unused inside srun because we use TIME variable, but keep for compatibility
-    for ds in "${datasets[@]}"; do
-        for k in "${krange[@]}"; do
-            for c in "${configs[@]}"; do
-                # split config into array preserving program + its args
-                read -r -a base <<< "$c"
-                # call run_with_output with: program <dataset>.bin <k> <config-args...>
-                run_with_output "${base[@]}" "$DATA_DIR/${ds}.bin" "$k"
-            done
-        done
-    done
-
-    # wait for remaining background jobs
-    wait
-}
-
-# launch
-run_jobs "$TIME"
-
-# ---------------- collect results ----------------
-rm -f output.txt
-for k in "${krange[@]}"; do
-    echo " -------------k=$k-----------------" >> output.txt
-    for ds in "${datasets[@]}"; do
-        echo -n "${ds} $k" >> output.txt
+for ds in "${datasets[@]}"; do
+    for k in "${krange[@]}"; do
         for c in "${configs[@]}"; do
             read -r -a base <<< "$c"
-            tag="$(sanitize "${base[*]} ${DATA_DIR}/${ds}.bin ${k}")"
-            fname="$LOGS/${tag}.txt"
-            awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$fname" >> output.txt
+            run_with_output "${base[@]}" "$DATA_DIR/${ds}.bin" "$k"
         done
-        echo >> output.txt
     done
 done
 
+wait
 echo "Job finished at $(date)"
