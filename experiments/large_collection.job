@@ -1,110 +1,85 @@
 #!/bin/bash
-#SBATCH --job-name=serial
-#SBATCH --ntasks=156
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=10G
-#SBATCH --partition=medium
-#SBATCH --time=12:00:00
-#SBATCH --output=%x.out
-#SBATCH --error=%x.err
 
-# NOTE: do NOT use -u in batch scripts
-set -eo pipefail
+#SBATCH --job-name=serial             ### Name of the job
+#SBATCH --ntasks=192                    ### Number of Tasks
+#SBATCH --cpus-per-task=1              ### Number of Tasks per CPU
+#SBATCH --mem-per-cpu=10G                        ### Memory required, 4 gigabyte
+#SBATCH --partition=medium             ### Cheaha Partition
+#SBATCH --time=12:00:00                 ### Estimated Time of Completion, 1 hour
+#SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
+#SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
-LOGS=test
-mkdir -p "$LOGS"
-
-DATA_DIR="~/graphs/large-collection"
-TIME="00:01:10"
-
-# Match parallelism to allocation
-MAX_JOBS="${SLURM_NTASKS:-156}"
+MAX_JOBS=2000
 count=0
+LOG=test
 
-# -------- collect datasets safely --------
-shopt -s nullglob
-datasets=()
-for f in "$DATA_DIR"/*.bin; do
-    datasets+=( "$(basename "$f" .bin)" )
-done
-shopt -u nullglob
+run_with_output() {
+    prog="$1"     # first argument is the program name
+    shift         # remove program name from the list
+    outfile="$LOG/$(IFS=_; echo "$*").txt"
+    # if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
+        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
+        ((count++))
+    # fi
+}
+run_jobs() {
+    for ds in $datasets; do
+        for k in $krange; do
+            for c in "${configs[@]}"; do
+                read -r first rest <<< "$c"
+                c="$first $ds.bin $k $rest"
+                run_with_output $c
+                # If at concurrency limit, wait for *one* job to finish
+                while (( count >= MAX_JOBS )); do
+                    sleep 0.1
+                    count=$(squeue -h -j "$SLURM_JOB_ID" -t R | wc -l)
+                done
+            done
+        done
+    done
 
-if (( ${#datasets[@]} == 0 )); then
-    echo "ERROR: no .bin files found in $DATA_DIR" >&2
-    exit 1
-fi
+    wait  # wait for remaining sruns to complete
+}
 
-krange=(2 3 4 5 6 7 8 9 10 15 20)
+datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
 
+krange='2 3 4 5 6 7 8 9 10 15 20'
 configs=(
-   "UMKPEX -algorithm UMKP+ -branching S-Br"
-   "UMKPEX -algorithm UMKP+ -branching R-Br"
-   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
-   "UMKP -branching S-Br"
-   "UMKP -branching R-Br"
+#    "UMKPEX -algorithm UMKP+ -branching S-Br"
+#    "UMKPEX -algorithm UMKP+ -branching R-Br"
+#    "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
+#    "UMKPEX -algorithm kPEX"
+#    "UMKPEX -algorithm kPEX -branching S-Br"
+#    "UMKPEX -algorithm kPEX -branching R-Br"
+#    "UMKPEX -algorithm kPEX -branching Pivot-Br"
+#    "UMKP -branching S-Br" 
+#    "UMKP -branching R-Br" 
    "UMKP -branching Pivot-Br"
 )
-configs=("UMKP")
+run_jobs
 
-# -------- helper: sanitize filenames --------
-sanitize() {
-    echo "$*" | sed 's/[[:space:]]\+/_/g; s/[^A-Za-z0-9._-]/_/g'
-}
+get_results() {
+    rm output.txt
+    for k in $krange; do
+        echo " -------------k=$k-----------------" >> output.txt
+        for ds in $datasets; do
+            echo -en ${ds/.bin} $k >> output.txt
+            # outfile="$LOG/${ds}_$k.txt"
 
-# -------- run one job --------
-run_with_output() {
-    local prog="$1"; shift
-    local args=( "$@" )
+            # awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
 
-    local tag
-    tag="$(sanitize "${prog} ${args[*]}")"
-    local outfile="$LOGS/${tag}.txt"
-
-    if ! ( grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null ); then
-        srun --exclusive -n1 -c1 --time="$TIME" \
-             "$prog" "${args[@]}" > "$outfile" 2>&1 &
-        ((count++))
-    fi
-
-    # ---- SLURM-BASED throttling (Bash 4.2 safe) ----
-    while (( count >= MAX_JOBS )); do
-        sleep 1
-        count=$(squeue -h -j "$SLURM_JOB_ID" -t R | wc -l)
-    done
-}
-
-# -------- launch jobs --------
-for ds in "${datasets[@]}"; do
-    for k in "${krange[@]}"; do
-        for c in "${configs[@]}"; do
-            read -r -a base <<< "$c"
-            run_with_output "${base[@]}" "$DATA_DIR/${ds}.bin" "$k"
-        done
-    done
-done
-
-wait
-echo "All jobs finished at $(date)"
-
-# -------- collect results --------
-rm -f output.txt
-for k in "${krange[@]}"; do
-    echo "-------------k=$k-----------------" >> output.txt
-    for ds in "${datasets[@]}"; do
-        echo -n "$ds $k" >> output.txt
-        for c in "${configs[@]}"; do
-            read -r -a base <<< "$c"
-            tag="$(sanitize "${base[*]} ${DATA_DIR}/${ds}.bin $k")"
-            awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' \
-                "$LOGS/${tag}.txt" >> output.txt
-        done
+            for c in "${configs[@]}"; do
+                read -r first rest <<< "$c"
+                c="$ds.bin $k${rest:+ $rest}"
+                outfile="$LOG/${c// /_}.txt"
+                # echo $outfile
+                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
+            done
         echo >> output.txt
+        done
     done
-done
 
-echo "Results written to output.txt"
+}
+get_results
+
 echo "Job finished at $(date)"
