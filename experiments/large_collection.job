@@ -15,7 +15,7 @@ LOGS=test
 mkdir -p "$LOGS"
 
 DATA_DIR="$HOME/graphs/large-collection"
-TIME="00:00:10"
+TIME="00:01:10"
 
 # Match parallelism to allocation
 MAX_JOBS="${SLURM_NTASKS:-156}"
