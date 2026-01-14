@@ -31,9 +31,10 @@ run_jobs() {
                 run_with_output $c
                 # If at concurrency limit, wait for *one* job to finish
                 while (( count >= MAX_JOBS )); do
-                    sleep 0.1
-                    count=$(squeue -h -j "$SLURM_JOB_ID" -t R | wc -l)
+                    wait
+                    ((count--))
                 done
+
             done
         done
     done
