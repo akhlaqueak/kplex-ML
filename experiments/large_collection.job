@@ -2,8 +2,8 @@
 #SBATCH --job-name=UMKP_batch
 #SBATCH --partition=medium
 #SBATCH --time=12:00:00
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=156
+#SBATCH --ntasks=156
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
