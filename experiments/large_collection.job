@@ -10,17 +10,17 @@
 
 set -euo pipefail
 
-# ------------------ configuration ------------------
-MAX_JOBS=156                 # number of parallel tasks
-TIME=00:00:10
+# ---------------- configuration ----------------
 LOGS=test
 DATA_DIR="$HOME/graphs/large-collection"
+TIME=00:00:10
 PROG="./UMKP"
-# ---------------------------------------------------
+MAX_TASKS=156
+# -----------------------------------------------
 
 mkdir -p "$LOGS"
 
-# Collect datasets safely (no extension, no path)
+# Collect datasets safely (no path, no .bin)
 datasets=()
 for f in "$DATA_DIR"/*.bin; do
     datasets+=( "$(basename "$f" .bin)" )
@@ -40,7 +40,7 @@ run_task() {
 
     local outfile="$LOGS/$(printf '%s_' "${args[@]}" | sed 's/_$//').txt"
 
-    # Skip if already completed
+    # skip completed runs
     if grep -q ">>" "$outfile" 2>/dev/null || grep -q "Trivial" "$outfile" 2>/dev/null; then
         return
     fi
@@ -50,14 +50,14 @@ run_task() {
 
     ((count++))
 
-    # throttle to MAX_JOBS
-    while (( count >= MAX_JOBS )); do
+    # throttle to exactly 156 tasks
+    while (( count >= MAX_TASKS )); do
         wait -n
         ((count--))
     done
 }
 
-# ------------------ launch tasks ------------------
+# ---------------- launch tasks ----------------
 for ds in "${datasets[@]}"; do
     for k in "${krange[@]}"; do
         for cfg in "${configs[@]}"; do
@@ -68,9 +68,9 @@ for ds in "${datasets[@]}"; do
 done
 
 wait
-echo "All tasks completed at $(date)"
+echo "All tasks finished at $(date)"
 
-# ------------------ collect results ------------------
+# ---------------- collect results ----------------
 rm -f output.txt
 
 for k in "${krange[@]}"; do
@@ -87,4 +87,4 @@ for k in "${krange[@]}"; do
 done
 
 echo "Results written to output.txt"
-echo "Job finished at $(date)"
+echo "Job completed at $(date)"
