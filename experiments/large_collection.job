@@ -14,7 +14,7 @@ set -eo pipefail
 LOGS=test
 mkdir -p "$LOGS"
 
-DATA_DIR="$HOME/graphs/large-collection"
+DATA_DIR="~/graphs/large-collection"
 TIME="00:01:10"
 
 # Match parallelism to allocation
