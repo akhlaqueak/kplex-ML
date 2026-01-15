@@ -17,7 +17,7 @@ run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="$LOG/$(IFS=_; echo "$*").txt"
-    if ! grep -q ">>" "$outfile" && ! grep -q '!' "$outfile"; then
+    if ! grep -q ">>" "$outfile" && ! grep -q "Warning" "$outfile"; then
         srun --nodes=1 --ntasks=1 -c 1 --time=00:01:00 --unbuffered --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
         ((count++))
     fi
@@ -26,6 +26,9 @@ run_jobs() {
     for ds in $datasets; do
         for k in $krange; do
             for c in "${configs[@]}"; do
+                if grep -Eq "Small|Preprocessing" test-prep-small/"$ds.bin_$k"; then
+                    continue
+                fi
                 read -r first rest <<< "$c"
                 c="$first $ds.bin $k $rest"
                 run_with_output $c
@@ -45,18 +48,18 @@ run_jobs() {
 datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
 
 krange='2 3 4 5 6 7 8 9 10 15 20'
-krange='2'
+# krange='2'
 configs=(
-#    "UMKPEX -algorithm UMKP+ -branching S-Br"
-#    "UMKPEX -algorithm UMKP+ -branching R-Br"
-#    "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-#    "UMKPEX -algorithm kPEX"
-#    "UMKPEX -algorithm kPEX -branching S-Br"
-#    "UMKPEX -algorithm kPEX -branching R-Br"
-#    "UMKPEX -algorithm kPEX -branching Pivot-Br"
-#    "UMKP -branching S-Br" 
-#    "UMKP -branching R-Br" 
+   "UMKP -branching S-Br" 
+   "UMKP -branching R-Br" 
    "UMKP -branching Pivot-Br"
+   "UMKPEX -algorithm UMKP+ -branching S-Br"
+   "UMKPEX -algorithm UMKP+ -branching R-Br"
+   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
+   "UMKPEX -algorithm kPEX"
+   "UMKPEX -algorithm kPEX -branching S-Br"
+   "UMKPEX -algorithm kPEX -branching R-Br"
+   "UMKPEX -algorithm kPEX -branching Pivot-Br"
 )
 run_jobs
 
