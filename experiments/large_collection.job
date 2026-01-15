@@ -29,6 +29,8 @@ run_jobs() {
                 if grep -Eq "Small|Preprocessing" test-prep-small/"$ds.bin_$k"; then
                     continue
                 fi
+
+                [[ -f $LOG/$ds.bin_$k_UMKP ]] && continue;
                 read -r first rest <<< "$c"
                 c="$first $ds.bin $k $rest"
                 run_with_output $c
@@ -51,7 +53,7 @@ krange='2 3 4 5 6 7 8 9 10 15 20'
 # krange='2'
 configs=(
     "UMKP -branching Default-Br"
-    "UMKPEX -branching Binary-Br"
+    # "UMKPEX -branching Binary-Br"
 #    "UMKP -branching S-Br" 
 #    "UMKP -branching R-Br" 
 #    "UMKP -branching Pivot-Br"
