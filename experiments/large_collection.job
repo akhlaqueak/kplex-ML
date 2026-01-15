@@ -48,12 +48,12 @@ run_jobs() {
 }
 
 # datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
-datasets=$(< datasets.txt)
+datasets=$(< datas.txt)
 krange='2 3 4 5 6 7 8 9 10 15 20'
 # krange='2'
 configs=(
     "UMKP -branching Default-Br"
-    # "UMKPEX -branching Binary-Br"
+    "UMKPEX -branching Binary-Br"
 #    "UMKP -branching S-Br" 
 #    "UMKP -branching R-Br" 
 #    "UMKP -branching Pivot-Br"
