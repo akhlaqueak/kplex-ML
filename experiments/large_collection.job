@@ -18,7 +18,7 @@ run_with_output() {
     shift         # remove program name from the list
     outfile="$LOG/$(IFS=_; echo "$*").txt"
     if ! grep -q ">>" "$outfile" && ! grep -q '!' "$outfile"; then
-        srun --nodes=1 --ntasks=1 -c 1 --time=00:01:00 --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
+        srun --nodes=1 --ntasks=1 -c 1 --time=00:01:00 --unbuffered --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
         ((count++))
     fi
 }
