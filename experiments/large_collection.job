@@ -11,14 +11,14 @@
 
 MAX_JOBS=1800
 count=0
-LOG=test
+LOG=test-10-sec
 mkdir $LOG
 run_with_output() {
     prog="$1"     # first argument is the program name
     shift         # remove program name from the list
     outfile="$LOG/$(IFS=_; echo "$*").txt"
     if ! grep -q ">>" "$outfile" && ! grep -q "Warning" "$outfile"; then
-        srun --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --unbuffered --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
+        srun --nodes=1 --ntasks=1 -c 1 --time=00:00:10 --unbuffered --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
         ((count++))
     fi
 }
@@ -45,46 +45,108 @@ run_jobs() {
     wait  # wait for remaining sruns to complete
 }
 
-datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
-
+# datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
+datasets=$(< datasets.txt)
 krange='2 3 4 5 6 7 8 9 10 15 20'
 # krange='2'
 configs=(
-   "UMKP -branching S-Br" 
-   "UMKP -branching R-Br" 
-   "UMKP -branching Pivot-Br"
-   "UMKPEX -algorithm UMKP+ -branching S-Br"
-   "UMKPEX -algorithm UMKP+ -branching R-Br"
-   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
+    "UMKP -branching Default-Br"
+    "UMKPEX -branching Binary-Br"
+#    "UMKP -branching S-Br" 
+#    "UMKP -branching R-Br" 
+#    "UMKP -branching Pivot-Br"
+#    "UMKPEX -algorithm UMKP+ -branching S-Br"
+#    "UMKPEX -algorithm UMKP+ -branching R-Br"
+#    "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
+#    "UMKPEX -algorithm kPEX"
+#    "UMKPEX -algorithm kPEX -branching S-Br"
+#    "UMKPEX -algorithm kPEX -branching R-Br"
+#    "UMKPEX -algorithm kPEX -branching Pivot-Br"
 )
 run_jobs
 
+output=output.txt
 get_results() {
-    rm output.txt
+    rm $output
     for k in $krange; do
-        echo " -------------k=$k-----------------" >> output.txt
+        # echo " -------------k=$k-----------------" >> $output
         for ds in $datasets; do
-            echo -en ${ds/.bin} $k >> output.txt
-            # outfile="$LOG/${ds}_$k.txt"
+            echo -en "${ds/.bin} $k " >> $output
 
-            # awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
-
+            results=()   # array to store values
+            prep=false
             for c in "${configs[@]}"; do
+                if grep -Eq "Small|Preprocessing" test-prep-small/"$ds.bin_$k"; then
+                    prep=true
+                    break
+                fi
                 read -r first rest <<< "$c"
                 c="$ds.bin $k${rest:+ $rest}"
                 outfile="$LOG/${c// /_}.txt"
-                # echo $outfile
-                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
+
+                value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf "x"}' "$outfile")
+                results+=("$value")
             done
-        echo >> output.txt
+
+            if $prep; then
+                echo "prep-solved" >> $output
+                continue
+            fi
+
+            all_lt_1=true
+            all_x=true
+
+            for v in "${results[@]}"; do
+                if [[ "$v" != "x" ]]; then
+                    all_x=false
+                    # numeric check
+                    if (( $(echo "$v >= 1" | bc -l) )); then
+                        all_lt_1=false
+                        break
+                    fi
+                else
+                    all_lt_1=false
+                fi
+            done
+
+            if $all_lt_1; then
+                echo "subsecond-solved" >> $output
+                continue
+            fi
+            if $all_x; then
+                echo  "not-solved" >> $output
+                continue
+            fi
+
+            echo "practical ${results[@]}" >> $output
         done
     done
 
 }
-get_results
+# get_results
+
+output=prep.txt
+get_results() {
+    rm $output
+        # echo " -------------k=$k-----------------" >> $output
+    for ds in $datasets; do
+        echo -en "${ds/.bin} " >> $output
+        for k in $krange; do
+            outfile="test-prep-small/$ds.bin_$k"
+            results=()   # array to store values
+            prep=false
+            if grep -Eq "Small|Preprocessing" $outfile; then    
+                echo -en " prep" >> $output
+                continue
+            fi
+            value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf "x"}' "$outfile")
+            echo -en " $value" >> $output
+
+        done
+        echo >> $output
+    done
+
+}
+# get_results 
 
 echo "Job finished at $(date)"
