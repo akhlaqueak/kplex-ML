@@ -28,8 +28,16 @@ datasets=$(< datas.txt)
 krange='2 3 4 5 6 7 8 9 10 15 20'
 
 configs=(
-    "UMKP -branching Default-Br"
-    "UMKPEX -branching Binary-Br"
+   "UMKP -branching S-Br" 
+   "UMKP -branching R-Br" 
+   "UMKP -branching Pivot-Br"
+   "UMKPEX -algorithm UMKP+ -branching S-Br"
+   "UMKPEX -algorithm UMKP+ -branching R-Br"
+   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
+   "UMKPEX -algorithm kPEX"
+   "UMKPEX -algorithm kPEX -branching S-Br"
+   "UMKPEX -algorithm kPEX -branching R-Br"
+   "UMKPEX -algorithm kPEX -branching Pivot-Br"
 )
 
 ######################################
