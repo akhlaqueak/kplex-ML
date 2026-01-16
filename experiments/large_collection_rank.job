@@ -95,16 +95,20 @@ export LOG CONFIGFILE
 ######################################
 # ONE srun – rank-based work sharing
 ######################################
-
-srun bash -c '
+echo "starting at" $(date)
+srun --label bash -c '
 rank=$SLURM_PROCID
 nworkers=$SLURM_NTASKS
 i=0
 
 while read -r ds k || [[ -n "$ds" ]]; do
     if (( i % nworkers == rank )); then
+        echo "[Rank $rank] Starting task $i: $ds $k"
         run_with_output "$ds" "$k"
+        echo "[Rank $rank] Finished task $i"
     fi
     ((i++))
 done < "'"$TASKFILE"'"
 '
+
+echo "finished at" $(date)
