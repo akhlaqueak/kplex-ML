@@ -73,7 +73,7 @@ run_with_output() {
 
         outfile="$LOG/$ds.bin $k $rest.txt"
         outfile=${outfile// /_}
-        timeout $TIME "./$prog" \
+        timeout 1m "./$prog" \
             "$HOME/graphs/large-collection/${ds}.bin" \
             "$k" \
             $rest \
