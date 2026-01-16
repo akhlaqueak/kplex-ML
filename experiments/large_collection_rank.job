@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=serial
-#SBATCH --ntasks=92
+#SBATCH --ntasks=192
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
@@ -69,8 +69,8 @@ run_with_output() {
     while IFS= read -r c || [[ -n "$c" ]]; do
         read -r prog rest <<< "$c"
 
-        outfile="$LOG/$(IFS=_; echo "$ds.bin $k $rest").txt"
-
+        outfile="$LOG/$ds.bin $k $rest.txt"
+        outfile=${outfile// /_}
         timeout 10s "./$prog" \
             "$HOME/graphs/large-collection/${ds}.bin" \
             "$k" \
