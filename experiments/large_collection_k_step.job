@@ -9,7 +9,7 @@
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
-MAX_JOBS=1800
+MAX_JOBS=500
 count=0
 LOG=test-10-sec
 mkdir $LOG
