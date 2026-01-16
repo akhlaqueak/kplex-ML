@@ -6,8 +6,8 @@
 #SBATCH --partition=medium
 #SBATCH --time=2:00:00
 #SBATCH --no-requeue
-#SBATCH --output=%x.%j.out
-#SBATCH --error=%x.%j.err
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
 
 set -euo pipefail
 
