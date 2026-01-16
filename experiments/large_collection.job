@@ -15,6 +15,8 @@ LOG=test-10-sec
 mkdir $LOG
 run_with_output() {
     prog="$1"     # first argument is the program name
+    ds="$2"
+    k="$3"
     shift         # remove program name from the list
     outfile="$LOG/$(IFS=_; echo "$*").txt"
     if ! grep -q ">>" "$outfile" && ! grep -q "Warning" "$outfile"; then
@@ -30,7 +32,6 @@ run_jobs() {
                     continue
                 fi
 
-                [[ -f $LOG/$ds.bin_$k_UMKP ]] && continue;
                 read -r first rest <<< "$c"
                 c="$first $ds.bin $k $rest"
                 run_with_output $c
@@ -134,13 +135,19 @@ get_results() {
     for ds in $datasets; do
         echo -en "${ds/.bin} " >> $output
         for k in $krange; do
-            outfile="test-prep-small/$ds.bin_$k"
             results=()   # array to store values
-            prep=false
+            outfile="test-prep-small/$ds.bin_${k}"
+
             if grep -Eq "Small|Preprocessing" $outfile; then    
                 echo -en " prep" >> $output
                 continue
             fi
+
+            outfile="test-10-sec/$ds.bin_${k}_kPEX"
+            # if [[ ! -f "$outfile" ]]; then
+            #     echo -en " x" >> $output
+            #     continue
+            # fi
             value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf "x"}' "$outfile")
             echo -en " $value" >> $output
 
@@ -149,6 +156,6 @@ get_results() {
     done
 
 }
-# get_results 
+get_results 
 
 echo "Job finished at $(date)"
