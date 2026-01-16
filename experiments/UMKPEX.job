@@ -1,126 +1,26 @@
 #!/bin/bash
 
 #SBATCH --job-name=serial             ### Name of the job
-#SBATCH --ntasks=192                    ### Number of Tasks
+#SBATCH --ntasks=16                    ### Number of Tasks
 #SBATCH --cpus-per-task=1              ### Number of Tasks per CPU
-#SBATCH --mem-per-cpu=10G                        ### Memory required, 4 gigabyte
+#SBATCH --mem-per-cpu=60G                        ### Memory required, 4 gigabyte
 #SBATCH --partition=medium             ### Cheaha Partition
-#SBATCH --time=12:00:00                 ### Estimated Time of Completion, 1 hour
+#SBATCH --time=2:00:00                 ### Estimated Time of Completion, 1 hour
 #SBATCH --output=%x.out              ### Slurm Output file, %x is job name, %j is job id
 #SBATCH --error=%x.err               ### Slurm Error file, %x is job name, %j is job id
 
-MAX_JOBS=2000
-count=0
+srun --label bash -c '
+rank=$SLURM_PROCID
+nworkers=$SLURM_NTASKS
+i=0
 
-
-run_with_output() {
-    prog="$1"     # first argument is the program name
-    shift         # remove program name from the list
-    outfile="smalltest/$(IFS=_; echo "$*").txt"
-    # if ! grep -q ">>" "$outfile" && ! grep -q "Trivial" "$outfile"; then
-        srun --unbuffered --nodes=1 --ntasks=1 -c 1 --time=00:10:00 --exclusive ./$prog ~/graphs/large-collection/$* > $outfile 2>&1 &    
-        ((count++))
-    # fi
-}
-run_jobs() {
-    for ds in $datasets; do
-        for k in $krange; do
-            for c in "${configs[@]}"; do
-                read -r first rest <<< "$c"
-                c="$first $ds.bin $k $rest"
-                run_with_output $c
-                # If at concurrency limit, wait for *one* job to finish
-                if ((count >= MAX_JOBS)); then
-                    wait 
-                    count=0
-                fi
-            done
-        done
-    done
-
-    wait  # wait for remaining sruns to complete
-}
-
-datasets='brock200-2
-keller4
-sc-ldoor
-soc-lastfm
-soc-youtube-snap
-dbpedia-link
-MANN-a45
-sc-msdoor
-soc-livejournal-user-groups
-sx-stackoverflow
-delicious-ui
-MANN-a81
-soc-bitcoin
-soc-LiveMocha
-tech-ip
-dimacs9-CTR
-p-hat500-1
-soc-buzznet
-soc-orkut
-trackers
-dimacs9-USA
-p-hat700-1
-soc-digg
-soc-pokec
-web-ClueWeb09
-hamming6-2
-socfb-A-anon
-soc-sinaweibo
-web-wikipedia_link_it
-ia-wiki-Talk
-rec-epinions-user-ratings
-socfb-B-anon
-wikipedia-link-en13
-ia-wiki-Talk-dir
-san200-0-9-1
-socfb-Duke14
-soc-themarker
-wikipedia-link-en
-johnson8-4-4
-san200-0-9-2
-soc-gowalla
-soc-youtube'
-
-krange='2 3 4 5 6 7 8 9 10 15 20'
-configs=(
-   "UMKPEX -algorithm UMKP+ -branching S-Br"
-   "UMKPEX -algorithm UMKP+ -branching R-Br"
-   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
-   "UMKP -branching S-Br" 
-   "UMKP -branching R-Br" 
-   "UMKP -branching Pivot-Br"
-)
-run_jobs
-
-get_results() {
-    rm output.txt
-    for k in $krange; do
-        echo " -------------k=$k-----------------" >> output.txt
-        for ds in $datasets; do
-            echo -en ${ds/.bin} $k >> output.txt
-            # outfile="smalltest/${ds}_$k.txt"
-
-            # awk '/STATS:/ { $1=""; sub(/^ /,""); printf " %s", $0; found=1; exit } END{ if(!found) printf " 0 0 0 0 0 []" }' "$outfile" >> output.txt
-
-            for c in "${configs[@]}"; do
-                read -r first rest <<< "$c"
-                c="$ds.bin $k${rest:+ $rest}"
-                outfile="smalltest/${c// /_}.txt"
-                # echo $outfile
-                awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile" >> output.txt
-            done
-        echo >> output.txt
-        done
-    done
-
-}
-get_results
-
-echo "Job finished at $(date)"
+while read -r line || [[ -n "$line" ]]; do
+    if (( i % nworkers == rank )); then
+        echo "[Rank $rank] Task $i: $line"
+        ./toBin-fixed BK/$line.txt
+        mv BK/$line.bin large-collection/.
+        echo "Done... [Rank $rank] Task $i: $line"   
+    fi
+    ((i++))
+done < conv.txt
+'
