@@ -17,31 +17,33 @@ set -euo pipefail
 
 LOG="test-1m"
 TASKFILE="tasks.txt"
-CONFIGFILE="configs.txt"
 TIME=1m
 mkdir -p "$LOG"
 
 ######################################
 # Datasets / parameters
 ######################################
+
 datasets=$(< datas.txt)
 krange='2 3 4 5 6 7 8 9 10 15 20'
 
 configs=(
-   "UMKP -branching S-Br" 
-   "UMKP -branching R-Br" 
-   "UMKP -branching Pivot-Br"
-   "UMKPEX -algorithm UMKP+ -branching S-Br"
-   "UMKPEX -algorithm UMKP+ -branching R-Br"
-   "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
-   "UMKPEX -algorithm kPEX"
-   "UMKPEX -algorithm kPEX -branching S-Br"
-   "UMKPEX -algorithm kPEX -branching R-Br"
-   "UMKPEX -algorithm kPEX -branching Pivot-Br"
+  "UMKP|-branching S-Br"
+  "UMKP|-branching R-Br"
+  "UMKP|-branching Pivot-Br"
+  "UMKPEX|-algorithm UMKP+ -branching S-Br"
+  "UMKPEX|-algorithm UMKP+ -branching R-Br"
+  "UMKPEX|-algorithm UMKP+ -branching Pivot-Br"
+  "UMKPEX|-algorithm kPEX"
+  "UMKPEX|-algorithm kPEX -branching S-Br"
+  "UMKPEX|-algorithm kPEX -branching R-Br"
+  "UMKPEX|-algorithm kPEX -branching Pivot-Br"
 )
 
 ######################################
 # Build TASKFILE
+# Format per line:
+# prog ds k args...
 ######################################
 
 : > "$TASKFILE"
@@ -52,63 +54,63 @@ for ds in $datasets; do
             continue
         fi
 
+        for c in "${configs[@]}"; do
+            IFS='|' read -r prog args <<< "$c"
+            
+            outfile="$LOG/$prog $ds.bin $k $args.txt"
+            outfile=${outfile// /_}
+            
+            grep -q ">>" "$outfile" 2>/dev/null && continue
 
-        echo "$ds $k" >> "$TASKFILE"
+            echo "$prog $ds $k $args" >> "$TASKFILE"
+        done
     done
 done
 
 echo "Total tasks: $(wc -l < "$TASKFILE")"
 
 ######################################
-# Write CONFIGFILE
-######################################
-
-: > "$CONFIGFILE"
-for c in "${configs[@]}"; do
-    echo "$c" >> "$CONFIGFILE"
-done
-
-######################################
 # Worker function
+# Receives the entire task line
 ######################################
 
-run_with_output() {
-    local ds="$1"
-    local k="$2"
+run_one_task() {
+    local line="$1"
 
-    while IFS= read -r c || [[ -n "$c" ]]; do
-        read -r prog rest <<< "$c"
+    # Parse: prog ds k args...
+    read -r prog ds k args <<< "$line"
 
-        outfile="$LOG/$ds.bin $k $rest.txt"
-        outfile=${outfile// /_}
-        timeout 1m "./$prog" \
-            "$HOME/graphs/large-collection/${ds}.bin" \
-            "$k" \
-            $rest \
-            > "$outfile" 2>&1 || true
-    done < "$CONFIGFILE"
+    outfile="$LOG/$prog $ds.bin $k $args.txt"
+    outfile=${outfile// /_}
+
+    timeout 1m "./$prog" \
+        "$HOME/graphs/large-collection/${ds}.bin" \
+        "$k" \
+        $args \
+        > "$outfile" 2>&1 || true
 }
 
-export -f run_with_output
-export LOG CONFIGFILE
+export -f run_one_task
+export LOG
 
 ######################################
 # ONE srun – rank-based work sharing
 ######################################
-echo "starting at" $(date)
+
+echo "starting at" "$(date)"
+
 srun --label bash -c '
 rank=$SLURM_PROCID
 nworkers=$SLURM_NTASKS
 i=0
 
-while read -r ds k || [[ -n "$ds" ]]; do
+while read -r line || [[ -n "$line" ]]; do
     if (( i % nworkers == rank )); then
-        echo "[Rank $rank] Starting task $i: $ds $k"
-        run_with_output "$ds" "$k"
-        echo "[Rank $rank] Finished task $i"
+        echo "[Rank $rank] Task $i: $line"
+        run_one_task "$line"
     fi
     ((i++))
 done < "'"$TASKFILE"'"
 '
 
-echo "finished at" $(date)
+echo "finished at" "$(date)"
