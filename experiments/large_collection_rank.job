@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --partition=medium
-#SBATCH --time=2:00:00
+#SBATCH --time=24:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -59,7 +59,7 @@ for ds in $datasets; do
             
             outfile="$LOG/$prog $ds.bin $k $args.txt"
             outfile=${outfile// /_}
-            
+
             grep -q ">>" "$outfile" 2>/dev/null && continue
 
             echo "$prog $ds $k $args" >> "$TASKFILE"
@@ -83,7 +83,7 @@ run_one_task() {
     outfile="$LOG/$prog $ds.bin $k $args.txt"
     outfile=${outfile// /_}
 
-    timeout 1m "./$prog" \
+    timeout 10m "./$prog" \
         "$HOME/graphs/large-collection/${ds}.bin" \
         "$k" \
         $args \
@@ -114,3 +114,32 @@ done < "'"$TASKFILE"'"
 '
 
 echo "finished at" "$(date)"
+
+# compile output
+get_results() {
+output=ds1m.out
+rm $output
+for ds in $datasets; do
+    for k in $krange; do
+        echo -en "$ds $k" >> $output
+
+
+        for c in "${configs[@]}"; do
+            if grep -Eq "Small|Preprocessing" "test-prep-small/${ds}.bin_${k}" 2>/dev/null; then
+                echo -en " prep" >> $output
+                continue
+            fi
+            IFS='|' read -r prog args <<< "$c"
+            
+            outfile="$LOG/$prog $ds.bin $k $args.txt"
+            outfile=${outfile// /_}
+            
+            value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile")
+            echo -en " $value" >> $output
+
+        done
+        echo >> $output
+    done
+done
+}
+# get_results
