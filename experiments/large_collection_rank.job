@@ -66,6 +66,7 @@ i=0
 for task in "${tasks[@]}"; do
     if (( i % nworkers == rank )); then
         read -r ds k <<< "$task"
+        echo run_with_output "$ds" "$k"
         run_with_output "$ds" "$k"
     fi
     ((i++))
