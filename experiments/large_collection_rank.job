@@ -1,0 +1,168 @@
+#!/bin/bash
+#SBATCH --job-name=serial
+#SBATCH --ntasks=92
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=2:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+
+LOG=test-10-sec
+mkdir -p "$LOG"
+
+run_with_output() {
+    ds="$1"
+    k="$2"
+
+    for c in "${configs[@]}"; do
+        read -r prog rest <<< "$c"
+        outfile="$LOG/$(IFS=_; echo "$ds.bin $k $rest").txt"
+        timeout 10s ./$prog ~/graphs/large-collection/$ds.bin $k $rest > "$outfile" 2>&1
+    done
+}
+
+export -f run_with_output
+
+# Build task list
+tasks=()
+for ds in $datasets; do
+    for k in $krange; do
+        if grep -Eq "Small|Preprocessing" test-prep-small/"$ds.bin_$k"; then
+            continue
+        fi
+        tasks+=("$ds $k")
+    done
+done
+
+
+
+# datasets=$(ls ~/graphs/large-collection/*.bin | xargs -n1 basename -s .bin)
+datasets='08blocks 1138_bus 12month1 130bit 144 145bit 162bit 176bit 192bit 208bit 2cubes_sphere 2D_27628_bjtcai 2D_54019_highK 3D_28984_Tetra 3D_51448_3D 3Dspectralwave2 3Dspectralwave 3dtube 3elt 3elt_dual 494_bus 598a 662_bus 685_bus a0nsdsil a2nnsnsl a5esindl aa01 aa03 aa3 aa4 aa5 aa6 ABACUS_shell_hd ABACUS_shell_ld ABACUS_shell_md ABACUS_shell_ud abb313 abtaha1 abtaha2 actor-collaboration actor-movie adaptive add20 add32 adder_dcop_01 adder_dcop_02 adder_dcop_03 adder_dcop_04 adder_dcop_05 adder_dcop_06 adder_dcop_07 adder_dcop_08 adder_dcop_09 adder_dcop_10 adder_dcop_11 adder_dcop_12 adder_dcop_13 adder_dcop_14 adder_dcop_15 adder_dcop_16 adder_dcop_17 adder_dcop_18 adder_dcop_19 adder_dcop_20 adder_dcop_21 adder_dcop_22 adder_dcop_23 adder_dcop_24 adder_dcop_25 adder_dcop_26 adder_dcop_27 adder_dcop_28 adder_dcop_29 adder_dcop_30 adder_dcop_31 adder_dcop_32 adder_dcop_33 adder_dcop_34 adder_dcop_35 adder_dcop_36 adder_dcop_37 adder_dcop_38 adder_dcop_39 adder_dcop_40 adder_dcop_41 adder_dcop_42 adder_dcop_43 adder_dcop_44 adder_dcop_45 adder_dcop_46 adder_dcop_47 adder_dcop_48 adder_dcop_49 adder_dcop_50 adder_dcop_51 adder_dcop_52 adder_dcop_53 adder_dcop_54 adder_dcop_55 adder_dcop_56 adder_dcop_57 adder_dcop_58 adder_dcop_59 adder_dcop_60 adder_dcop_61 adder_dcop_62 adder_dcop_63 adder_dcop_64 adder_dcop_65 adder_dcop_66 adder_dcop_67 adder_dcop_68 adder_dcop_69 adder_trans_01 adder_trans_02 adjnoun_adjacency adjnoun advogato af_0_k101 af_1_k101 af23560 af_2_k101 af_3_k101 af_4_k101 af_5_k101 aff-amazon-copurchases aff-dbpedia-users2country aff-delicious-url-tag aff-delicious-user-tag aff-digg aff-flickr-user-groups aff-github-user2project aff-wiki-en-article-cat aff-wiki-wordbypage af_shell10 af_shell1 af_shell2 af_shell3 af_shell4 af_shell5 af_shell6 af_shell7 af_shell8 aft01 aft02 air02 air03 air04 air05 air06 aircraft airfoil1 airfoil1_dual airfoil_2d Alemdar amazon0302 amazon0312 amazon0505 amazon0601 amazon-2008 amazon-ratings Andrews apache1 apache2 appu arabic-2005 arc130 arenas-jazz arenas-meta arenas-pgp as20000102 as-22july06 as-735 as-caida20071105 as-caida ash219 ash292 ash331 ash608 ash85 ash958 asia_osm ASIC_100k ASIC_100ks ASIC_320k ASIC_320ks ASIC_680k ASIC_680ks as-Skitter astro-ph atmosmodd atmosmodj atmosmodl atmosmodm audikw_1 aug2d aug2dc aug3d aug3dcqp auto av41092 b1_ss b2_ss barrier2-10 barrier2-11 barrier2-12 barrier2-1 barrier2-2 barrier2-3 barrier2-4 barrier2-9 barth4 barth5 barth bas1lp Baumann bauru5727 baxter bayer01 bayer02 bayer03 bayer04 bayer05 bayer06 bayer07 bayer08 bayer09 bayer10 bbmat bcircuit bcspwr01 bcspwr02 bcspwr03 bcspwr04 bcspwr05 bcspwr06 bcspwr07 bcspwr08 bcspwr09 bcspwr10 bcsstk01 bcsstk02 bcsstk03 bcsstk04 bcsstk05 bcsstk06 bcsstk07 bcsstk08 bcsstk09 bcsstk10 bcsstk11 bcsstk12 bcsstk13 bcsstk14 bcsstk15 bcsstk16 bcsstk17 bcsstk18 bcsstk19 bcsstk20 bcsstk21 bcsstk22 bcsstk23 bcsstk24 bcsstk25 bcsstk26 bcsstk27 bcsstk28 bcsstk29 bcsstk30 bcsstk31 bcsstk32 bcsstk33 bcsstk34 bcsstk35 bcsstk36 bcsstk37 bcsstk38 bcsstk39 bcsstm01 bcsstm02 bcsstm03 bcsstm04 bcsstm05 bcsstm06 bcsstm07 bcsstm08 bcsstm09 bcsstm10 bcsstm11 bcsstm12 bcsstm13 bcsstm19 bcsstm20 bcsstm21 bcsstm22 bcsstm23 bcsstm24 bcsstm25 bcsstm26 bcsstm27 bcsstm34 bcsstm35 bcsstm36 bcsstm37 bcsstm38 bcsstm39 b_dyn beacxc beaflw beause belgium_osm BenElechi1 benzene bfly bfwa398'
+krange='2 3 4 5 6 7 8 9 10 15 20'
+# krange='2'
+configs=(
+    "UMKP -branching Default-Br"
+    "UMKPEX -branching Binary-Br"
+#    "UMKP -branching S-Br" 
+#    "UMKP -branching R-Br" 
+#    "UMKP -branching Pivot-Br"
+#    "UMKPEX -algorithm UMKP+ -branching S-Br"
+#    "UMKPEX -algorithm UMKP+ -branching R-Br"
+#    "UMKPEX -algorithm UMKP+ -branching Pivot-Br"
+#    "UMKPEX -algorithm kPEX"
+#    "UMKPEX -algorithm kPEX -branching S-Br"
+#    "UMKPEX -algorithm kPEX -branching R-Br"
+#    "UMKPEX -algorithm kPEX -branching Pivot-Br"
+)
+
+
+export tasks configs datasets krange LOG
+
+# ONE srun
+srun bash -c '
+rank=$SLURM_PROCID
+nworkers=$SLURM_NTASKS
+i=0
+
+for task in "${tasks[@]}"; do
+    if (( i % nworkers == rank )); then
+        read -r ds k <<< "$task"
+        run_with_output "$ds" "$k"
+    fi
+    ((i++))
+done
+'
+
+output=output.txt
+get_results() {
+    rm $output
+    for k in $krange; do
+        # echo " -------------k=$k-----------------" >> $output
+        for ds in $datasets; do
+            echo -en "${ds/.bin} $k " >> $output
+
+            results=()   # array to store values
+            prep=false
+            for c in "${configs[@]}"; do
+                if grep -Eq "Small|Preprocessing" test-prep-small/"$ds.bin_$k"; then
+                    prep=true
+                    break
+                fi
+                read -r first rest <<< "$c"
+                c="$ds.bin $k${rest:+ $rest}"
+                outfile="$LOG/${c// /_}.txt"
+
+                value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf "x"}' "$outfile")
+                results+=("$value")
+            done
+
+            if $prep; then
+                echo "prep-solved" >> $output
+                continue
+            fi
+
+            all_lt_1=true
+            all_x=true
+
+            for v in "${results[@]}"; do
+                if [[ "$v" != "x" ]]; then
+                    all_x=false
+                    # numeric check
+                    if (( $(echo "$v >= 1" | bc -l) )); then
+                        all_lt_1=false
+                        break
+                    fi
+                else
+                    all_lt_1=false
+                fi
+            done
+
+            if $all_lt_1; then
+                echo "subsecond-solved" >> $output
+                continue
+            fi
+            if $all_x; then
+                echo  "not-solved" >> $output
+                continue
+            fi
+
+            echo "practical ${results[@]}" >> $output
+        done
+    done
+
+}
+# get_results
+
+output=prep.txt
+get_results() {
+    rm $output
+        # echo " -------------k=$k-----------------" >> $output
+    for ds in $datasets; do
+        echo -en "${ds/.bin} " >> $output
+        for k in $krange; do
+            results=()   # array to store values
+            outfile="test-prep-small/$ds.bin_${k}"
+
+            if grep -Eq "Small|Preprocessing" $outfile; then    
+                echo -en " prep" >> $output
+                continue
+            fi
+
+            outfile="test-10-sec/$ds.bin_${k}_kPEX"
+            # if [[ ! -f "$outfile" ]]; then
+            #     echo -en " x" >> $output
+            #     continue
+            # fi
+            value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf "x"}' "$outfile")
+            echo -en " $value" >> $output
+
+        done
+        echo >> $output
+    done
+
+}
+get_results 
+
+echo "Job finished at $(date)"
