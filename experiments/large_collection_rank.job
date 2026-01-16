@@ -83,7 +83,7 @@ run_one_task() {
     outfile="$LOG/$prog $ds.bin $k $args.txt"
     outfile=${outfile// /_}
 
-    timeout 30m "./$prog" \
+    timeout 10m "./$prog" \
         "$HOME/graphs/large-collection/${ds}.bin" \
         "$k" \
         $args \
