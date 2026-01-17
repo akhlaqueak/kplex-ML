@@ -133,7 +133,7 @@ for ds in $datasets; do
 
         for c in "${configs[@]}"; do
             if $prep; then
-                echo -en " prep" >> $output
+                echo -en " p" >> $output
                 continue
             fi
             IFS='|' read -r prog args <<< "$c"
