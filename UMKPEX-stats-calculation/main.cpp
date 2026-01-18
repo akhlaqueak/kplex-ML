@@ -205,7 +205,7 @@ void heuris()
 #endif
 
     FastHeuris();
-    // StrongHeuris(); // generate n subgraphs and compute larger lb
+    StrongHeuris(); // generate n subgraphs and compute larger lb
 }
 
 /**
@@ -244,6 +244,7 @@ int main(int argc, char *argv[])
     puts("------------------{start KPHeuris}---------------------");
     Timer prepro("heuristic and preprocess");
     // heuris();
+    lb=6;
     prepro.print_time();
     // print_heuris_log();
 
