@@ -205,7 +205,7 @@ void heuris()
 #endif
 
     FastHeuris();
-    StrongHeuris(); // generate n subgraphs and compute larger lb
+    // StrongHeuris(); // generate n subgraphs and compute larger lb
 }
 
 /**
