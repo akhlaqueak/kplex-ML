@@ -243,7 +243,7 @@ int main(int argc, char *argv[])
     // KPHeuris
     puts("------------------{start KPHeuris}---------------------");
     Timer prepro("heuristic and preprocess");
-    heuris();
+    // heuris();
     prepro.print_time();
     // print_heuris_log();
 
