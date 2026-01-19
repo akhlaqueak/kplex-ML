@@ -16,8 +16,8 @@ set -euo pipefail
 ######################################
 
 LOG="test-1m"
-TASKFILE="tasks_1.txt"
-TIME=1m
+TASKFILE="filtered_tasks.txt"
+TIME=30m
 mkdir -p "$LOG"
 
 ######################################
@@ -88,7 +88,7 @@ run_one_task() {
         "$k" \
         $args \
         > "$outfile" 2>&1 || true
-    echo "OOT $TIME" >> "$outfile" 
+    echo "Executed for $TIME" >> "$outfile" 
 }
 
 export -f run_one_task
@@ -151,4 +151,39 @@ for ds in $datasets; do
     done
 done
 }
-get_results
+# get_results
+echo "calculating results at" "$(date)"
+
+get_results_filtered() {
+output=results-filtered-dataset.txt
+rm $output
+while read -r ds k ; do 
+        echo -en "$ds $k" >> $output
+            prep=false
+            if grep -Eq "Small|Preprocessing" "test-prep-small/${ds}.bin_${k}" 2>/dev/null; then
+                prep=true
+            fi
+
+
+        for c in "${configs[@]}"; do
+            if $prep; then
+                echo -en " p" >> $output
+                continue
+            fi
+            IFS='|' read -r prog args <<< "$c"
+            
+            outfile="$LOG/$prog $ds.bin $k $args.txt"
+            outfile=${outfile// /_}
+            # value=$(tail -n 5 "$outfile" | grep '^>>' | awk '{print " " $NF}' || echo " x")
+            value=$(tail -n 5 "$outfile" | awk '/^>>/ {print " " $NF; found=1} END{if(!found) print " x"}')
+
+            # value=$(awk '/>>/ {printf " %s", $NF; found=1} END{if(!found) printf " x"}' "$outfile")
+            echo -en " $value" >> $output
+
+        done
+        echo >> $output
+done < filtered-ds.txt
+}
+get_results_filtered
+
+echo "finished results at" "$(date)"

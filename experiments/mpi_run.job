@@ -12,4 +12,4 @@
 module load python
 module load mpi   # or openmpi / mpich as appropriate
 
-srun python mpi_run.py tasks_1.txt
+srun python mpi_run.py config_filtered.txt 

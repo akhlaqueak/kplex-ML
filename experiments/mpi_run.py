@@ -5,7 +5,7 @@ import subprocess
 
 TASKFILE = sys.argv[1]
 LOGDIR = "test-1m"
-TIMEOUT = 60  # seconds
+TIMEOUT = 1800  # seconds
 
 os.makedirs(LOGDIR, exist_ok=True)
 
