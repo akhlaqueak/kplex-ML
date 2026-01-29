@@ -66,19 +66,10 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     IFS= read -r seq rest <<< "$line"
     seq=${seq:-0}
 
-    # If command part missing, emit fallback
-    if [[ -z "${rest:-}" ]]; then
-        printf "%s 0 0 0 0 0 []\n" "$seq" >> "$rank_out"
-        continue
-    fi
-
-    # Build argv array
-    read -r -a cmd_array <<< "$rest"
-
     fname=$(sanitize "$rest")
     outfile="${logdir}/${fname}.txt"
 
-    timeout "$time_limit" ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
+    timeout "$time_limit" ./stats "$rest" > "$outfile" 2>&1 || true
 
     awk -v seq="$seq" "
         /STATS:/ {
