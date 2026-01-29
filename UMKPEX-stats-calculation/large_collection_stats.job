@@ -15,10 +15,9 @@ set -euo pipefail
 # Config
 ######################################
 LOG="stats-filtered"
-TASKFILE="configs.txt"     # one task per line: seq prog ds k [args...]
+TASKFILE="configs.txt"
 TIME="5m"
 
-mkdir -p "$LOG"
 rm -f output.txt
 
 echo "Job started at $(date)"
@@ -26,9 +25,6 @@ echo "SLURM job id: ${SLURM_JOB_ID:-local}"
 
 export TASKFILE LOG TIME
 
-######################################
-# Exit if no tasks
-######################################
 if [[ ! -s "$TASKFILE" ]]; then
     echo "No tasks in $TASKFILE. Exiting."
     exit 0
@@ -45,12 +41,12 @@ nworkers=${SLURM_NTASKS:-1}
 
 taskfile="$TASKFILE"
 logdir="$LOG"
-time_limit="$TIME"
 
-# Minimal sanitize: ONLY replace spaces with underscores
+# 🔑 MUST exist on compute nodes
+mkdir -p "$logdir"
+
 sanitize() {
-    local s="$1"
-    printf "%s" "${s// /_}"
+    printf "%s" "${1// /_}"
 }
 
 rank_out="${logdir}/output.${rank}.txt"
@@ -62,14 +58,21 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     echo "[Rank $rank] $line" >> "$rank_out"
 
-    # Parse: seq + rest of command
+    # Parse seq + rest
     IFS= read -r seq rest <<< "$line"
     seq=${seq:-0}
+
+    # Skip malformed lines
+    [[ -z "${rest:-}" ]] && continue
+
+    # Split args properly
+    read -r -a cmd_array <<< "$rest"
 
     fname=$(sanitize "$rest")
     outfile="${logdir}/${fname}.txt"
 
-    ./stats "$rest" > "$outfile" 2>&1 || true
+    # ✅ This WILL now create outfile
+    ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
 
     awk -v seq="$seq" "
         /STATS:/ {
@@ -89,20 +92,4 @@ done
 ' || true
 
 echo "srun completed."
-
-######################################
-# Merge outputs
-######################################
-# shopt -s nullglob
-# files=("$LOG"/output.*.txt)
-
-# if (( ${#files[@]} )); then
-#     IFS=$'\n' sorted=( $(printf "%s\n" "${files[@]}" | sort -V) )
-#     for f in "${sorted[@]}"; do
-#         cat "$f" >> output.txt
-#     done
-#     rm -f "$LOG"/output.*.txt
-# fi
-shopt -u nullglob
-
 echo "Finished at $(date)"
