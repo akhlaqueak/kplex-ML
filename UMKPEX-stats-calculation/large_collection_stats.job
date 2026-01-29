@@ -19,8 +19,7 @@ TASKFILE="configs.txt"
 STATS_BIN="$SLURM_SUBMIT_DIR/stats"
 FINAL_OUT="output.txt"
 
-rm -rf "$LOG"
-rm -f "$FINAL_OUT"
+rm -rf "$LOG" "$FINAL_OUT"
 mkdir -p "$LOG"
 
 export LOG TASKFILE STATS_BIN
@@ -47,9 +46,6 @@ sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
 while IFS= read -r line || [[ -n "$line" ]]; do
     [[ -z "${line//[[:space:]]/}" ]] && continue
 
-    # Log the task
-    echo "[Rank $rank] $line" >> "$rank_out"
-
     # --- robust parsing ---
     seq=${line%%[[:space:]]*}
     rest=${line#*[[:space:]]}
@@ -63,30 +59,29 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     set -- $rest
     "$STATS_BIN" "$@" > "$outfile" 2>&1
 
-    # Extract STATS (prepend seq)
-    awk -v seq="$seq" '
+    # Extract STATS (double-quoted awk — SAFE)
+    awk -v seq="$seq" "
         /STATS:/ {
-            $1="";
-            sub(/^ /,"");
-            printf "%s %s\n", seq, $0;
+            \$1=\"\";
+            sub(/^ /,\"\");
+            printf \"%s %s\\n\", seq, \$0;
             found=1;
             exit
         }
         END {
             if (!found)
-                printf "%s 0 0 0 0 0 []\n", seq
+                printf \"%s 0 0 0 0 0 []\\n\", seq
         }
-    ' "$outfile" >> "$rank_out"
+    " \"$outfile\" >> \"$rank_out\"
 
 done
 '
 
 ######################################
-# Consolidate final output (driver)
+# Consolidate final output
 ######################################
 echo "Consolidating results..."
 
-# Keep only numeric summary lines, sort by seq
 grep -h '^[0-9]' "$LOG"/output.*.txt \
     | sort -n \
     > "$FINAL_OUT"
