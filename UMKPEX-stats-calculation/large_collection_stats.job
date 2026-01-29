@@ -48,23 +48,10 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     base=$(basename "${rest%% *}")
     outfile="$LOG/${base}_${seq}.txt"
-    echo  helllloooo $outfile
+
     # 🔑 SAFE execution (no arrays, no early exit)
     set -- $rest
-    echo "$STATS_BIN" "$@" > "$outfile" 2>&1 || true
+    "$STATS_BIN" "$@" > "$outfile" 2>&1 || true
 
-    awk -v seq="$seq" "
-        /STATS:/ {
-            \$1=\"\";
-            sub(/^ /,\"\");
-            printf \"%s %s\\n\", seq, \$0;
-            found=1;
-            exit
-        }
-        END {
-            if (!found)
-                printf \"%s 0 0 0 0 0 []\\n\", seq
-        }
-    " "$outfile" >> "$rank_out"
 done
 ' || true
