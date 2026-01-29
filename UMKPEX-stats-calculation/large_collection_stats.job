@@ -15,7 +15,7 @@ set -euo pipefail
 # Config
 ######################################
 LOG="stats-filtered"
-TASKFILE="configs.txt"     # one task per line: seq prog ds k [args...]
+TASKFILE="configs.txt"     # one task per line: seq path k [args...]
 
 rm -f output.txt
 
@@ -38,7 +38,7 @@ fi
 srun --label bash -c '
 set -uo pipefail
 
-# 🔑 CRITICAL: ensure correct working directory
+# 🔑 Ensure correct working directory
 cd "$SLURM_SUBMIT_DIR" || exit 1
 
 rank=${SLURM_PROCID:-0}
@@ -54,21 +54,24 @@ rank_out="${logdir}/output.${rank}.txt"
 
 sed -n "$((rank+1))~$nworkers p" "$taskfile" |
 while IFS= read -r line || [[ -n "$line" ]]; do
+    # Skip empty lines
     [[ -z "${line//[[:space:]]/}" ]] && continue
 
     echo "[Rank $rank] $line" >> "$rank_out"
 
-    # Parse: seq + rest of command
+    # Parse: seq + rest
     IFS= read -r seq rest <<< "$line"
     seq=${seq:-0}
     [[ -z "${rest:-}" ]] && continue
 
-    # Split command into argv
+    # Split args correctly
     read -r -a cmd_array <<< "$rest"
 
-    outfile="${logdir}/${rest// /_}.txt"
+    # 🔑 SAFE outfile name (no slashes)
+    base=$(basename "${cmd_array[0]}")
+    outfile="${logdir}/${base}_${seq}.txt"
 
-    # Run command (this WILL create outfile)
+    # Run stats (this WILL execute)
     ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
 
     # Extract STATS, prepend seq
