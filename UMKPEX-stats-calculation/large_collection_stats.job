@@ -15,16 +15,18 @@ set -euo pipefail
 # Config
 ######################################
 LOG="stats-filtered"
-TASKFILE="configs.txt"
-TIME="5m"
+TASKFILE="configs.txt"     # one task per line: seq prog ds k [args...]
 
 rm -f output.txt
 
 echo "Job started at $(date)"
 echo "SLURM job id: ${SLURM_JOB_ID:-local}"
 
-export TASKFILE LOG TIME
+export LOG TASKFILE
 
+######################################
+# Exit if no tasks
+######################################
 if [[ ! -s "$TASKFILE" ]]; then
     echo "No tasks in $TASKFILE. Exiting."
     exit 0
@@ -36,18 +38,16 @@ fi
 srun --label bash -c '
 set -uo pipefail
 
+# 🔑 CRITICAL: ensure correct working directory
+cd "$SLURM_SUBMIT_DIR" || exit 1
+
 rank=${SLURM_PROCID:-0}
 nworkers=${SLURM_NTASKS:-1}
 
-taskfile="$TASKFILE"
 logdir="$LOG"
+taskfile="$TASKFILE"
 
-# 🔑 MUST exist on compute nodes
 mkdir -p "$logdir"
-
-sanitize() {
-    printf "%s" "${1// /_}"
-}
 
 rank_out="${logdir}/output.${rank}.txt"
 : > "$rank_out"
@@ -58,22 +58,20 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     echo "[Rank $rank] $line" >> "$rank_out"
 
-    # Parse seq + rest
+    # Parse: seq + rest of command
     IFS= read -r seq rest <<< "$line"
     seq=${seq:-0}
-
-    # Skip malformed lines
     [[ -z "${rest:-}" ]] && continue
 
-    # Split args properly
+    # Split command into argv
     read -r -a cmd_array <<< "$rest"
 
-    fname=$(sanitize "$rest")
-    outfile="${logdir}/${fname}.txt"
+    outfile="${logdir}/${rest// /_}.txt"
 
-    # ✅ This WILL now create outfile
+    # Run command (this WILL create outfile)
     ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
 
+    # Extract STATS, prepend seq
     awk -v seq="$seq" "
         /STATS:/ {
             \$1=\"\";
