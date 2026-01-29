@@ -1125,11 +1125,12 @@ public:
                     }
                 }
             }
+            max_core_g = max_core;
             int rest = heap.sz;
             while (heap.sz)
             {
                 ui u = heap.get_min_node();
-                if(pd[u]>max_core) cores.push_back({pd[u], max(heap.sz, pd[u])});
+                // if(pd[u]>max_core) cores.push_back({pd[u], heap.sz});
                 heap.delete_node(u);
                 seq[heap.sz] = u;
                 plex.push_back(u);
@@ -1137,7 +1138,6 @@ public:
                 core[u] = max_core;
             }
             lb = max(lb, rest);
-            max_core_g = max_core;
         }
         // store k-plex
         if (solution != nullptr && solution->size() < plex.size())
