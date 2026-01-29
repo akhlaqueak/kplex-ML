@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=serial1
+#SBATCH --ntasks=192
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.%A_%a.out
+#SBATCH --error=%x.%A_%a.err
+
+# Exit on undefined variables and pipe failures
+set -euo pipefail
+
+######################################
+# Configurable paths / parameters
+######################################
+LOG="stats-filtered"
+TASKFILE="configs.txt"          # one task per line: seq prog ds k [args...]
+TIME="5m"                       # timeout for each task
+
+mkdir -p "$LOG"
+rm -f output.txt
+
+######################################
+# Debug/log header
+######################################
+echo "Job started at $(date)"
+echo "SLURM job id: ${SLURM_JOB_ID:-local}"
+echo "Using TASKFILE=$TASKFILE, LOG=$LOG, TIME=$TIME"
+
+export TASKFILE LOG TIME
+
+######################################
+# Exit if no tasks
+######################################
+if [[ ! -s "$TASKFILE" ]]; then
+    echo "No tasks in $TASKFILE (missing or empty). Exiting."
+    exit 0
+fi
+
+######################################
+# Parallel execution
+######################################
+srun --label bash -c '
+set -uo pipefail
+
+rank=${SLURM_PROCID:-0}
+nworkers=${SLURM_NTASKS:-1}
+
+taskfile="$TASKFILE"
+logdir="$LOG"
+time_limit="$TIME"
+
+sanitize() {
+    local s="$1"
+    s=${s// /_}
+    printf "%s" "$s" | tr -c "A-Za-z0-9._-@" "_"
+}
+
+rank_out="${logdir}/output.${rank}.txt"
+: > "$rank_out"
+
+sed -n "$((rank+1))~$nworkers p" "$taskfile" |
+while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+
+    echo "[Rank $rank] Started task: $line" >> "$rank_out"
+
+    # Parse: seq + rest of command
+    IFS= read -r seq rest <<< "$line"
+    seq=${seq:-0}
+    cmd_line="$rest"
+
+    # Build argv array
+    read -r -a cmd_array <<< "$cmd_line"
+
+    # Output file per task
+    fname=$(sanitize "$cmd_line")
+    outfile="${logdir}/${fname}.txt"
+
+    # Run command
+    timeout "$time_limit" ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
+
+    # Extract stats, prepend seq
+    awk -v seq="$seq" '
+    /STATS:/ {
+        $1=""; sub(/^ /,"");
+        printf "%s %s\n", seq, $0;
+        found=1;
+        exit
+    }
+    END {
+        if (!found)
+            printf "%s 0 0 0 0 0 []\n", seq
+    }
+    ' "$outfile" >> "$rank_out"
+
+done
+' || true
+
+echo "srun completed."
+
+######################################
+# Merge per-rank outputs
+######################################
+shopt -s nullglob
+rank_files=("$LOG"/output.*.txt)
+
+if (( ${#rank_files[@]} )); then
+    IFS=$'\n' sorted=( $(printf "%s\n" "${rank_files[@]}" | sort -V) )
+    for f in "${sorted[@]}"; do
+        cat "$f" >> output.txt
+    done
+    rm -f "$LOG"/output.*.txt
+fi
+shopt -u nullglob
+
+echo "Main script finished at $(date)"
