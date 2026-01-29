@@ -249,6 +249,7 @@ int main(int argc, char *argv[])
 
     ui heuris_size = solution.size();   
     cores.clear();
+    cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "<<max_core_g<<" [";
     g.degeneracy_and_reduce(lb);
     if(max_core_g+paramK<=lb) 
     {
