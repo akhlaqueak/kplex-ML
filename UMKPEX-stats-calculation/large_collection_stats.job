@@ -15,43 +15,59 @@ LOG="stats-filtered"
 TASKFILE="configs.txt"
 STATS_BIN="$SLURM_SUBMIT_DIR/stats"
 
-rm -f output.txt
+rm -rf "$LOG"
 mkdir -p "$LOG"
 
 export LOG TASKFILE STATS_BIN
 
 if [[ ! -s "$TASKFILE" ]]; then
-    echo "No tasks in $TASKFILE. Exiting."
+    echo "No tasks in $TASKFILE"
     exit 0
 fi
 
 srun --label bash -c '
-set -uo pipefail
+# 🚫 NO set -u or set -e here (on purpose)
+set -o pipefail
+
 cd "$SLURM_SUBMIT_DIR" || exit 1
 
 rank=${SLURM_PROCID:-0}
 nworkers=${SLURM_NTASKS:-1}
 
-mkdir -p "$LOG"
 rank_out="$LOG/output.${rank}.txt"
+mkdir -p "$LOG"
 : > "$rank_out"
+
+echo "[Rank $rank] pwd=$(pwd)" >> "$rank_out"
+echo "[Rank $rank] stats=$(ls -l $STATS_BIN)" >> "$rank_out"
 
 sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
 while IFS= read -r line || [[ -n "$line" ]]; do
     [[ -z "${line//[[:space:]]/}" ]] && continue
 
-    echo "[Rank $rank] $line" >> "$rank_out"
+    echo "[Rank $rank] LINE: $line" >> "$rank_out"
 
-    IFS= read -r seq rest <<< "$line"
-    seq=${seq:-0}
-    [[ -z "${rest:-}" ]] && continue
+    seq=$(echo "$line" | awk "{print \$1}")
+    rest=$(echo "$line" | cut -d\" \" -f2-)
 
-    base=$(basename "${rest%% *}")
+    echo "[Rank $rank] SEQ=$seq REST=$rest" >> "$rank_out"
+
+    base=$(basename "$(echo "$rest" | awk "{print \$1}")")
     outfile="$LOG/${base}_${seq}.txt"
 
-    # 🔑 SAFE execution (no arrays, no early exit)
+    # 🔥 PROOF POINT
+    echo "[Rank $rank] touching $outfile" >> "$rank_out"
+    touch "$outfile" || echo "[Rank $rank] touch FAILED" >> "$rank_out"
+
+    echo "[Rank $rank] running stats" >> "$rank_out"
+
     set -- $rest
-    "$STATS_BIN" "$@" > "$outfile" 2>&1 || true
+    "$STATS_BIN" "$@" >> "$outfile" 2>&1
+    rc=$?
+
+    echo "[Rank $rank] stats exit code=$rc" >> "$rank_out"
 
 done
-' || true
+'
+
+echo "Job finished"
