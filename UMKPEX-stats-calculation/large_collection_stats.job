@@ -93,16 +93,16 @@ echo "srun completed."
 ######################################
 # Merge outputs
 ######################################
-shopt -s nullglob
-files=("$LOG"/output.*.txt)
+# shopt -s nullglob
+# files=("$LOG"/output.*.txt)
 
-if (( ${#files[@]} )); then
-    IFS=$'\n' sorted=( $(printf "%s\n" "${files[@]}" | sort -V) )
-    for f in "${sorted[@]}"; do
-        cat "$f" >> output.txt
-    done
-    rm -f "$LOG"/output.*.txt
-fi
+# if (( ${#files[@]} )); then
+#     IFS=$'\n' sorted=( $(printf "%s\n" "${files[@]}" | sort -V) )
+#     for f in "${sorted[@]}"; do
+#         cat "$f" >> output.txt
+#     done
+#     rm -f "$LOG"/output.*.txt
+# fi
 shopt -u nullglob
 
 echo "Finished at $(date)"
