@@ -11,70 +11,49 @@
 
 set -euo pipefail
 
-######################################
-# Config
-######################################
 LOG="stats-filtered"
-TASKFILE="configs.txt"     # one task per line: seq path k [args...]
+TASKFILE="configs.txt"
+STATS_BIN="$SLURM_SUBMIT_DIR/stats"
 
 rm -f output.txt
+mkdir -p "$LOG"
 
-echo "Job started at $(date)"
-echo "SLURM job id: ${SLURM_JOB_ID:-local}"
+export LOG TASKFILE STATS_BIN
 
-export LOG TASKFILE
-
-######################################
-# Exit if no tasks
-######################################
 if [[ ! -s "$TASKFILE" ]]; then
     echo "No tasks in $TASKFILE. Exiting."
     exit 0
 fi
 
-######################################
-# Parallel execution
-######################################
 srun --label bash -c '
 set -uo pipefail
-
-# 🔑 Ensure correct working directory
 cd "$SLURM_SUBMIT_DIR" || exit 1
 
 rank=${SLURM_PROCID:-0}
 nworkers=${SLURM_NTASKS:-1}
 
-logdir="$LOG"
-taskfile="$TASKFILE"
-
-mkdir -p "$logdir"
-
-rank_out="${logdir}/output.${rank}.txt"
+mkdir -p "$LOG"
+rank_out="$LOG/output.${rank}.txt"
 : > "$rank_out"
 
-sed -n "$((rank+1))~$nworkers p" "$taskfile" |
+sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
 while IFS= read -r line || [[ -n "$line" ]]; do
-    # Skip empty lines
     [[ -z "${line//[[:space:]]/}" ]] && continue
 
     echo "[Rank $rank] $line" >> "$rank_out"
 
-    # Parse: seq + rest
     IFS= read -r seq rest <<< "$line"
     seq=${seq:-0}
     [[ -z "${rest:-}" ]] && continue
 
-    # Split args correctly
     read -r -a cmd_array <<< "$rest"
 
-    # 🔑 SAFE outfile name (no slashes)
     base=$(basename "${cmd_array[0]}")
-    outfile="${logdir}/${base}_${seq}.txt"
+    outfile="$LOG/${base}_${seq}.txt"
 
-    # Run stats (this WILL execute)
-    ./stats "${cmd_array[@]}" > "$outfile" 2>&1 || true
+    # 🔑 ABSOLUTE PATH
+    "$STATS_BIN" "${cmd_array[@]}" > "$outfile" 2>&1 || true
 
-    # Extract STATS, prepend seq
     awk -v seq="$seq" "
         /STATS:/ {
             \$1=\"\";
@@ -88,9 +67,5 @@ while IFS= read -r line || [[ -n "$line" ]]; do
                 printf \"%s 0 0 0 0 0 []\\n\", seq
         }
     " "$outfile" >> "$rank_out"
-
 done
 ' || true
-
-echo "srun completed."
-echo "Finished at $(date)"
