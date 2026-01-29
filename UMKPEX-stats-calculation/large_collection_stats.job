@@ -26,20 +26,14 @@ if [[ ! -s "$TASKFILE" ]]; then
 fi
 
 srun --label bash -c '
-# 🚫 NO set -u or set -e here (on purpose)
 set -o pipefail
-
 cd "$SLURM_SUBMIT_DIR" || exit 1
 
 rank=${SLURM_PROCID:-0}
 nworkers=${SLURM_NTASKS:-1}
 
 rank_out="$LOG/output.${rank}.txt"
-mkdir -p "$LOG"
 : > "$rank_out"
-
-echo "[Rank $rank] pwd=$(pwd)" >> "$rank_out"
-echo "[Rank $rank] stats=$(ls -l $STATS_BIN)" >> "$rank_out"
 
 sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
 while IFS= read -r line || [[ -n "$line" ]]; do
@@ -47,26 +41,23 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     echo "[Rank $rank] LINE: $line" >> "$rank_out"
 
-    seq=$(echo "$line" | awk "{print \$1}")
-    rest=$(echo "$line" | cut -d\" \" -f2-)
+    # ✅ CORRECT parsing (whitespace-safe)
+    seq=${line%%[[:space:]]*}
+    rest=${line#*[[:space:]]}
 
     echo "[Rank $rank] SEQ=$seq REST=$rest" >> "$rank_out"
 
-    base=$(basename "$(echo "$rest" | awk "{print \$1}")")
+    [[ -z "$rest" ]] && continue
+
+    base=$(basename "${rest%%[[:space:]]*}")
     outfile="$LOG/${base}_${seq}.txt"
 
-    # 🔥 PROOF POINT
-    echo "[Rank $rank] touching $outfile" >> "$rank_out"
-    touch "$outfile" || echo "[Rank $rank] touch FAILED" >> "$rank_out"
-
-    echo "[Rank $rank] running stats" >> "$rank_out"
-
+    # Execute stats
     set -- $rest
-    "$STATS_BIN" "$@" >> "$outfile" 2>&1
+    "$STATS_BIN" "$@" > "$outfile" 2>&1
     rc=$?
 
     echo "[Rank $rank] stats exit code=$rc" >> "$rank_out"
-
 done
 '
 
