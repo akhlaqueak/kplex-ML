@@ -1132,7 +1132,6 @@ public:
                 heap.delete_node(u);
                 seq[heap.sz] = u;
                 plex.push_back(u);
-                if(pd[u]>max_core) cores.push_back({pd[u], heap.sz});
                 max_core = max(max_core, pd[u]);
                 core[u] = max_core;
             }

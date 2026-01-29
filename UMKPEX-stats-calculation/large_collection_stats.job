@@ -88,3 +88,9 @@ grep -h '^[0-9]' "$LOG"/output.*.txt \
 
 echo "Final output written to $FINAL_OUT"
 echo "Job finished at $(date)"
+
+
+while read -r seq ds k; do 
+f=$(basename $ds)
+grep "^STATS" stats-filtered/${f}_$seq.txt >> output.txt
+done < configs.txt
