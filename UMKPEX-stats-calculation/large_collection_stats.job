@@ -11,11 +11,16 @@
 
 set -euo pipefail
 
+######################################
+# Config
+######################################
 LOG="stats-filtered"
 TASKFILE="configs.txt"
 STATS_BIN="$SLURM_SUBMIT_DIR/stats"
+FINAL_OUT="output.txt"
 
 rm -rf "$LOG"
+rm -f "$FINAL_OUT"
 mkdir -p "$LOG"
 
 export LOG TASKFILE STATS_BIN
@@ -25,6 +30,9 @@ if [[ ! -s "$TASKFILE" ]]; then
     exit 0
 fi
 
+######################################
+# Parallel execution
+######################################
 srun --label bash -c '
 set -o pipefail
 cd "$SLURM_SUBMIT_DIR" || exit 1
@@ -39,26 +47,49 @@ sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
 while IFS= read -r line || [[ -n "$line" ]]; do
     [[ -z "${line//[[:space:]]/}" ]] && continue
 
-    echo "[Rank $rank] LINE: $line" >> "$rank_out"
+    # Log the task
+    echo "[Rank $rank] $line" >> "$rank_out"
 
-    # ✅ CORRECT parsing (whitespace-safe)
+    # --- robust parsing ---
     seq=${line%%[[:space:]]*}
     rest=${line#*[[:space:]]}
-
-    echo "[Rank $rank] SEQ=$seq REST=$rest" >> "$rank_out"
-
     [[ -z "$rest" ]] && continue
 
+    # Per-task outfile
     base=$(basename "${rest%%[[:space:]]*}")
     outfile="$LOG/${base}_${seq}.txt"
 
-    # Execute stats
+    # Run stats
     set -- $rest
     "$STATS_BIN" "$@" > "$outfile" 2>&1
-    rc=$?
 
-    echo "[Rank $rank] stats exit code=$rc" >> "$rank_out"
+    # Extract STATS (prepend seq)
+    awk -v seq="$seq" '
+        /STATS:/ {
+            $1="";
+            sub(/^ /,"");
+            printf "%s %s\n", seq, $0;
+            found=1;
+            exit
+        }
+        END {
+            if (!found)
+                printf "%s 0 0 0 0 0 []\n", seq
+        }
+    ' "$outfile" >> "$rank_out"
+
 done
 '
 
-echo "Job finished"
+######################################
+# Consolidate final output (driver)
+######################################
+echo "Consolidating results..."
+
+# Keep only numeric summary lines, sort by seq
+grep -h '^[0-9]' "$LOG"/output.*.txt \
+    | sort -n \
+    > "$FINAL_OUT"
+
+echo "Final output written to $FINAL_OUT"
+echo "Job finished at $(date)"
