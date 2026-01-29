@@ -205,7 +205,7 @@ void heuris()
 #endif
 
     FastHeuris();
-    StrongHeuris(); // generate n subgraphs and compute larger lb
+    // StrongHeuris(); // generate n subgraphs and compute larger lb
 }
 
 /**
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
     // print_heuris_log();
 
     ui heuris_size = solution.size();   
-    g.degeneracy_and_reduce(lb);
+    // g.degeneracy_and_reduce(lb);
     if(max_core_g+paramK<=lb) 
     {
         cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
