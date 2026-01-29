@@ -59,21 +59,6 @@ while IFS= read -r line || [[ -n "$line" ]]; do
     set -- $rest
     "$STATS_BIN" "$@" > "$outfile" 2>&1
 
-    # Extract STATS (double-quoted awk — SAFE)
-    awk -v seq="$seq" "
-        /STATS:/ {
-            \$1=\"\";
-            sub(/^ /,\"\");
-            printf \"%s %s\\n\", seq, \$0;
-            found=1;
-            exit
-        }
-        END {
-            if (!found)
-                printf \"%s 0 0 0 0 0 []\\n\", seq
-        }
-    " \"$outfile\" >> \"$rank_out\"
-
 done
 '
 
@@ -92,5 +77,5 @@ echo "Job finished at $(date)"
 
 while read -r seq ds k; do 
 f=$(basename $ds)
-grep "^STATS" stats-filtered/${f}_$seq.txt >> output.txt
+grep "^STATS" stats-filtered/${f}_$seq.txt | tail -n 1 >> output.txt
 done < configs.txt
