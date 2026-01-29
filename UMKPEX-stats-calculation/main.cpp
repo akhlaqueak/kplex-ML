@@ -248,21 +248,17 @@ int main(int argc, char *argv[])
     // print_heuris_log();
 
     ui heuris_size = solution.size();   
-    cores.clear();
-    cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "<<max_core_g<<" [";
-
-    g.degeneracy_and_reduce(lb);
-
     if(max_core_g+paramK<=lb) 
     {
         cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
         return 0;
     }
-
     cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "<<max_core_g<<" [";
-    // cout<<"max_d: "<<max_d_g;
-    // cout<<" max_core: "<<max_core_g;
-    // cout<<" [";
+    
+    cores.clear();
+    g.degeneracy_and_reduce(lb);
+
+
     for(auto& p: cores){
         printf("(%d,%d)", p.first, p.second);
         if(p!=cores.back())printf(",");

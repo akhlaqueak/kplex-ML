@@ -34,16 +34,16 @@ run_task() {
 
     case $rc in
         0)
-            echo "DONE  $(date) :: success"
+            # echo "DONE  $(date) :: success"
             ;;
         124)
-            echo "DONE  $(date) :: TIMEOUT"
+            echo "DONE  $(cmd) :: TIMEOUT"
             ;;
         137)
-            echo "DONE  $(date) :: KILLED"
+            echo "DONE  $(cmd) :: KILLED"
             ;;
         *)
-            echo "DONE  $(date) :: FAILED (exit=$rc)"
+            echo "DONE  $(cmd) :: FAILED (exit=$rc)"
             ;;
     esac
 
