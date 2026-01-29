@@ -253,10 +253,12 @@ int main(int argc, char *argv[])
         cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
         return 0;
     }
-    cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "<<max_core_g<<" [";
+    cout<<"STATS: "<<g.n<<" "<<g.m/2<<" "<<(double) g.m/2/g.n<<" "<<max_d_g<<" "; 
     
     cores.clear();
     g.degeneracy_and_reduce(lb);
+    
+    cout<<max_core_g<<" [";
 
 
     for(auto& p: cores){
