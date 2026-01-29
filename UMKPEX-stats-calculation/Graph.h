@@ -1129,7 +1129,7 @@ public:
             while (heap.sz)
             {
                 ui u = heap.get_min_node();
-                // if(pd[u]>max_core) cores.push_back({pd[u], heap.sz});
+                if(pd[u]>max_core) cores.push_back({pd[u], max(heap.sz, pd[u])});
                 heap.delete_node(u);
                 seq[heap.sz] = u;
                 plex.push_back(u);
