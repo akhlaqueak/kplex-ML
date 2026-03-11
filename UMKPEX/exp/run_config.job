@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=task-runner
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+
+set -euo pipefail
+
+
+######################################
+# USER INPUT (ONLY THIS)
+######################################
+TASKFILE="tasks1.txt"        # each line = full command to execute
+TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
+TIMEOUT_GRACE="30s"         # grace period before SIGKILL
+
+create_tasks(){
+    PROG='UMKPEX UMKPEX-CTCP'
+    HEUR='kPEX-Heur EGO-Heur'
+    BR='S-Br P-Br R-Br'
+    while read -r ds k; do 
+        for hr in $HEUR; do 
+            for br in $BR; do 
+                for pr in $PROG; do 
+                    fname=$(echo "$pr $ds $k branching $br heuristic $hr" | tr ' ' '_')
+                    echo "./$pr $ds $k -branching $br -heuristic $hr > $fname" 
+                done
+            done
+        done
+    done < ../ds.txt
+}
+# create_tasks
+
+get_results(){
+    while read -r ds k; do 
+        for prog in UMKP UMKP-S UMKP-R UMKP-P; do
+            fname=$(echo "$prog $ds $k" | tr ' ' '_')
+            if grep -q ">>" "$fname"; then
+                val=$(grep ">>" "$fname" | awk '{print $NF}')
+            else
+                val="x"
+            fi
+            printf "%s " "$val" >> output.txt
+        done
+        printf "\n" >> output.txt
+    done < ../ds.txt
+}
+######################################
+# USER-MODIFIABLE FUNCTION
+######################################
+run_task() {
+    local cmd="$1"
+
+    echo "START $(date) :: $cmd"
+
+    timeout --signal=TERM \
+            --kill-after="$TIMEOUT_GRACE" \
+            "$TASK_TIMEOUT" \
+            bash -c "$cmd"
+    rc=$?
+
+    case $rc in
+        0)
+            # echo "DONE  $(date) :: success"
+            ;;
+        124)
+            echo "DONE  $(cmd) :: TIMEOUT"
+            ;;
+        137)
+            echo "DONE  $(cmd) :: KILLED"
+            ;;
+        *)
+            echo "DONE  $(cmd) :: FAILED (exit=$rc)"
+            ;;
+    esac
+
+    # 🔑 NEVER allow failure to stop the rank
+    return 0
+}
+
+# 🔑 REQUIRED: export function and variables for worker shells
+export -f run_task
+export TASKFILE TASK_TIMEOUT TIMEOUT_GRACE
+
+######################################
+# Sanity checks
+######################################
+if [[ ! -s "$TASKFILE" ]]; then
+    echo "Task file '$TASKFILE' is missing or empty"
+    exit 1
+fi
+
+echo "Job started at $(date)"
+echo "Task file: $TASKFILE"
+echo "Timeout per task: $TASK_TIMEOUT"
+echo "SLURM job id: ${SLURM_JOB_ID:-local}"
+
+######################################
+# Parallel execution
+######################################
+srun --label bash -c '
+# IMPORTANT: do NOT use set -e here
+set -o pipefail
+
+cd "$SLURM_SUBMIT_DIR" || exit 1
+
+rank=${SLURM_PROCID:-0}
+nworkers=${SLURM_NTASKS:-1}
+
+# Distribute tasks by stride
+sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
+while IFS= read -r cmd || [[ -n "$cmd" ]]; do
+    # Skip empty lines and comments
+    [[ -z "${cmd//[[:space:]]/}" ]] && continue
+    [[ "${cmd## }" == \#* ]] && continue
+
+    echo "[Rank $rank] Running: $cmd"
+
+    run_task "$cmd"
+done
+'
+
+echo "Job finished at $(date)"
