@@ -193,7 +193,7 @@ If an invalid value is provided, the program falls back to `kPEX-Heur`.
   -branching Pivot-Br \
   -bounding SR-Bound \
   -ctcp CF-CTCP \
-  -huer Degen-Heur \
+  -huer kPEX-Heur \
   -UBR2 true
 ```
 
@@ -212,7 +212,7 @@ Branching: Pivot-Br
 Bounding: SR-Bound
 UBR2: true
 CTCP Method: CF-CTCP
-Heuristic: Degen-Heur
+Heuristic: kPEX-Heur
 ----------------------**********-----------------------
 ```
 

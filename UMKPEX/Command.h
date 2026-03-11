@@ -48,7 +48,7 @@ public:
       bounding = "None";
     }
 
-    vector<string> heuristics={"kPEX-Heur", "EGO-Heur", "Degen-Heur"};
+    vector<string> heuristics={"kPEX-Heur", "EGO-Heur"};
     if(find(heuristics.begin(), heuristics.end(), heuristic)==heuristics.end()) {
       cout<<"Not a valid selection for Heuristic, using 'kPEX-Heur'"<<endl;
       cout<<"Valid Heuristic methods: "; for(auto& b: heuristics) cout<<b<<" ";
