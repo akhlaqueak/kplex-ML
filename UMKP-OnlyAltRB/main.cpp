@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 		Graph *graph = new Graph(filename, k);
 		graph->read();
 		graph->search();
-		graph->write();
+		// graph->write();
 		// delete graph; // there are some bugs in releasing memory
 	}
 	else if (argc == 4) {
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 		graph->read();
 		graph->search();
 		graph->search_dense();
-		graph->write();
+		// graph->write();
 		// delete graph; // there are some bugs in releasing memory
 	}
 	else printf("[usage]: exe file k [dense]\n");
