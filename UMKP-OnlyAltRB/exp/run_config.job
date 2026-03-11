@@ -15,13 +15,13 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks.txt"        # each line = full command to execute
+TASKFILE="tasks1.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 
 create_tasks(){
     while read -r ds k; do 
-        for prog in UMKP-*; do
+        for prog in UMKP; do
             cmd="$prog /home/akhlaque.ak@gmail.com/graphs/large-collection/$ds.bin $k"
             fname=$(echo "$prog $ds $k" | tr ' ' '_')
             echo "./$cmd > $fname" >> "$TASKFILE"
