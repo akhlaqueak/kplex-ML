@@ -174,7 +174,8 @@ public:
         CTCP_time += get_system_time_microsecond() - start_IE;
         array_N.resize(G_input.n);
         array1_N.resize(G_input.n, 0);
-
+        if (PARA.branching == "Adaptive-Br")
+            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
         while (G_input.size() > lb)
         {
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
@@ -981,8 +982,6 @@ public:
             n_edges+=deg[u];
         }
 		bool sparse = n_edges / sz / (sz - 1) < 0.90;
-        if (PARA.branching == "Adaptive-Br")
-            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
 
         while (!P.empty())
         {
