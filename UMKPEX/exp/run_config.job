@@ -41,7 +41,7 @@ create_tasks(){
         done
     done < ../ds.txt
 }
-# create_tasks
+create_tasks
 
 get_results(){
     while read -r ds k; do 
