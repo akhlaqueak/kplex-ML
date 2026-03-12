@@ -56,22 +56,17 @@ public:
       heuristic = "kPEX-Heur";
     }
 
-    vector<string> ctcps={"CTCP", "CF-CTCP"};
-    if(find(ctcps.begin(), ctcps.end(), ctcp)==ctcps.end()) {
-      cout<<"Not a valid selection for CTCP method, using 'CF-CTCP'"<<endl;
-      cout<<"Valid CTCP methods: "; for(auto& b: ctcps) cout<<b<<" ";
-      cout<<endl;
-      ctcp = "CF-CTCP";
-    }
-
-
     cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<algorithm<<endl;
     cout<<"K: "<<argv[2]<<endl;
     cout<<"Branching: "<<branching<<endl;
     cout<<"Bounding: "<<bounding<<endl;
     cout<<"UBR2: "<<UBR2<<endl;
-    cout<<"CTCP Method: "<<ctcp<<endl;
+    #ifdef enable_CTCP
+    cout<<"CTCP Method: CTCP"<<endl;
+    #else
+    cout<<"CTCP Method: CF-TCP"<<endl;
+    #endif
     cout<<"Heuristic: "<<heuristic<<endl;
     cout<<"----------------------**********-----------------------\n";
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=task-runner
-#SBATCH --ntasks=32
+#SBATCH --ntasks=192
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
@@ -15,22 +15,29 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks1.txt"        # each line = full command to execute
+TASKFILE="tasks.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
-
+DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
+rm $TASKFILE
 create_tasks(){
     PROG='UMKPEX UMKPEX-CTCP'
     HEUR='kPEX-Heur EGO-Heur'
-    BR='S-Br P-Br R-Br'
+    BR='S-Br Pivot-Br R-Br'
     while read -r ds k; do 
-        for hr in $HEUR; do 
-            for br in $BR; do 
-                for pr in $PROG; do 
-                    fname=$(echo "$pr $ds $k branching $br heuristic $hr" | tr ' ' '_')
-                    echo "./$pr $ds $k -branching $br -heuristic $hr > $fname" 
-                done
-            done
+
+        for br in $BR; do 
+            cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+            echo "./$cmd > ${ds}_${k}_${br}_v1" >> $TASKFILE
+
+            cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB -heuristic EGO-Heur"
+            echo "./$cmd > ${ds}_${k}_${br}_v2" >> $TASKFILE
+
+            cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+            echo "./$cmd > ${ds}_${k}_${br}_v3" >> $TASKFILE
+
+            cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+            echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
         done
     done < ../ds.txt
 }
