@@ -19,8 +19,8 @@ TASKFILE="tasks.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
-rm $TASKFILE
 create_tasks(){
+    rm $TASKFILE
     PROG='UMKPEX UMKPEX-CTCP'
     HEUR='kPEX-Heur EGO-Heur'
     BR='S-Br Pivot-Br R-Br'
@@ -41,7 +41,7 @@ create_tasks(){
         done
     done < ../ds.txt
 }
-create_tasks
+# create_tasks
 
 get_results(){
     while read -r ds k; do 
