@@ -53,7 +53,7 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
             done
         done < ../ds.txt
     }
-# create_tasks
+create_tasks
 get_results(){
     outfile=output.txt
     rm $outfile
