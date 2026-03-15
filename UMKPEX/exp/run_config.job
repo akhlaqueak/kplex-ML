@@ -19,30 +19,67 @@ TASKFILE="tasks.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
-create_tasks(){
-    rm $TASKFILE
-    PROG='UMKPEX UMKPEX-CTCP'
-    HEUR='kPEX-Heur EGO-Heur'
-    BR='S-Br Pivot-Br R-Br'
+    create_tasks(){
+        rm $TASKFILE
+        BR='S-Br R-Br Pivot-Br'
+        while read -r ds k; do 
+
+            for br in $BR; do 
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                # grep -q "${ds}_${k}_${br}_v1" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v1" >> "$TASKFILE"; }
+                # # grep -q "${ds}_${k}_${br}_v2" || echo "./$cmd > ${ds}_${k}_${br}_v1" >> $TASKFILE
+
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB -heuristic EGO-Heur"
+                # # echo "./$cmd > ${ds}_${k}_${br}_v2" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v2" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v2" >> "$TASKFILE"; }
+
+                # cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+                # # echo "./$cmd > ${ds}_${k}_${br}_v3" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v3" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v3" >> "$TASKFILE"; }
+
+                # cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                # # echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v4" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v4" >> "$TASKFILE"; }
+
+
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB"
+                # echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v5" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v5" >> "$TASKFILE"; }
+
+                cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+                echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v2" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v2" >> "$TASKFILE"; }
+
+            done
+        done < ../ds.txt
+    }
+# create_tasks
+get_results(){
+    outfile=output.txt
+    rm $outfile
+    BR='S-Br R-Br Pivot-Br'
     while read -r ds k; do 
-
+    for ver in v5; do 
         for br in $BR; do 
-            cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
-            echo "./$cmd > ${ds}_${k}_${br}_v1" >> $TASKFILE
+            fname="${ds}_${k}_${br}_$ver"
+            val="x"
 
-            cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB -heuristic EGO-Heur"
-            echo "./$cmd > ${ds}_${k}_${br}_v2" >> $TASKFILE
+            if [[ -f "$fname" ]]; then
+                mapfile -tn 0 line < "$fname"
+                last="${line[-1]}"
+                if [[ $last == ">>"* ]]; then
+                    tmp=${last#>>}
+                    read -ra parts <<< "$tmp"
+                    val=${parts[-1]}
+                fi
+            fi
 
-            cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
-            echo "./$cmd > ${ds}_${k}_${br}_v3" >> $TASKFILE
-
-            cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
-            echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
+            printf "%s " "$val" >> $outfile
         done
+    done
+    echo >> $outfile
     done < ../ds.txt
 }
-# create_tasks
-
 get_results(){
     while read -r ds k; do 
         for prog in UMKP UMKP-S UMKP-R UMKP-P; do
@@ -73,7 +110,7 @@ run_task() {
 
     case $rc in
         0)
-            # echo "DONE  $(date) :: success"
+            echo "DONE  $(date) :: success"
             ;;
         124)
             echo "DONE  $(cmd) :: TIMEOUT"
