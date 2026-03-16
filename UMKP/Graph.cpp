@@ -312,7 +312,7 @@ void Graph::search()
 	{
 		write_one_kplex(kplex);
 		printf("!!! Warning Solved in Preprocessing !!!\n");
-		printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, bnb_time/1e6, t.elapsed() / 1e6);
+		printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, t.elapsed() / 1e6);
 		return;
 	}
 	else
@@ -350,7 +350,7 @@ void Graph::search()
 		{
 			write_one_kplex(kplex);
 			printf("!!! Warning Solved in Preprocessing !!!\n");
-			printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, bnb_time/1e6, t.elapsed() / 1e6);
+			printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, t.elapsed() / 1e6);
 			return;
 		}
 
