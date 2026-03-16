@@ -65,7 +65,7 @@ public:
     #ifdef enable_CTCP
     cout<<"CTCP Method: CTCP"<<endl;
     #else
-    cout<<"CTCP Method: CF-TCP"<<endl;
+    cout<<"CTCP Method: CF-CTCP"<<endl;
     #endif
     cout<<"Heuristic: "<<heuristic<<endl;
     cout<<"----------------------**********-----------------------\n";
@@ -143,3 +143,5 @@ public:
 };
 
 CommandLine PARA;
+
+

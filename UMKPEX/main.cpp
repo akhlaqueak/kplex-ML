@@ -13,13 +13,13 @@ set<ui> solution;
 
 string file_path;
 Graph g;
-double algorithm_start_time, total_heuris_time;
-double FastHeuris_time;
-double StrongHeuris_time;
-double strong_reduce_time;
+double algorithm_start_time=0, total_heuris_time=0;
+double FastHeuris_time=0;
+double StrongHeuris_time=0;
+double strong_reduce_time=0;
 int FastHeuris_lb;
 int input_n;
-
+double heuristic_time, ctcp_time, bnb_time;
 void print_solution()
 {
     if (solution.size() < 2 * paramK - 1)
@@ -57,7 +57,7 @@ void print_heuris_log()
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
         puts("------------------{whole procedure: kPEX}---------------------");
-        printf("\n>>Heursitic MaxKPlex_Size: %u t_time: %.4lf\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+        printf("\n>>MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         exit(0);
     }
@@ -96,7 +96,7 @@ void FastHeuris()
         ui pre_n = g.n;
         reduce.strong_reduce(lb);
         printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-        strong_reduce_time += start_strong_reduce.get_time();
+        strong_reduce_time += t.get_time();
 
         if (lb >= g.n)
         {
@@ -146,7 +146,7 @@ void StrongHeuris()
             ui pre_n = g.n;
             reduce.strong_reduce(lb);
             printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-            strong_reduce_time += start_strong_reduce.get_time();
+            // strong_reduce_time += start_strong_reduce.get_time();
 
             if (lb >= g.n)
             {
@@ -169,6 +169,7 @@ void EgoHeuris()
     lb = g.ego_degen(&solution);
     g.weak_reduce(lb);
     t.print_time();
+    StrongHeuris_time = t.get_time();
     // strong reduce
     {
         Timer start_strong_reduce;
@@ -245,17 +246,13 @@ int main(int argc, char *argv[])
     ui heuris_size = solution.size();   
     // recursive branch and bound
     puts("------------------{start BRB_Rec}---------------------");
+    Timer bnb_time;
     bnb();
 
     print_solution();
 
     puts("------------------{whole procedure: kPEX}---------------------");
-    double bnb_time = (get_system_time_microsecond() - algorithm_start_time-total_heuris_time);
-
-    double after_maxkp_percent = (get_system_time_microsecond() - after_maxkp_time)/bnb_time;
-    // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-    // printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf after_maxkp_percent: %.4lf change_after_heur: %d\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6, after_maxkp_percent, solution.size()-heuris_size);
-    printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    printf("\n>>MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
 
     return 0;
 }
