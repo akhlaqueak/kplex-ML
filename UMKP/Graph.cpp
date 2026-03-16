@@ -278,6 +278,7 @@ void Graph::search()
 {
 	Timer t;
 	ui max_degree = 0;
+	double heuristic_time, ctcp_time, bnb_time;
 	for (ui i = 0; i < n; i++)
 	{
 		if (pstart[i + 1] - pstart[i] > max_degree)
@@ -309,7 +310,10 @@ void Graph::search()
 
 	if (kplex.size() >= UB)
 	{
+		write_one_kplex(kplex);
 		printf("!!! Warning Solved in Preprocessing !!!\n");
+		printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, bnb_time/1e6, t.elapsed() / 1e6);
+		return;
 	}
 	else
 	{
@@ -321,6 +325,8 @@ void Graph::search()
 		shrink_graph(n, m, peel_sequence, core, out_mapping, nullptr, rid, pstart, edges, true);
 		ego_degen(n, m, peel_sequence, pstart, edges, degree, rid, vis, heap, edgelist_pointer, true);
 
+		heuristic_time = t.elapsed();
+
 		if (kplex.size() > old_size)
 		{
 			old_size = kplex.size();
@@ -331,9 +337,11 @@ void Graph::search()
 			}
 		}
 
+		Timer tc;
 		if (topCTCP and kplex.size() + 1 > 2 * K)
 			CTPrune::core_truss_copruning(n, m, kplex.size() + 1 - K, kplex.size() + 1 - 2 * K, peel_sequence, out_mapping, rid, pstart, edges, degree, true);
-	
+		ctcp_time = tc.elapsed();
+		tc.restart();
 		
 		delete[] core;
 		core = NULL;
@@ -342,16 +350,10 @@ void Graph::search()
 		{
 			write_one_kplex(kplex);
 			printf("!!! Warning Solved in Preprocessing !!!\n");
-			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
+			printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, bnb_time/1e6, t.elapsed() / 1e6);
 			return;
 		}
-		if(m<=500)
-		{
-			write_one_kplex(kplex);
-			printf("!!! Warning Small Instance !!!\n");
-			printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1000000.0);
-			return;
-		}
+
 		ui *degree = new ui[n];
 		for (ui i = 0; i < n; i++)
 			degree[i] = pstart[i + 1] - pstart[i];
@@ -529,6 +531,7 @@ void Graph::search()
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
+		bnb_time=tc.elapsed();
 
 		best_n_edges = write_one_kplex(kplex);
 
@@ -548,8 +551,7 @@ void Graph::search()
 	}
 	delete[] core;
 	delete[] peel_sequence;
-
-	printf(">>%s \tMaxKPlex_Size: %lu t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), t.elapsed() / 1e6);
+	printf(">>%s \tMaxKPlex_Size: %lu heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_Total: %f \n", dir.substr(dir.find_last_of("/") + 1).c_str(), kplex.size(), heuristic_time/1e6, ctcp_time/1e6, bnb_time/1e6, t.elapsed() / 1e6);
 
 	// printf("\tMaxKPlex_Size: %lu t_Total: %f t_Seesaw: %f\n", kplex.size(), t.elapsed()/1000000.0, 0);
 	// printf("\tMaximum kPlex Size: %lu, Total Time: %s (microseconds)\n", kplex.size(), Utility::integer_to_string(t.elapsed()).c_str());
