@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=task-runner
-#SBATCH --ntasks=192
+#SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
-#SBATCH --time=12:00:00
+#SBATCH --time=36:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -25,9 +25,15 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
         while read -r ds k; do 
 
             for br in $BR; do 
-                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
-                # grep -q "${ds}_${k}_${br}_v1" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v1" >> "$TASKFILE"; }
-                # # grep -q "${ds}_${k}_${br}_v2" || echo "./$cmd > ${ds}_${k}_${br}_v1" >> $TASKFILE
+                cmd="UMKP $DS_LOC/$ds.bin $k -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v0" >> "$TASKFILE";
+
+                cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v1" >> "$TASKFILE";
+
+                cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
+
 
                 # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB -heuristic EGO-Heur"
                 # # echo "./$cmd > ${ds}_${k}_${br}_v2" >> $TASKFILE
@@ -37,8 +43,6 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
                 # # echo "./$cmd > ${ds}_${k}_${br}_v3" >> $TASKFILE
                 # grep -q "${ds}_${k}_${br}_v3" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v3" >> "$TASKFILE"; }
 
-                # cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
-                # # echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
                 # grep -q "${ds}_${k}_${br}_v4" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v4" >> "$TASKFILE"; }
 
 
@@ -46,8 +50,8 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
                 # echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
                 # grep -q "${ds}_${k}_${br}_v5" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v5" >> "$TASKFILE"; }
 
-                cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
-                echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+                # echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
                 # grep -q "${ds}_${k}_${br}_v2" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v2" >> "$TASKFILE"; }
 
             done
@@ -56,44 +60,45 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 create_tasks
 get_results(){
     outfile=output.txt
-    rm $outfile
+    rm -f "$outfile"
     BR='S-Br R-Br Pivot-Br'
-    while read -r ds k; do 
-    for ver in v5; do 
-        for br in $BR; do 
-            fname="${ds}_${k}_${br}_$ver"
-            val="x"
 
-            if [[ -f "$fname" ]]; then
-                mapfile -tn 0 line < "$fname"
-                last="${line[-1]}"
-                if [[ $last == ">>"* ]]; then
-                    tmp=${last#>>}
-                    read -ra parts <<< "$tmp"
-                    val=${parts[-1]}
+    while read -r ds k; do 
+        for ver in v0 v1 v4; do 
+            for br in $BR; do 
+                fname="${ds}_${k}_${br}_$ver"
+                val="x x x x"
+
+                if [[ -f "$fname" ]]; then
+                    last=$(tail -n 1 "$fname")
+
+                    if [[ $last == ">>"* ]]; then
+                        tmp=${last#>>}
+                        nums=($(grep -oE '[0-9]+\.[0-9]+|[0-9]+' <<< "$tmp"))
+                        val="${nums[@]: -4}"
+                    fi
                 fi
-            fi
 
-            printf "%s " "$val" >> $outfile
+                printf "%s " "$val" >> "$outfile"
+            done
         done
-    done
-    echo >> $outfile
+        echo >> "$outfile"
     done < ../ds.txt
 }
-get_results(){
-    while read -r ds k; do 
-        for prog in UMKP UMKP-S UMKP-R UMKP-P; do
-            fname=$(echo "$prog $ds $k" | tr ' ' '_')
-            if grep -q ">>" "$fname"; then
-                val=$(grep ">>" "$fname" | awk '{print $NF}')
-            else
-                val="x"
-            fi
-            printf "%s " "$val" >> output.txt
-        done
-        printf "\n" >> output.txt
-    done < ../ds.txt
-}
+# get_results(){
+#     while read -r ds k; do 
+#         for prog in UMKP UMKP-S UMKP-R UMKP-P; do
+#             fname=$(echo "$prog $ds $k" | tr ' ' '_')
+#             if grep -q ">>" "$fname"; then
+#                 val=$(grep ">>" "$fname" | awk '{print $NF}')
+#             else
+#                 val="x"
+#             fi
+#             printf "%s " "$val" >> output.txt
+#         done
+#         printf "\n" >> output.txt
+#     done < ../ds.txt
+# }
 ######################################
 # USER-MODIFIABLE FUNCTION
 ######################################
@@ -170,3 +175,5 @@ done
 '
 
 echo "Job finished at $(date)"
+
+get_results
