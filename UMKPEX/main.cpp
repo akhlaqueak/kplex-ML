@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
     // recursive branch and bound
     puts("------------------{start BRB_Rec}---------------------");
     Timer bnb_time;
-    bnb();
+    // bnb();
 
     print_solution();
 

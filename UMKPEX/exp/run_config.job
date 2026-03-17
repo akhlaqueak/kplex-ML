@@ -20,7 +20,7 @@ TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
     create_tasks(){
-        rm $TASKFILE
+        rm -f $TASKFILE
         BR='S-Br R-Br Pivot-Br'
         while read -r ds k; do 
 
@@ -69,13 +69,19 @@ get_results(){
                 fname="${ds}_${k}_${br}_$ver"
                 val="x x x x"
 
-                if [[ -f "$fname" ]]; then
-                    last=$(tail -n 1 "$fname")
+               matched=$(tail -n 5 "$fname" | tac | grep -m1 '^>>' || true)
 
-                    if [[ $last == ">>"* ]]; then
-                        tmp=${last#>>}
-                        nums=($(grep -oE '[0-9]+\.[0-9]+|[0-9]+' <<< "$tmp"))
-                        val="${nums[@]: -4}"
+                if [[ -n "$matched" ]]; then
+                    tmp=${matched#>>}
+
+                    # split into array by whitespace
+                    read -ra parts <<< "$tmp"
+
+                    # directly take positions
+                    if (( ${#parts[@]} >= 8 )); then
+                        val="${parts[-7]} ${parts[-5]} ${parts[-3]} ${parts[-1]}"
+                    else
+                        val="x x x x"
                     fi
                 fi
 
@@ -85,6 +91,17 @@ get_results(){
         echo >> "$outfile"
     done < ../ds.txt
 }
+
+    # BR=(S R P)
+    #     for ver in v0 v1 v4; do 
+    #         for br in $BR; do 
+    #             for c in heu ctcp bnb total; do
+    #                 echo -en "$ver-$br-$c "
+    #             done
+    #         done
+    #     done
+
+
 # get_results(){
 #     while read -r ds k; do 
 #         for prog in UMKP UMKP-S UMKP-R UMKP-P; do
@@ -115,16 +132,16 @@ run_task() {
 
     case $rc in
         0)
-            echo "DONE  $(date) :: success"
+            echo "SUCCESS  $cmd"
             ;;
         124)
-            echo "DONE  $(cmd) :: TIMEOUT"
+            echo "TIMEOUT  $cmd"
             ;;
         137)
-            echo "DONE  $(cmd) :: KILLED"
+            echo "KILLED  $cmd"
             ;;
         *)
-            echo "DONE  $(cmd) :: FAILED (exit=$rc)"
+            echo "FAILED  $cmd (exit=$rc)"
             ;;
     esac
 

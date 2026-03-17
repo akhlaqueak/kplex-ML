@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 		graph->search_dense();
 
 	// delete graph; // there are some bugs in releasing memory
-	printf("-----------------------------------------------------------------------------------------\n\n");
+	// printf("-----------------------------------------------------------------------------------------\n\n");
 }
 
 Graph::Graph(const char *_dir, const int _K)
@@ -346,7 +346,7 @@ void Graph::search()
 		delete[] core;
 		core = NULL;
 
-		if (n <= kplex.size())
+		// if (n <= kplex.size())
 		{
 			write_one_kplex(kplex);
 			printf("!!! Warning Solved in Preprocessing !!!\n");
