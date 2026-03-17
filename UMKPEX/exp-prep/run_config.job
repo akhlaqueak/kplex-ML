@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=task-runner
+#SBATCH --ntasks=216
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=36:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+
+set -euo pipefail
+
+
+######################################
+# USER INPUT (ONLY THIS)
+######################################
+TASKFILE="tasks.txt"        # each line = full command to execute
+TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
+TIMEOUT_GRACE="30s"         # grace period before SIGKILL
+DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
+    create_tasks(){
+        rm -f $TASKFILE
+        BR='S-Br'
+        # BR='S-Br R-Br Pivot-Br'
+        while read -r ds k; do 
+
+            for br in $BR; do 
+                cmd="UMKP $DS_LOC/$ds.bin $k -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v0" >> "$TASKFILE";
+
+                cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v1" >> "$TASKFILE";
+
+                cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br"
+                echo "./$cmd > ${ds}_${k}_${br}_v4" >> $TASKFILE
+
+
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB -heuristic EGO-Heur"
+                # # echo "./$cmd > ${ds}_${k}_${br}_v2" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v2" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v2" >> "$TASKFILE"; }
+
+                # cmd="UMKPEX $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+                # # echo "./$cmd > ${ds}_${k}_${br}_v3" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v3" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v3" >> "$TASKFILE"; }
+
+                # grep -q "${ds}_${k}_${br}_v4" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v4" >> "$TASKFILE"; }
+
+
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -bounding AltRB"
+                # echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v5" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v5" >> "$TASKFILE"; }
+
+                # cmd="UMKPEX-CTCP $DS_LOC/$ds.bin $k -algorithm UMKP+ -branching $br -heuristic EGO-Heur"
+                # echo "./$cmd > ${ds}_${k}_${br}_v6" >> $TASKFILE
+                # grep -q "${ds}_${k}_${br}_v2" task-runner.out || { echo "./$cmd > ${ds}_${k}_${br}_v2" >> "$TASKFILE"; }
+
+            done
+        done < ../ds.txt
+    }
+create_tasks
+get_results(){
+    outfile=output.txt
+    rm -f "$outfile"
+    # BR='S-Br R-Br Pivot-Br'
+    BR='S-Br'
+
+    while read -r ds k; do 
+        for ver in v0 v1 v4; do 
+            for br in $BR; do 
+                fname="${ds}_${k}_${br}_$ver"
+                val="x x"
+
+               matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
+
+                if [[ -n "$matched" ]]; then
+                    tmp=${matched#>>}
+
+                    # split into array by whitespace
+                    read -ra parts <<< "$tmp"
+
+                    # directly take positions
+                    if (( ${#parts[@]} >= 8 )); then
+                        val="${parts[-7]} ${parts[-5]}}"
+                    else
+                        val="x x"
+                    fi
+                fi
+
+                printf "%s " "$val" >> "$outfile"
+            done
+        done
+        echo >> "$outfile"
+    done < ../ds.txt
+}
+
+    # BR=(S R P)
+    #     for ver in v0 v1 v4; do 
+    #         for br in $BR; do 
+    #             for c in heu ctcp bnb total; do
+    #                 echo -en "$ver-$br-$c "
+    #             done
+    #         done
+    #     done
+
+
+# get_results(){
+#     while read -r ds k; do 
+#         for prog in UMKP UMKP-S UMKP-R UMKP-P; do
+#             fname=$(echo "$prog $ds $k" | tr ' ' '_')
+#             if grep -q ">>" "$fname"; then
+#                 val=$(grep ">>" "$fname" | awk '{print $NF}')
+#             else
+#                 val="x"
+#             fi
+#             printf "%s " "$val" >> output.txt
+#         done
+#         printf "\n" >> output.txt
+#     done < ../ds.txt
+# }
+######################################
+# USER-MODIFIABLE FUNCTION
+######################################
+run_task() {
+    local cmd="$1"
+
+    echo "START $(date) :: $cmd"
+
+    timeout --signal=TERM \
+            --kill-after="$TIMEOUT_GRACE" \
+            "$TASK_TIMEOUT" \
+            bash -c "$cmd"
+    rc=$?
+
+    case $rc in
+        0)
+            echo "SUCCESS  $cmd"
+            ;;
+        124)
+            echo "TIMEOUT  $cmd"
+            ;;
+        137)
+            echo "KILLED  $cmd"
+            ;;
+        *)
+            echo "FAILED  $cmd (exit=$rc)"
+            ;;
+    esac
+
+    # 🔑 NEVER allow failure to stop the rank
+    return 0
+}
+
+# 🔑 REQUIRED: export function and variables for worker shells
+export -f run_task
+export TASKFILE TASK_TIMEOUT TIMEOUT_GRACE
+
+######################################
+# Sanity checks
+######################################
+if [[ ! -s "$TASKFILE" ]]; then
+    echo "Task file '$TASKFILE' is missing or empty"
+    exit 1
+fi
+
+echo "Job started at $(date)"
+echo "Task file: $TASKFILE"
+echo "Timeout per task: $TASK_TIMEOUT"
+echo "SLURM job id: ${SLURM_JOB_ID:-local}"
+
+######################################
+# Parallel execution
+######################################
+srun --label bash -c '
+# IMPORTANT: do NOT use set -e here
+set -o pipefail
+
+cd "$SLURM_SUBMIT_DIR" || exit 1
+
+rank=${SLURM_PROCID:-0}
+nworkers=${SLURM_NTASKS:-1}
+
+# Distribute tasks by stride
+sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
+while IFS= read -r cmd || [[ -n "$cmd" ]]; do
+    # Skip empty lines and comments
+    [[ -z "${cmd//[[:space:]]/}" ]] && continue
+    [[ "${cmd## }" == \#* ]] && continue
+
+    echo "[Rank $rank] Running: $cmd"
+
+    run_task "$cmd"
+done
+'
+
+echo "Job finished at $(date)"
+
+get_results
