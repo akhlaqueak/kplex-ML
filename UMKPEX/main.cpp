@@ -4,7 +4,7 @@
 
 // #define enable_CTCP
 #ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
-#include "2th-Reduction-CTCP.h"
+// #include "2th-Reduction-CTCP.h"
 #include "2th-Reduction-CTPrune.h"
 #else // use CF-CTCP
 #include "2th-Reduction.h"
