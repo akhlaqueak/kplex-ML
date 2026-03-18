@@ -124,10 +124,16 @@ run_task() {
 
     echo "START $(date) :: $cmd"
 
+    # extract output file (after last >)
+    outfile="${cmd##*> }"
+
+    # extract actual command (before >)
+    cmd_no_redir="${cmd%>*}"
+
     timeout --signal=TERM \
             --kill-after="$TIMEOUT_GRACE" \
             "$TASK_TIMEOUT" \
-            bash -c "$cmd"
+            bash -c "$cmd_no_redir" > "$outfile" 2>&1
     rc=$?
 
     case $rc in

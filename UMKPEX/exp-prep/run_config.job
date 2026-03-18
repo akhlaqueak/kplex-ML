@@ -81,7 +81,7 @@ get_results(){
 
                     # directly take positions
                     if (( ${#parts[@]} >= 8 )); then
-                        val="${parts[-7]} ${parts[-5]}}"
+                        val="${parts[-7]} ${parts[-5]}"
                     else
                         val="x x"
                     fi
@@ -129,7 +129,7 @@ run_task() {
     timeout --signal=TERM \
             --kill-after="$TIMEOUT_GRACE" \
             "$TASK_TIMEOUT" \
-            bash -c "$cmd"
+            bash -c "$cmd" 2>&1
     rc=$?
 
     case $rc in

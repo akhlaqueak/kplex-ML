@@ -346,7 +346,7 @@ void Graph::search()
 		delete[] core;
 		core = NULL;
 
-		// if (n <= kplex.size())
+		if (n <= kplex.size())
 		{
 			write_one_kplex(kplex);
 			printf("!!! Warning Solved in Preprocessing !!!\n");
