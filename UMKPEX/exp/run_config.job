@@ -26,7 +26,7 @@ create_tasks(){
         for heur in kPEX-Heur EGO-Heur; do
             # for algo in UMKP+ kPEX; do
                 for br in $BR; do 
-                    cmd="$DS_LOC/$ds.bin $k -branching $br -algorithm UMKP+ -heuristic $heur"
+                    cmd="$DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+"
                     echo "UMKPEX-CTCP $cmd" >> "$TASKFILE"
                     echo "UMKPEX $cmd" >> "$TASKFILE"
                 done
@@ -101,16 +101,31 @@ run_task() {
 
     echo "START $(date) :: $cmd"
 
-    # extract output file (after last >)
-    outfile="${cmd##*> }"
+    set -- $cmd
+    full_cmd=("$@")   # save everything
 
-    # extract actual command (before >)
-    cmd_no_redir="${cmd%>*}"
+    file="$2"
+    base=$(basename "$file")
+    base="${base%.*}"
 
+    outfile="${1}_${base}"
+
+    # build filename from filtered args
+    shift 2
+    for arg in "$@"; do
+        if [[ "$arg" != -* ]]; then
+            outfile="${outfile}_${arg}"
+        fi
+    done
+
+    outfile=$(echo "$outfile" | tr ' ' '_')
+    outfile="${outfile}.log"
+
+    # run FULL command
     timeout --signal=TERM \
             --kill-after="$TIMEOUT_GRACE" \
             "$TASK_TIMEOUT" \
-            bash -c "$cmd_no_redir" > "$outfile" 2>&1
+            "./${full_cmd[@]}" > "$outfile" 2>&1
     rc=$?
 
     case $rc in
