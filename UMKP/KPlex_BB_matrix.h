@@ -9,7 +9,7 @@
 class KPLEX_BB_MATRIX
 {
 private:
-	ui n;
+	long long n;
 	ui *ids;
 	char *matrix;
 	long long matrix_size;

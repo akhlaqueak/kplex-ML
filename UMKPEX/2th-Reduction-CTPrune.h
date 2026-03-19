@@ -113,6 +113,7 @@ public:
      */
     void strong_reduce(int lb, int start_u = 0)
     {
+        if(lb+1<=2*paramK) return;
         CTCP(lb);
     }
     void rebuild_graph(vector<bool> &vertex_removed, vector<bool> &edge_removed, ui *que = nullptr)

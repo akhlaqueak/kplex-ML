@@ -11,7 +11,7 @@ ll dfs_cnt=0;
 class KPLEX_BB_MATRIX
 {
 private:
-	ui n;
+	long long n;
 	vector<int> ids;
 	char *matrix;
 	long long matrix_size;
@@ -180,6 +180,7 @@ public:
 	{
 		ids = g.vertex_id;
 		n = g.size();
+		if(n>1e4) cout<<n<<" ";
 		if (((long long)n) * n > matrix_size)
 		{
 			do
