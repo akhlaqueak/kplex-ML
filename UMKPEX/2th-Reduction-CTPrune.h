@@ -1,12 +1,12 @@
 #ifndef REDUCTION_H
 #define REDUCTION_H
 
-#include "Graph.h"
+#include "2th-Reduction.h"
 #include "CTPrune.h"
 /**
  * @brief second order reduction
  */
-class Reduction
+class ReductionCTCP: public ReductionBase
 {
 private:
     ui *triangles;
@@ -93,13 +93,13 @@ private:
     }
 
 public:
-    Reduction(Graph *_g) : g(_g), triangles(nullptr)
+    ReductionCTCP(Graph *_g) : g(_g), triangles(nullptr)
     {
         n = g->n;
         m = g->m;
         vis.resize(n, 0);
     }
-    ~Reduction()
+    ~ReductionCTCP()
     {
         if (triangles != nullptr)
         {
@@ -111,7 +111,7 @@ public:
      * @brief we first remove edges with updating triangles[]; also, we put core-reduce on highest priority.
      * assume we already conduct weak reduce
      */
-    void strong_reduce(int lb, int start_u = 0)
+    void strong_reduce(int lb)
     {
         if(lb+1<=2*paramK) return;
         CTCP(lb);
@@ -244,4 +244,17 @@ public:
 }    
 };
 
+class Reduction{
+    ReductionBase* reduce;
+    public:
+    Reduction(Graph *_g){
+        if(PARA.ctcp=="CTCP")
+            reduce = new ReductionCTCP(_g);
+        else
+            reduce = new ReductionCFCTCP(_g);
+    }
+     void strong_reduce(int lb){
+        reduce->strong_reduce(lb);
+    }
+};
 #endif

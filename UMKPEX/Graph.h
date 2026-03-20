@@ -1040,6 +1040,43 @@ public:
         n = new_n;
         delete[] q;
     }
+   void degenerate(ui* seq){
+        vector<ui> core(n, 0);
+        vector<ui> rm(n, 0);
+        ui rest_v_cnt = 0;
+        // compute degeneracy order
+        {
+            ui *pd = new ui[n]; // this may destroy d[]; however, d[] is useless for us now
+            for(ui i=0;i<n;i++) pd[i] = d[i];
+            LinearHeap heap(n, n, pd);
+            rest_v_cnt = heap.sz;
+            ui sz = 0;
+            // each time we remove the vertex with min degree
+            while (heap.get_min_key() + paramK < heap.sz)
+            {
+                ui u = heap.get_min_node();
+                heap.delete_node(u);
+                seq[sz++]=u;
+                rm[u] = 1;
+                // update the degrees of the rest vertices
+                for (ui i = pstart[u]; i < pstart[u + 1]; i++)
+                {
+                    ui v = edge_to[i];
+                    if (!rm[v])
+                    {
+                        heap.decrease(--pd[v], v);
+                    }
+                }
+            }
+            int rest = heap.sz;
+            while (heap.sz)
+            {
+                ui u = heap.get_min_node();
+                heap.delete_node(u);
+                seq[sz++]=u;
+            }
+        }
+    }
     /**
      * @brief degenaracy order to get lb, i.e., each time we remove the vertex with min degree;
      * then we reduce the graph to (lb+1-k)-core

@@ -358,6 +358,7 @@ namespace CTPrune {
 			ui start = pstart[i];
 			pstart[cnt] = pos;
 			for(ui j = start;j < pend[i];j ++) if(!deleted[j]) edges[pos++] = rid[edges[j]];
+			degree[cnt]=degree[i];
 			++ cnt;
 		}
 		pstart[cnt] = m = pos;

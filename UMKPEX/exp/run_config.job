@@ -24,60 +24,16 @@ create_tasks(){
     BR='S-Br R-Br Pivot-Br'
     while read -r ds k; do 
         for heur in kPEX-Heur EGO-Heur; do
-            # for algo in UMKP+ kPEX; do
-                for br in $BR; do 
-                    cmd="$DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+"
-                    echo "UMKPEX-CTCP $cmd" >> "$TASKFILE"
-                    echo "UMKPEX $cmd" >> "$TASKFILE"
+            for br in $BR; do 
+                for ct in CTCP CF-CTCP; do
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct"
+                    echo "$cmd" >> "$TASKFILE"
                 done
-            # done
+            done
         done
     done < ../ds.txt
 }
 create_tasks
-get_results(){
-    outfile=output.txt
-    rm -f "$outfile"
-    BR='S-Br R-Br Pivot-Br'
-
-    while read -r ds k; do 
-        for ver in v0 v1 v4; do 
-            for br in $BR; do 
-                fname="${ds}_${k}_${br}_$ver"
-                val="x x x x"
-
-               matched=$(tail -n 5 "$fname" | tac | grep -m1 '^>>' || true)
-
-                if [[ -n "$matched" ]]; then
-                    tmp=${matched#>>}
-
-                    # split into array by whitespace
-                    read -ra parts <<< "$tmp"
-
-                    # directly take positions
-                    if (( ${#parts[@]} >= 8 )); then
-                        val="${parts[-7]} ${parts[-5]} ${parts[-3]} ${parts[-1]}"
-                    else
-                        val="x x x x"
-                    fi
-                fi
-
-                printf "%s " "$val" >> "$outfile"
-            done
-        done
-        echo >> "$outfile"
-    done < ../ds.txt
-}
-
-    # BR=(S R P)
-    #     for ver in v0 v1 v4; do 
-    #         for br in $BR; do 
-    #             for c in heu ctcp bnb total; do
-    #                 echo -en "$ver-$br-$c "
-    #             done
-    #         done
-    #     done
-
 
 # get_results(){
 #     while read -r ds k; do 
@@ -133,13 +89,13 @@ run_task() {
             echo "SUCCESS  $cmd"
             ;;
         124)
-            echo "TIMEOUT  $cmd"
+            echo "TIMEOUT  $cmd" >> "$outfile"
             ;;
         137)
-            echo "KILLED  $cmd"
+            echo "KILLED  $cmd" >> "$outfile"
             ;;
         *)
-            echo "FAILED  $cmd (exit=$rc)"
+            echo "FAILED  $cmd (exit=$rc)" >> "$outfile"
             ;;
     esac
 
