@@ -26,7 +26,8 @@ create_tasks(){
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
+                    # cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct"
                     echo "$cmd" >> "$TASKFILE"
                 done
             done
