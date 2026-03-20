@@ -15,7 +15,7 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks.txt"        # each line = full command to execute
+TASKFILE="tasks-kpex.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
@@ -26,8 +26,8 @@ create_tasks(){
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
-                    # cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
+                    # cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct"
                     echo "$cmd" >> "$TASKFILE"
                 done
             done
