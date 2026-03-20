@@ -51,7 +51,7 @@ void print_heuris_log()
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
         puts("------------------{whole procedure: kPEX}---------------------");
-        printf("\n>>MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+        printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", lb, solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         exit(0);
     }
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     prepro.print_time();
     print_heuris_log();
 
-    ui heuris_size = solution.size();   
+    ui heur_size = solution.size();   
     // recursive branch and bound
     puts("------------------{start BRB_Rec}---------------------");
     Timer bnb_time;
@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     print_solution();
 
     puts("------------------{whole procedure: kPEX}---------------------");
-    printf("\n>>MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", heur_size, solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
 
     return 0;
 }
