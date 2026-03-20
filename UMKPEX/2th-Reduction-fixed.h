@@ -841,8 +841,6 @@ public:
         ui *rid           = new ui[n];
         ui *psq           = new ui[n];
         g->degenerate(psq);
-        
-        for(ui i=0;i<n;i++) psq[i]=i;
 
         CTPrune::core_truss_copruning(
             g->n,
@@ -857,7 +855,11 @@ public:
             g->d,
             false
         );
+        g->map_refresh_id.resize(g->n);
+        
         delete[] rid;
+        delete[] psq;
+
     } 
 };
 
