@@ -15,13 +15,13 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks-kpex.txt"        # each line = full command to execute
+TASKFILE="tasks.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 create_tasks(){
     rm -f $TASKFILE
-    BR='Binary-Br S-Br R-Br Pivot-Br'
+    BR='S-Br R-Br Pivot-Br'
     while read -r ds k; do 
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
