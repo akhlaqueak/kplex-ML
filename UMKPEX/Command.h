@@ -32,8 +32,8 @@ public:
       cout<<"Valid branching methods: "; for(auto& b: branchings) cout<<b<<" ";
       cout<<endl;
       if(algorithm=="kPEX"){
-        cout<<"Not a valid selection for branching, using Binary-Br"<<endl;
-        branching="Binary-Br";
+        cout<<"Not a valid selection for branching, using Adaptive-Br"<<endl;
+        branching="Adaptive-Br";
       }
       else{
         cout<<"Not a valid selection for branching, using Adaptive-Br"<<endl;
@@ -43,10 +43,10 @@ public:
 
     vector<string> boundings={"None", "S-Bound", "R-Bound", "SR-Bound", "AltRB"};
     if(find(boundings.begin(), boundings.end(), bounding)==boundings.end()) {
-      cout<<"Not a valid selection for bounding, using 'None'"<<endl;
+      cout<<"Not a valid selection for bounding, using 'AltRB'"<<endl;
       cout<<"Valid bounding methods: "; for(auto& b: boundings) cout<<b<<" ";
       cout<<endl;
-      bounding = "None";
+      bounding = "AltRB";
     }
 
     vector<string> heuristics={"kPEX-Heur", "EGO-Heur"};

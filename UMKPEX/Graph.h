@@ -872,7 +872,7 @@ public:
                 s.insert({d[i], i});
             }
         }
-        int ret = paramK;
+        int ret = 2*paramK-2;
         for (auto &h : s)
         {
             ret = max(ret, sqrt_degeneracy(h.y, solution));

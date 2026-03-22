@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
-#SBATCH --time=36:00:00
+#SBATCH --time=48:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -15,10 +15,11 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks-kpex.txt"        # each line = full command to execute
+TASKFILE="tasks.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
+OUTFILE="output.txt"
 create_tasks(){
     rm -f $TASKFILE
     BR='S-Br R-Br Pivot-Br'
@@ -26,9 +27,10 @@ create_tasks(){
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
-                    # cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct"
+                  for bound in AltRB None; do 
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct -bounding $bound"
                     echo "$cmd" >> "$TASKFILE"
+                  done
                 done
             done
         done
@@ -36,53 +38,39 @@ create_tasks(){
 }
 create_tasks
 
-# get_results(){
-#     while read -r ds k; do 
-#         for prog in UMKP UMKP-S UMKP-R UMKP-P; do
-#             fname=$(echo "$prog $ds $k" | tr ' ' '_')
-#             if grep -q ">>" "$fname"; then
-#                 val=$(grep ">>" "$fname" | awk '{print $NF}')
-#             else
-#                 val="x"
-#             fi
-#             printf "%s " "$val" >> output.txt
-#         done
-#         printf "\n" >> output.txt
-#     done < ../ds.txt
-# }
+
 ######################################
 # USER-MODIFIABLE FUNCTION
 ######################################
-run_task() {
-    local cmd="$1"
 
-    echo "START $(date) :: $cmd"
+get_outfile() {
+    read -r -a args <<< "$1"
 
-    set -- $cmd
-    full_cmd=("$@")   # save everything
-
-    file="$2"
-    base=$(basename "$file")
+    local base
+    base=$(basename "${args[1]}")
     base="${base%.*}"
 
-    outfile="${1}_${base}"
+    local outfile="${args[0]}_${base}"
 
-    # build filename from filtered args
-    shift 2
-    for arg in "$@"; do
-        if [[ "$arg" != -* ]]; then
-            outfile="${outfile}_${arg}"
-        fi
+    for arg in "${args[@]:2}"; do
+        [[ $arg != -* ]] && outfile+="_$arg"
     done
 
-    outfile=$(echo "$outfile" | tr ' ' '_')
-    outfile="${outfile}.log"
+    printf "%s.log\n" "${outfile// /_}"
+}
 
-    # run FULL command
+run_task() {
+    local cmd="$1"
+    echo "START $(date) :: $cmd"
+
+    outfile=$(get_outfile "$cmd")
+
+    read -r -a args <<< "$cmd"
     timeout --signal=TERM \
             --kill-after="$TIMEOUT_GRACE" \
             "$TASK_TIMEOUT" \
-            "./${full_cmd[@]}" > "$outfile" 2>&1
+            "./${args[@]}" > "$outfile" 2>&1
+
     rc=$?
 
     case $rc in
@@ -148,4 +136,43 @@ done
 
 echo "Job finished at $(date)"
 
+get_results(){
+    rm -f $OUTFILE
+    BR='S-Br R-Br Pivot-Br'
+    while read -r ds k; do 
+        for heur in kPEX-Heur EGO-Heur; do
+            for ct in CTCP CF-CTCP; do
+                for br in $BR; do 
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
+
+                    fname=$(get_outfile "$cmd")
+                    values=""
+                    matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
+                    if [[ -n "$matched" ]]; then
+                        read -ra f <<< "$matched"
+
+                        values=""
+                        for ((i=1; i<${#f[@]}; i+=2)); do
+                            values+="${f[i]} "
+                        done
+                        values=${values% }
+                    else
+                        values="x x x x x x"
+                    fi
+                    printf "%s " "$values" >> "$OUTFILE"
+                done
+            done
+        done
+        echo >> "$OUTFILE"
+    done < ../ds.txt
+}
 get_results
+
+
+for v in v0 v1 v2 v3; do 
+    for br in S R P; do 
+        for t in heur-kp mkp heur ctcp bnb total; do
+            echo -en "$v-$br-$t "
+        done 
+    done
+done

@@ -190,7 +190,8 @@ void heuris()
     input_n = g.n;
     FastHeuris();
 
-    if(PARA.heuristic=="EGO-Heur"){
+    if(PARA.heuristic=="EGO-Heur")
+    {
         EgoHeuris();
         return;
     }
