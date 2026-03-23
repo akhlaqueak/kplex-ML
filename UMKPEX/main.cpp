@@ -1,7 +1,7 @@
 #include "Graph.h"
 #include "Command.h"
 #include "KPlex_BB_matrix.h"
-#include "2th-Reduction-fixed.h"
+#include "2th-Reduction.h"
 #include "Branch.h"
 set<ui> solution;
 

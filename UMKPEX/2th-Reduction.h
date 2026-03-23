@@ -1,9 +1,14 @@
 #ifndef REDUCTION_CFCTCP_H
 #define REDUCTION_CFCTCP_H
 #include "CTPrune.h"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <queue>
 class ReductionBase
 {
 public:
+    virtual ~ReductionBase() = default;
     virtual void strong_reduce(int lb) = 0;
 };
 /**
@@ -53,16 +58,25 @@ private:
             return tt + 1 - hh;
         }
     };
+
+    static ui find_edge_id(ui *edge_to, ui *begin, ui *end, ui target)
+    {
+        ui *it = std::find(begin, end, target);
+        assert(it != end);
+        return static_cast<ui>(it - edge_to);
+    }
     // G-fast: only vertices in G-fast are useful
     Graph &G_fast;
     ui *triangles, *compute_time, *another_edge;
-    vector<char> vertex_removed_from_G_fast, edge_removed_from_G_fast;
+    vector<bool> vertex_removed_from_G_fast, edge_removed_from_G_fast;
     ui n, m;
     ui timestamp;
     // G-slow: this is used to update triangle count
-    vector<char> edge_removed_from_G_slow;
+    vector<bool> edge_removed_from_G_slow;
     // cache
-    vector<char> vis;
+    vector<bool> vis;
+    ui* rank = nullptr;
+    ui* peel_seq = nullptr;
 
     /**
      * @brief reduce G-fast to (lb+1-k)-core
@@ -269,8 +283,9 @@ private:
                 ui v = edge_to[i];
                 if (vertex_removed_from_G_fast[v])
                     continue;
-                if (v >= u) // make sure v<u in degeneracy order
-                    break;
+                // if (v >= u) // make sure v<u in degeneracy order
+                //     break;
+                if(rank[v]>rank[u]) continue;
                 ui edge_cnt = 0;
                 // compute the triangle count of (u,v)
                 for (ui j = pstart[v]; j < pstart[v + 1]; j++)
@@ -286,7 +301,7 @@ private:
                 if (edge_cnt + 2 * paramK <= lb) // remove (u,v)
                 {
                     edge_removed_from_G_fast[i] = true;
-                    ui another_edge_id = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
+                    ui another_edge_id = find_edge_id(edge_to, edge_to + pstart[v], edge_to + pstart[v + 1], u);
                     edge_removed_from_G_fast[another_edge_id] = true;
                     if (--d[u] + paramK == lb)
                     {
@@ -343,19 +358,32 @@ public:
             {
                 delete[] p;
             }
+        if(rank!=nullptr){
+            delete[] rank;
+            rank=nullptr;
+        }
+        if(peel_seq!=nullptr){
+            delete[] peel_seq;
+            peel_seq=nullptr;
+        }
     }
     /**
      * the entrance of our second-order reduction
      */
     void strong_reduce(int lb)
     {
+        // if(lb+1<=2*paramK) return;
         // the first round, we brutely remove edges (of course, core-reduce is always first)
         bool continue_first_round;
+        if(peel_seq==nullptr) peel_seq=new ui[n];
+        if(rank==nullptr) rank=new ui[n];
+        G_fast.degenerate(peel_seq);
         do
         {
             ui previous_m = m, previous_n = n;
-            vertex_removed_from_G_fast.resize(n, 0);
-            edge_removed_from_G_fast.resize(m, 0);
+            vertex_removed_from_G_fast.assign(n, false);
+            edge_removed_from_G_fast.assign(m, false);
+            vis.assign(n, false);
             Queue q_v(n);
             first_round_reduce(lb, q_v);
             if (previous_m == m) // none of the edges can be reduced
@@ -364,8 +392,16 @@ public:
             }
             continue_first_round = previous_m * 0.8 > m || previous_n * 0.8 > n;
         } while (continue_first_round);
+
+        for(ui i=0;i<n;i++)rank[peel_seq[i]]=i;
         // prepare for CF-CTCP
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
+        delete[] triangles;
+        delete[] compute_time;
+        delete[] another_edge;
+        triangles = nullptr;
+        compute_time = nullptr;
+        another_edge = nullptr;
         triangles = new ui[m];
         compute_time = new ui[m];
         another_edge = new ui[m];
@@ -374,14 +410,14 @@ public:
             for (ui i = pstart[u]; i < pstart[u + 1]; i++)
             {
                 ui v = edge_to[i];
-                if (v >= u)
-                    break;
-                ui another_edge_id = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
+                // if (v >= u) break;
+                if (rank[v] > rank[u]) continue;
+                ui another_edge_id = find_edge_id(edge_to, edge_to + pstart[v], edge_to + pstart[v + 1], u);
                 another_edge[i] = another_edge_id;
                 another_edge[another_edge_id] = i;
             }
         }
-        edge_removed_from_G_slow.resize(m, 0);
+        edge_removed_from_G_slow.assign(m, false);
         CF_CTCP(lb);
     }
     void rebuild_graph()
@@ -466,8 +502,9 @@ public:
                 ui v = edge_to[i];
                 if (vertex_removed_from_G_fast[v])
                     continue;
-                if (v >= u)
-                    break;
+                // if (v >= u)
+                //     break;
+                if (rank[v] > rank[u]) continue;
                 ui edge_cnt = 0;
                 // compute the triangle count of (u,v)
                 for (ui j = pstart[v]; j < pstart[v + 1]; j++)
@@ -636,7 +673,7 @@ private:
     ui *triangles;
     Graph *g;
     ui n, m;
-    vector<char> vis; // a cache when counting triangles
+    vector<bool> vis; // a cache when counting triangles
     ui *edge_to, *pstart, *deg;
     /**
      * @brief count the number of triangles for each edge and save the results in triangls[]
@@ -696,7 +733,7 @@ private:
      *
      * @return the number of vertices that we remove
      */
-    int remove_vertex(queue<ui> &q, vector<char> &vertex_removed, vector<char> &edge_removed)
+    int remove_vertex(queue<ui> &q, vector<bool> &vertex_removed, vector<bool> &edge_removed)
     {
         int cnt = 0;
         while (q.size())
@@ -740,7 +777,7 @@ public:
         if(lb+1<=2*paramK) return;
         CTCP(lb);
     }
-    void rebuild_graph(vector<char> &vertex_removed, vector<char> &edge_removed, ui *que = nullptr)
+    void rebuild_graph(vector<bool> &vertex_removed, vector<bool> &edge_removed, ui *que = nullptr)
     {
         ui *q = que;
         if (q == nullptr)
@@ -809,50 +846,38 @@ public:
         edge_to = g->edge_to;
         pstart  = g->pstart;
         deg     = g->d;
-    
-        ui n_local = n;
-        ui m_local = m;
+
     
         int degree_threshold   = lb - paramK + 1;
         int triangle_threshold = lb - 2 * paramK + 1;
     
         if (triangle_threshold <= 0 || degree_threshold <= 0)
             return;
-    
-        ui *peel_sequence = new ui[n_local];
-        ui *out_mapping   = new ui[n_local];
-        ui *rid           = new ui[n_local];
-    
-        for (ui i = 0; i < n_local; i++) {
-            peel_sequence[i] = i;
-            out_mapping[i]   = g->map_refresh_id[i];
-        }
-    
+        // vector<ui> psq = g->degenerate();
+        // ui *peel_sequence = psq.data();
+        ui *rid           = new ui[n];
+        ui *psq           = new ui[n];
+        g->degenerate(psq);
+
         CTPrune::core_truss_copruning(
-            n_local,
-            m_local,
+            g->n,
+            g->m,
             (ui)degree_threshold,
             (ui)triangle_threshold,
-            peel_sequence,
-            out_mapping,
+            psq,
+            g->map_refresh_id.data(),
             rid,
-            pstart,
-            edge_to,
-            deg,
+            g->pstart,
+            g->edge_to,
+            g->d,
             false
         );
-    
-        n = g->n = n_local;
-        m = g->m = m_local;
-        g->pstart = pstart;
-        g->edge_to = edge_to;
-        g->d = deg;
-        g->map_refresh_id.assign(out_mapping, out_mapping + n);
-    
-        delete[] peel_sequence;
-        delete[] out_mapping;
+        g->map_refresh_id.resize(g->n);
+        
         delete[] rid;
-    }   
+        delete[] psq;
+
+    } 
 };
 
 class Reduction{
@@ -864,7 +889,10 @@ class Reduction{
         else
             reduce = new ReductionCFCTCP(_g);
     }
-     void strong_reduce(int lb){
+    ~Reduction(){
+        delete reduce;
+    }
+    void strong_reduce(int lb){
         reduce->strong_reduce(lb);
     }
 };
