@@ -15,7 +15,7 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-ALGO="kPEX"
+ALGO="UMKP+"
 TASKFILE="tasks-$ALGO.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
