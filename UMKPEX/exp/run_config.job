@@ -170,6 +170,7 @@ get_results(){
     done < ../ds.txt
 }
 get_results
+echo "Results computed at $(date)"
 
 
 # for v in v0 v1 v2 v3; do 
