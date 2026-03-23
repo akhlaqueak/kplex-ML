@@ -68,13 +68,13 @@ private:
     // G-fast: only vertices in G-fast are useful
     Graph &G_fast;
     ui *triangles, *compute_time, *another_edge;
-    vector<bool> vertex_removed_from_G_fast, edge_removed_from_G_fast;
+    vector<char> vertex_removed_from_G_fast, edge_removed_from_G_fast;
     ui n, m;
     ui timestamp;
     // G-slow: this is used to update triangle count
-    vector<bool> edge_removed_from_G_slow;
+    vector<char> edge_removed_from_G_slow;
     // cache
-    vector<bool> vis;
+    vector<char> vis;
     ui* rank = nullptr;
     ui* peel_seq = nullptr;
 
@@ -673,7 +673,7 @@ private:
     ui *triangles;
     Graph *g;
     ui n, m;
-    vector<bool> vis; // a cache when counting triangles
+    vector<char> vis; // a cache when counting triangles
     ui *edge_to, *pstart, *deg;
     /**
      * @brief count the number of triangles for each edge and save the results in triangls[]
@@ -733,7 +733,7 @@ private:
      *
      * @return the number of vertices that we remove
      */
-    int remove_vertex(queue<ui> &q, vector<bool> &vertex_removed, vector<bool> &edge_removed)
+    int remove_vertex(queue<ui> &q, vector<char> &vertex_removed, vector<char> &edge_removed)
     {
         int cnt = 0;
         while (q.size())
@@ -777,7 +777,7 @@ public:
         if(lb+1<=2*paramK) return;
         CTCP(lb);
     }
-    void rebuild_graph(vector<bool> &vertex_removed, vector<bool> &edge_removed, ui *que = nullptr)
+    void rebuild_graph(vector<char> &vertex_removed, vector<char> &edge_removed, ui *que = nullptr)
     {
         ui *q = que;
         if (q == nullptr)
