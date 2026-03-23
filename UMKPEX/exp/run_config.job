@@ -15,7 +15,7 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-ALGO="UMKP+"
+ALGO="UMKP+noAltRB"
 TASKFILE="tasks-$ALGO.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
@@ -29,7 +29,7 @@ create_tasks(){
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
                 #   for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm ${ALGO/noAltRB} -bounding None -ctcp $ct"
                     echo "$cmd" >> "$TASKFILE"
                 #   done
                 done
