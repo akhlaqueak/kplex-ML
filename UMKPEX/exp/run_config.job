@@ -15,11 +15,12 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-TASKFILE="tasks.txt"        # each line = full command to execute
+ALGO="kPEX"
+TASKFILE="tasks-$ALGO.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
-OUTFILE="output.txt"
+OUTFILE="output-$ALGO.txt"
 create_tasks(){
     rm -f $TASKFILE
     BR='S-Br R-Br Pivot-Br'
@@ -27,10 +28,10 @@ create_tasks(){
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
-                  for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm UMKP+ -ctcp $ct -bounding $bound"
+                #   for bound in AltRB None; do 
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
                     echo "$cmd" >> "$TASKFILE"
-                  done
+                #   done
                 done
             done
         done
@@ -58,6 +59,8 @@ get_outfile() {
 
     printf "%s.log\n" "${outfile// /_}"
 }
+
+export -f get_outfile
 
 run_task() {
     local cmd="$1"
@@ -143,7 +146,7 @@ get_results(){
         for heur in kPEX-Heur EGO-Heur; do
             for ct in CTCP CF-CTCP; do
                 for br in $BR; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm kPEX -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
 
                     fname=$(get_outfile "$cmd")
                     values=""
@@ -169,10 +172,10 @@ get_results(){
 get_results
 
 
-for v in v0 v1 v2 v3; do 
-    for br in S R P; do 
-        for t in heur-kp mkp heur ctcp bnb total; do
-            echo -en "$v-$br-$t "
-        done 
-    done
-done
+# for v in v0 v1 v2 v3; do 
+#     for br in S R P; do 
+#         for t in heur-kp mkp heur ctcp bnb total; do
+#             echo -en "$v-$br-$t "
+#         done 
+#     done
+# done
