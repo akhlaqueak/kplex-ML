@@ -57,7 +57,7 @@ get_outfile() {
         [[ $arg != -* ]] && outfile+="_$arg"
     done
 
-    printf "%s.log\n" "${outfile// /_}"
+    printf "logs/%s.log\n" "${outfile// /_}"
 }
 
 export -f get_outfile
