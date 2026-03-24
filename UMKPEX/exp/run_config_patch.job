@@ -74,7 +74,7 @@ run_task() {
     outfile=$(get_outfile "$cmd")
 
     # Run ONLY if file exists AND last line starts with FAILED
-    if [[ -f "$outfile" ]] && tail -n 1 "$outfile" | grep -q "^FAILED"; then
+    # if [[ -f "$outfile" ]] && tail -n 1 "$outfile" | grep -q "^FAILED"; then
         read -r -a args <<< "$cmd"
 
         timeout --signal=TERM \
@@ -101,9 +101,9 @@ run_task() {
                 echo "FAILED  $cmd (exit=$rc)"
                 ;;
         esac
-    else
-        echo "SKIP (no FAILED at end): $outfile"
-    fi
+    # else
+    #     echo "SKIP (no FAILED at end): $outfile"
+    # fi
 
     return 0
 }
