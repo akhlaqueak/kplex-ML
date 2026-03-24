@@ -372,8 +372,7 @@ public:
      */
     void strong_reduce(int lb)
     {
-        // if(lb+1<=2*paramK) return;
-        // the first round, we brutely remove edges (of course, core-reduce is always first)
+        if(lb+1<=2*paramK) return;
         bool continue_first_round;
         if(peel_seq==nullptr) peel_seq=new ui[n];
         if(rank==nullptr) rank=new ui[n];

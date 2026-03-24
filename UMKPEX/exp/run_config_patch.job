@@ -16,20 +16,22 @@ set -euo pipefail
 # USER INPUT (ONLY THIS)
 ######################################
 ALGO="$SLURM_JOB_NAME"
-TASKFILE="tasks-$ALGO.txt"        # each line = full command to execute
+TASKFILE="tasks-$ALGO-v4.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
-OUTFILE="output-$ALGO.txt"
+OUTFILE="output-$ALGO-v4.txt"
 create_tasks(){
     rm -f $TASKFILE
     BR='S-Br R-Br Pivot-Br'
     while read -r ds k; do 
-        for heur in kPEX-Heur EGO-Heur; do
+        # for heur in kPEX-Heur EGO-Heur; do
+        for heur in kPEX-Heur; do
             for br in $BR; do 
-                for ct in CTCP CF-CTCP; do
+                # for ct in CTCP CF-CTCP; do
+                for ct in CTCP; do
                 #   for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct v4"
                     echo "$cmd" >> "$TASKFILE"
                 #   done
                 done
@@ -37,7 +39,7 @@ create_tasks(){
         done
     done < ../ds.txt
 }
-# create_tasks
+create_tasks
 
 
 ######################################
@@ -154,10 +156,10 @@ get_results(){
     rm -f $OUTFILE
     BR='S-Br R-Br Pivot-Br'
     while read -r ds k; do 
-        for heur in kPEX-Heur EGO-Heur; do
-            for ct in CTCP CF-CTCP; do
+        for heur in kPEX-Heur; do
+            for ct in CTCP; do
                 for br in $BR; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct v4"
 
                     fname=$(get_outfile "$cmd")
                     values=""
