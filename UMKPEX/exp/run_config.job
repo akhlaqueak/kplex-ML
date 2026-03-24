@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=noAltRB
+#SBATCH --job-name=UMKP+noAltRB
 #SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
