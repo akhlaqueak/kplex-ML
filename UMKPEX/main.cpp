@@ -45,6 +45,7 @@ void print_heuris_log()
     printf("lb= %d , FastHeuris-lb= %d \n", lb, FastHeuris_lb);
     if (solution.size() >= 2 * paramK - 1)
         assert(solution.size() == lb);
+        
 
     if (g.n <= lb)
     {
@@ -160,7 +161,7 @@ void StrongHeuris()
 void EgoHeuris()
 {
     Timer t("ego-degen");
-    lb = g.ego_degen(&solution);
+    lb = max(g.ego_degen(&solution), lb);
     g.weak_reduce(lb);
     t.print_time();
     StrongHeuris_time = t.get_time();

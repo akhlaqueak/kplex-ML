@@ -15,6 +15,7 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
+# SLURM_JOB_NAME="kPEX"
 ALGO="$SLURM_JOB_NAME"
 TASKFILE="tasks-$ALGO-v4.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
@@ -159,8 +160,7 @@ get_results(){
         for heur in kPEX-Heur; do
             for ct in CTCP; do
                 for br in $BR; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct v4"
-
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct v4"
                     fname=$(get_outfile "$cmd")
                     values=""
                     matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)

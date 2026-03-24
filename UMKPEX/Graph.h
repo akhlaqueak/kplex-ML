@@ -86,7 +86,8 @@ public:
     }
     int ego_degen(set<ui> *solution = nullptr)
     {
-        int lb = degeneracy_and_reduce(2 * paramK - 2, solution);
+        lb = max(degeneracy_and_reduce(2 * paramK - 2, solution), lb);
+
         if (n <= lb)
         {
             return lb;
