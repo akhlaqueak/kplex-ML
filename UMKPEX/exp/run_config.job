@@ -82,12 +82,15 @@ run_task() {
             ;;
         124)
             echo "TIMEOUT  $cmd" >> "$outfile"
+            echo "TIMEOUT  $cmd" 
             ;;
         137)
             echo "KILLED  $cmd" >> "$outfile"
+            echo "KILLED  $cmd" 
             ;;
         *)
             echo "FAILED  $cmd (exit=$rc)" >> "$outfile"
+            echo "FAILED  $cmd (exit=$rc)"
             ;;
     esac
 

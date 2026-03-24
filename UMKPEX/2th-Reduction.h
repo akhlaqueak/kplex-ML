@@ -882,8 +882,10 @@ public:
 
 class Reduction{
     ReductionBase* reduce;
+    Graph *g;
     public:
     Reduction(Graph *_g){
+        g=_g;
         if(PARA.ctcp=="CTCP")
             reduce = new ReductionCTCP(_g);
         else
@@ -893,6 +895,7 @@ class Reduction{
         delete reduce;
     }
     void strong_reduce(int lb){
+        if(lb >= g->n) return;
         reduce->strong_reduce(lb);
     }
 };
