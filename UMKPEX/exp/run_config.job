@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=UMKP+noAltRB
+#SBATCH --job-name=UMKP+AltRB
 #SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -29,7 +29,7 @@ create_tasks(){
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
                 #   for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding None -ctcp $ct"
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct"
                     echo "$cmd" >> "$TASKFILE"
                 #   done
                 done
