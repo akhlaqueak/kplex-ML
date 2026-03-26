@@ -2224,21 +2224,21 @@ private:
 				break;
 			}
 
-			if (UB_r + UB_l + S_end == lb + 1)
-			{
-				// RR2 on C_l
-				if (UB_l == R_l - S_end)
-				{
-					ret = Reduction2(S_end, R_l, R_end, level, left);
-					break;
-				}
-				// RR2 on C_r
-				else if (UB_r == R_end - R_l)
-				{
-					ret = Reduction2(S_end, R_l, R_end, level, right);
-					break;
-				}
-			}
+			// if (UB_r + UB_l + S_end == lb + 1)
+			// {
+			// 	// RR2 on C_l
+			// 	if (UB_l == R_l - S_end)
+			// 	{
+			// 		ret = Reduction2(S_end, R_l, R_end, level, left);
+			// 		break;
+			// 	}
+			// 	// RR2 on C_r
+			// 	else if (UB_r == R_end - R_l)
+			// 	{
+			// 		ret = Reduction2(S_end, R_l, R_end, level, right);
+			// 		break;
+			// 	}
+			// }
 		}
 		// restoring S
 		for (ui i = 0; i < old_S_end; i++)
@@ -2469,8 +2469,8 @@ private:
 	ui compute_UB(ui S_end, ui R_end, ui S_l, ui R_l, Partition side)
 	{
 		// when computing for left side
-		if (side == right)
-			return color_ub_partial_C(R_l, R_end);
+		// if (side == right)
+		// 	return color_ub_partial_C(R_l, R_end);
 		ui Sa, Sb, Ra, Rb;
 		if (side == left)
 			Sa = 0, Sb = S_l, Ra = S_end, Rb = R_l;

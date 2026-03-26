@@ -21,17 +21,52 @@ TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
+# -------- TEMPLATE --------
+build_cmd() {
+    CMD=(
+        UMKPEX
+        "$DS_LOC/$ds.bin"
+        "$k"
+        -branching "$br"
+        -heuristic "$heur"
+        -algorithm "$ALGO"
+        -bounding None
+        -ctcp "$ct"
+    )
+}
+
+# -------- OUTPUT FILE --------
+get_outfile() {
+    # reconstruct arguments safely
+    eval "set -- $1"
+
+    local base
+    base=$(basename "$2")
+    base="${base%.*}"
+
+    local outfile="$1_$base"
+
+    shift 2
+    for arg in "$@"; do
+        [[ $arg != -* ]] && outfile+="_$arg"
+    done
+
+    printf "logs/%s.log\n" "${outfile// /_}"
+}
+export -f get_outfile
+
+# -------- CREATE TASKS --------
 create_tasks(){
-    rm -f $TASKFILE
+    rm -f "$TASKFILE"
     BR='S-Br R-Br Pivot-Br'
+
     while read -r ds k; do 
         for heur in kPEX-Heur EGO-Heur; do
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
-                #   for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding None -ctcp $ct"
+                    build_cmd
+                    cmd=$(printf '%q ' "${CMD[@]}")
                     echo "$cmd" >> "$TASKFILE"
-                #   done
                 done
             done
         done
@@ -39,28 +74,6 @@ create_tasks(){
 }
 create_tasks
 
-
-######################################
-# USER-MODIFIABLE FUNCTION
-######################################
-
-get_outfile() {
-    read -r -a args <<< "$1"
-
-    local base
-    base=$(basename "${args[1]}")
-    base="${base%.*}"
-
-    local outfile="${args[0]}_${base}"
-
-    for arg in "${args[@]:2}"; do
-        [[ $arg != -* ]] && outfile+="_$arg"
-    done
-
-    printf "logs/%s.log\n" "${outfile// /_}"
-}
-
-export -f get_outfile
 
 run_task() {
     local cmd="$1"
@@ -142,21 +155,30 @@ done
 
 echo "Job finished at $(date)"
 
+# -------- COLLECT RESULTS --------
 get_results(){
-    rm -f $OUTFILE
+    rm -f "$OUTFILE"
+
     BR='S-Br R-Br Pivot-Br'
+
     while read -r ds k; do 
         for heur in kPEX-Heur EGO-Heur; do
             for ct in CTCP CF-CTCP; do
                 for br in $BR; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
+                    build_cmd
 
+                    # serialize again to match task format
+                    cmd=$(printf '%q ' "${CMD[@]}")
                     fname=$(get_outfile "$cmd")
-                    values=""
-                    matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
+
+                    if [[ -f "$fname" ]]; then
+                        matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
+                    else
+                        matched=""
+                    fi
+
                     if [[ -n "$matched" ]]; then
                         read -ra f <<< "$matched"
-
                         values=""
                         for ((i=1; i<${#f[@]}; i+=2)); do
                             values+="${f[i]} "
@@ -165,6 +187,7 @@ get_results(){
                     else
                         values="x x x x x x"
                     fi
+
                     printf "%s " "$values" >> "$OUTFILE"
                 done
             done
@@ -175,11 +198,3 @@ get_results(){
 get_results
 echo "Results computed at $(date)"
 
-
-# for v in v0 v1 v2 v3; do 
-#     for br in S R P; do 
-#         for t in heur-kp mkp heur ctcp bnb total; do
-#             echo -en "$v-$br-$t "
-#         done 
-#     done
-# done

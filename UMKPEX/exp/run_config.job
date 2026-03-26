@@ -21,6 +21,16 @@ TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
+CMD=(
+  UMKPEX
+  "$DS_LOC/$ds.bin"
+  "$k"
+  -branching "$br"
+  -heuristic "$heur"
+  -algorithm "$ALGO"
+  -bounding AltRB
+  -ctcp "$ct"
+)
 create_tasks(){
     rm -f $TASKFILE
     BR='S-Br R-Br Pivot-Br'
@@ -29,8 +39,7 @@ create_tasks(){
             for br in $BR; do 
                 for ct in CTCP CF-CTCP; do
                 #   for bound in AltRB None; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct"
-                    echo "$cmd" >> "$TASKFILE"
+                    echo "${CMD[@]}" >> "$TASKFILE"
                 #   done
                 done
             done
@@ -149,9 +158,7 @@ get_results(){
         for heur in kPEX-Heur EGO-Heur; do
             for ct in CTCP CF-CTCP; do
                 for br in $BR; do 
-                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -ctcp $ct"
-
-                    fname=$(get_outfile "$cmd")
+                    fname=$(get_outfile "${CMD[@]}")
                     values=""
                     matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
                     if [[ -n "$matched" ]]; then
