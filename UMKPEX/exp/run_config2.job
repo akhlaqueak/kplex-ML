@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=UMKP+noAltRB
+#SBATCH --job-name=v0v2
 #SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -15,12 +15,13 @@ set -euo pipefail
 ######################################
 # USER INPUT (ONLY THIS)
 ######################################
-ALGO="UMKP+"
+ALGO="kPEX"
 TASKFILE="tasks-$SLURM_JOB_NAME.txt"        # each line = full command to execute
 TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
 TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
+SECONDS=0
 # -------- TEMPLATE --------
 build_cmd() {
     CMD=(
@@ -30,7 +31,7 @@ build_cmd() {
         -branching "$br"
         -heuristic "$heur"
         -algorithm "$ALGO"
-        -bounding None
+        -bounding AltRB
         -ctcp "$ct"
     )
 }
@@ -61,9 +62,9 @@ create_tasks(){
     BR='S-Br R-Br Pivot-Br'
 
     while read -r ds k; do 
-        for heur in kPEX-Heur EGO-Heur; do
+        for heur in EGO-Heur kPEX-Heur; do
             for br in $BR; do 
-                for ct in CTCP CF-CTCP; do
+                for ct in CTCP ; do
                     build_cmd
                     cmd=$(printf '%q ' "${CMD[@]}")
                     echo "$cmd" >> "$TASKFILE"
@@ -163,7 +164,7 @@ get_results(){
 
     while read -r ds k; do 
         for heur in kPEX-Heur EGO-Heur; do
-            for ct in CTCP CF-CTCP; do
+            for ct in CTCP; do
                 for br in $BR; do 
                     build_cmd
 
@@ -197,4 +198,5 @@ get_results(){
 }
 get_results
 echo "Results computed at $(date)"
+echo "Total execution time: $SECONDS seconds"
 
