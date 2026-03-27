@@ -70,7 +70,7 @@ create_tasks(){
                 done
             done
         done
-    done < ../ds.txt
+    done < ../ds-problems.txt
 }
 create_tasks
 
