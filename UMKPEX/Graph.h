@@ -84,7 +84,162 @@ public:
         delete[] deg;
         return res.size();
     }
-    int ego_degen(set<ui> *solution = nullptr)
+
+    int ego_degen(set<ui> *solution)
+    {
+        Timer t;
+        ui* pend=nullptr;
+        ui* edgelist_pointer=nullptr;
+        ui* pend_buf=nullptr;
+        ui* edges=edge_to;
+        ui* peel_sequence=new ui[n];
+        ui* rid=new ui[n];
+        ui* degree=new ui[n];
+        char* vis=new char[n];
+        int pre_lb = solution->size();
+        degenerate(peel_sequence);
+
+        if (pend == nullptr)
+            pend = new ui[n + 1];
+        for (ui i = 0; i < n; i++)
+            rid[peel_sequence[i]] = i;
+        for (ui i = 0; i < n; i++)
+        {
+            ui &end = pend[i] = pstart[i];
+            for (ui j = pstart[i]; j < pstart[i + 1]; j++)
+                if (rid[edges[j]] > rid[i])
+                    edges[end++] = edges[j];
+        }
+    
+        if (pend_buf == nullptr)
+            pend_buf = new ui[n + 1];
+        if (edgelist_pointer == nullptr)
+            edgelist_pointer = new ui[m];
+        ui *pstart_s = pend_buf;
+        ui *pend_s = rid;
+        ui *edges_s = edgelist_pointer;
+    
+        vector<ui> Q;
+        vector<ui> vs;
+        memset(vis, 0, sizeof(char) * n);
+        for (ui i = n; i > 0; i--)
+        {
+            ui u = peel_sequence[i - 1];
+            if (pend[u] - pstart[u] < solution->size())
+                continue;
+    
+            vs.clear();
+            for (ui j = pstart[u]; j < pend[u]; j++)
+            {
+                vs.push_back(edges[j]);
+                vis[edges[j]] = 1;
+                degree[edges[j]] = 0;
+            }
+            for (ui j = 0; j < vs.size(); j++)
+                for (ui k = pstart[vs[j]]; k < pend[vs[j]]; k++)
+                    if (vis[edges[k]])
+                    {
+                        ++degree[vs[j]];
+                        ++degree[edges[k]];
+                    }
+
+            pend_s[vs[0]] = pstart_s[vs[0]] = 0;
+
+            for (ui j = 1; j < vs.size(); j++)
+                pend_s[vs[j]] = pstart_s[vs[j]] = pstart_s[vs[j - 1]] + degree[vs[j - 1]];
+            for (ui j = 0; j < vs.size(); j++)
+                for (ui k = pstart[vs[j]]; k < pend[vs[j]]; k++)
+                    if (vis[edges[k]])
+                    {
+                        edges_s[pend_s[vs[j]]++] = edges[k];
+                        edges_s[pend_s[edges[k]]++] = vs[j];
+                    }
+    
+            ui threshold = (solution->size() > paramK ? solution->size() - paramK : 0); // all vertices with degree < threshold can be pruned
+            Q.clear();
+            for (ui j = 0; j < vs.size(); j++)
+                if (degree[vs[j]] < threshold)
+                {
+                    Q.push_back(vs[j]);
+                    vis[vs[j]] = 0;
+                }
+            for (ui j = 0; j < Q.size(); j++)
+                for (ui k = pstart_s[Q[j]]; k < pend_s[Q[j]]; k++)
+                    if (vis[edges_s[k]])
+                    {
+                        if ((degree[edges_s[k]]--) == threshold)
+                        {
+                            Q.push_back(edges_s[k]);
+                            vis[edges_s[k]] = 0;
+                        }
+                    }
+            ui cnt = 0;
+            for (ui j = 0; j < vs.size(); j++)
+                if (vis[vs[j]])
+                    vs[cnt++] = vs[j];
+            assert(cnt + Q.size() == vs.size());
+            vs.resize(cnt);
+            if (cnt == 0)
+                continue;
+    
+            LinearHeap heap(vs.size(), vs.size(), degree);
+            bool found = false;
+            for (ui ii = 0; ii < vs.size(); ii++)
+            {
+                ui v, key;
+                v = heap.get_min_node();
+                key = heap.get_min_key();
+                heap.delete_node(v);
+                if (found)
+                {
+                    solution->insert(v);
+                    continue;
+                }
+    
+                if (vs.size() - ii + 1 <= solution->size())
+                    break;
+    
+                if (key + paramK >= vs.size() - ii)
+                {
+                    solution->clear();
+                    solution->insert(u);
+                    solution->insert(v);
+                    found = true;
+                    continue;
+                }
+    
+                vis[v] = 0;
+                for (ui j = pstart_s[v]; j < pend_s[v]; j++){
+                    ui w = edges_s[j];     
+                    if (vis[w])
+                        heap.decrease(--degree[w], w);
+                }
+            }
+            for (ui j = 0; j < vs.size(); j++)
+                vis[vs[j]] = 0;
+        }
+        for (ui i = 0; i < n; i++)
+            pend_buf[i] = pend[i];
+        for (ui i = 0; i < n; i++)
+            for (ui j = pstart[i]; j < pend[i]; j++)
+                edges[pend_buf[edges[j]]++] = i;
+    #ifndef NDEBUG
+        for (ui i = 0; i < n; i++)
+            assert(pend_buf[i] == pstart[i + 1]);
+    #endif
+        delete[] pend;
+        delete[] edgelist_pointer;
+        delete[] pend_buf;
+        delete[] peel_sequence;
+        delete[] rid;
+        delete[] degree;
+        delete[] vis;
+        if(pre_lb < solution->size())
+        printf("*** EGo-Degen kPlex size: %lu, Time: %.2f (microseconds)\n", solution->size(), t.get_time_seconds());
+        return solution->size();
+    }
+    
+    int ego_degen_(set<ui> *solution = nullptr)
     {
         // lb = max(degeneracy_and_reduce(2 * paramK - 2, solution), lb);
 
@@ -601,6 +756,36 @@ public:
         delete[] seq;
         return ret;
     }
+
+    int strong_ego(int ret, set<ui> &solution, double time_limit)
+    {
+        Timer t;
+        ui *seq = new ui[n];
+        sort_by_degree(seq, 0);
+        // the following arrays are shared for each extending procedure and we need to clear them each time
+        vector<int> deg_in_S(n, -1);    // if deg_in_S[u]=-1, then u is not in S
+        vector<int> deg_in_g(n, 0);     // g is subgraph induced by the 2-hop-neighbors of u
+        vector<int> cnt(n, -1);         // cnt[v] = the edge count between S and v; if cnt[v]=-1, then v is not in candidate set
+        vector<bool> vertex_removed(n); // just a marker recording the vertices we have already searched
+        for (ll i = 0; i < n; i++)
+        {
+            ll enumerate_num = i + 1;
+            ui u = seq[i];
+            bool pruned;
+            // int extend_lb = extend(u, deg_in_S, deg_in_g, cnt, vertex_removed, solution, pruned);
+            int degen_lb = degen_on_subgraph(u, deg_in_g, cnt, vertex_removed, solution, pruned);
+            if (degen_lb > ret)
+            {
+                ret = degen_lb;
+                lb = degen_lb;
+                printf("EGO find a larger plex: %d , already extend %d times\n", degen_lb, enumerate_num);
+                // break;
+            }
+            vertex_removed[u] = 1;
+        }
+        delete[] seq;
+        return ret;
+    }
     /**
      * @brief a[] = {0,1,2,...,n-1}, we need sort a[] by degree; counting sort O(n) is faster than std::sort O(nlogn)
      *
@@ -873,7 +1058,7 @@ public:
                 s.insert({d[i], i});
             }
         }
-        int ret = 2*paramK-2;
+        int ret = 2 * paramK - 2;
         for (auto &h : s)
         {
             ret = max(ret, sqrt_degeneracy(h.y, solution));
@@ -1041,14 +1226,16 @@ public:
         n = new_n;
         delete[] q;
     }
-   void degenerate(ui* seq){
+    void degenerate(ui *seq)
+    {
         vector<ui> core(n, 0);
         vector<ui> rm(n, 0);
         ui rest_v_cnt = 0;
         // compute degeneracy order
         {
             ui *pd = new ui[n]; // this may destroy d[]; however, d[] is useless for us now
-            for(ui i=0;i<n;i++) pd[i] = d[i];
+            for (ui i = 0; i < n; i++)
+                pd[i] = d[i];
             LinearHeap heap(n, n, pd);
             rest_v_cnt = heap.sz;
             ui sz = 0;
@@ -1057,7 +1244,7 @@ public:
             {
                 ui u = heap.get_min_node();
                 heap.delete_node(u);
-                seq[sz++]=u;
+                seq[sz++] = u;
                 rm[u] = 1;
                 // update the degrees of the rest vertices
                 for (ui i = pstart[u]; i < pstart[u + 1]; i++)
@@ -1074,7 +1261,7 @@ public:
             {
                 ui u = heap.get_min_node();
                 heap.delete_node(u);
-                seq[sz++]=u;
+                seq[sz++] = u;
             }
         }
     }

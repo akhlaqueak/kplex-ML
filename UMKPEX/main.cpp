@@ -162,6 +162,7 @@ void EgoHeuris()
 {
     Timer t("ego-degen");
     lb = max(g.ego_degen(&solution), lb);
+    // lb = g.strong_ego(lb, solution, 1000);
     cout<<"ego degen lb: "<<lb<<endl;
     g.weak_reduce(lb);
     t.print_time();
