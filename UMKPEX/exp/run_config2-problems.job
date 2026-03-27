@@ -70,7 +70,7 @@ create_tasks(){
                 done
             done
         done
-    done < ../ds-problems.txt
+    done < ../ds.txt
 }
 create_tasks
 
@@ -193,7 +193,7 @@ get_results(){
             done
         done
         echo >> "$OUTFILE"
-    done < ../ds-problems.txt
+    done < ../ds.txt
 }
 get_results
 echo "Results computed at $(date)"
