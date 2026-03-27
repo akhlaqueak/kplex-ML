@@ -2122,7 +2122,10 @@ private:
 	{
 		return matrix[SR[i] * n + SR[j]];
 	}
-
+	bool is_neigh_uv(ui u, ui v)
+	{
+		return matrix[u * n + v];
+	}
 	ui tryPartition(ui S_end, ui R_end)
 	{
 		double maxdise = 0;
@@ -2274,6 +2277,7 @@ private:
 			rebuild_cache();
 			return ans;
 		};
+
 
 		while (true)
 		{
@@ -2531,9 +2535,14 @@ private:
 
 				for (ui v : force)
 				{
+					// check if v can be moved to S.
+					if(support(S_end, v)==0) return finish(lb);
+					for(ui i=0;i<S_end;i++) {
+						ui w=SR[i];
+						if(support(S_end, w)==0 && !is_neigh_uv(v, w))return finish(lb);
+					}
 					if (!move_u_to_S_with_prune(v, S_end, R_end, level))
 						return finish(lb);
-
 					changed = true;
 				}
 
