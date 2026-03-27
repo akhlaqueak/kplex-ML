@@ -182,7 +182,8 @@ public:
             if (cnt == 0)
                 continue;
     
-            LinearHeap heap(vs.size(), vs.size(), degree);
+            LinearHeap heap(n, n);
+            for(ui v: vs) heap.insert(v, degree[v]);
             bool found = false;
             for (ui ii = 0; ii < vs.size(); ii++)
             {
