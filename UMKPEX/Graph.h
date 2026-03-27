@@ -91,14 +91,14 @@ public:
         ui* pend=nullptr;
         ui* edgelist_pointer=nullptr;
         ui* pend_buf=nullptr;
-        ui* edges=edge_to;
+        ui* edges=new ui[m];
         ui* peel_sequence=new ui[n];
         ui* rid=new ui[n];
         ui* degree=new ui[n];
         char* vis=new char[n];
         int pre_lb = solution->size();
         degenerate(peel_sequence);
-
+        std::copy(edge_to, edge_to+m, edges);
         if (pend == nullptr)
             pend = new ui[n + 1];
         for (ui i = 0; i < n; i++)
@@ -183,7 +183,7 @@ public:
                 continue;
     
             LinearHeap heap(n, n);
-            for(ui v: vs) heap.insert(v, degree[v]);
+            for(ui v: vs) heap.insert(degree[v], v);
             bool found = false;
             for (ui ii = 0; ii < vs.size(); ii++)
             {
@@ -191,6 +191,7 @@ public:
                 v = heap.get_min_node();
                 key = heap.get_min_key();
                 heap.delete_node(v);
+                vis[v] = 0;
                 if (found)
                 {
                     solution->insert(v);
@@ -209,7 +210,6 @@ public:
                     continue;
                 }
     
-                vis[v] = 0;
                 for (ui j = pstart_s[v]; j < pend_s[v]; j++){
                     ui w = edges_s[j];     
                     if (vis[w])
@@ -219,11 +219,13 @@ public:
             for (ui j = 0; j < vs.size(); j++)
                 vis[vs[j]] = 0;
         }
-        for (ui i = 0; i < n; i++)
-            pend_buf[i] = pend[i];
-        for (ui i = 0; i < n; i++)
-            for (ui j = pstart[i]; j < pend[i]; j++)
-                edges[pend_buf[edges[j]]++] = i;
+        // for (ui i = 0; i < n; i++)
+        //     pend_buf[i] = pend[i];
+        // for (ui i = 0; i < n; i++)
+        // for (ui j = pstart[i]; j < pend[i]; j++)
+        //     edges[pend_buf[edges[j]]++] = i;
+        
+
     #ifndef NDEBUG
         for (ui i = 0; i < n; i++)
             assert(pend_buf[i] == pstart[i + 1]);
@@ -235,6 +237,7 @@ public:
         delete[] rid;
         delete[] degree;
         delete[] vis;
+        delete[] edges;
         if(pre_lb < solution->size())
         printf("*** EGo-Degen kPlex size: %lu, Time: %.2f (microseconds)\n", solution->size(), t.get_time_seconds());
         return solution->size();
@@ -1264,6 +1267,7 @@ public:
                 heap.delete_node(u);
                 seq[sz++] = u;
             }
+            delete[] pd;
         }
     }
     /**

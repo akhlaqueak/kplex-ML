@@ -52,7 +52,7 @@ void print_heuris_log()
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
         puts("------------------{whole procedure: kPEX}---------------------");
-        printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", lb, solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+        printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", lb, solution.size(), StrongHeuris_time/1e6, FastHeuris_time/1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
         exit(0);
     }
@@ -146,13 +146,13 @@ void StrongHeuris()
             if (lb >= g.n)
             {
                 g.n = 0;
-                StrongHeuris_time += t_extend.get_time();
+                StrongHeuris_time = t_extend.get_time();
                 print_heuris_log();
                 exit(0);
             }
         }
     }
-    StrongHeuris_time += t_extend.get_time();
+    StrongHeuris_time = t_extend.get_time();
 }
 
 /**
@@ -161,28 +161,32 @@ void StrongHeuris()
 void EgoHeuris()
 {
     Timer t("ego-degen");
-    lb = max(g.ego_degen(&solution), lb);
-    // lb = g.strong_ego(lb, solution, 1000);
-    cout<<"ego degen lb: "<<lb<<endl;
-    g.weak_reduce(lb);
-    t.print_time();
-
+    int ego_lb=g.ego_degen(&solution);
     StrongHeuris_time = t.get_time();
-    // strong reduce
+    if( ego_lb > lb)
     {
-        Timer start_strong_reduce;
-        Reduction reduce(&g);
-        ui pre_n = g.n;
-        reduce.strong_reduce(lb);
-        printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-        strong_reduce_time += start_strong_reduce.get_time();
-        if (lb >= g.n)
+        lb = ego_lb;
+        cout<<"ego degen lb: "<<lb<<endl;
+        g.weak_reduce(lb);
+        
+        // strong reduce
         {
-            g.n = 0;
-            print_heuris_log();
-            exit(0);
+            Timer start_strong_reduce;
+            Reduction reduce(&g);
+            ui pre_n = g.n;
+            reduce.strong_reduce(lb);
+            printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+            // strong_reduce_time += start_strong_reduce.get_time();
+            StrongHeuris_time = t.get_time();
+            if (lb >= g.n)
+            {
+                g.n = 0;
+                print_heuris_log();
+                exit(0);
+            }
         }
     }
+    t.print_time();
 }
 
 /**
@@ -251,7 +255,7 @@ int main(int argc, char *argv[])
     print_solution();
 
     puts("------------------{whole procedure: kPEX}---------------------");
-    printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", heur_size, solution.size(), StrongHeuris_time/1e6, strong_reduce_time/1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", heur_size, solution.size(), StrongHeuris_time/1e6, FastHeuris_time/1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
 
     return 0;
 }
