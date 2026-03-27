@@ -627,10 +627,9 @@ private:
 				return;
 			}
 
-			if (PARA.bounding == "AltRB" and !alt_RB(S_end, R_end, level))
+			if (PARA.bounding == "AltRB" and !altRB(S_end, R_end, level)<=lb)
 			{
-				// printf("here2\n");
-				altrb_cnt++;
+				
 				restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 				return;
 			}
@@ -669,7 +668,7 @@ private:
 		{
 
 			// First branch moves u to S
-			ui pre_best_solution_size = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
+			ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 			ui u = SR[S_end];
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
 				BB_search(S_end, R_end, level + 1);
@@ -687,7 +686,7 @@ private:
 				B.clear();
 
 				bool succeed = remove_u_from_S_with_prune(S_end, R_end, level);
-				if (succeed && lb > pre_best_solution_size)
+				if (succeed && lb > pre_lb)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
 				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
 					BB_search(S_end, R_end, level + 1);
@@ -735,7 +734,7 @@ private:
 				if (found_larger)
 					continue;
 
-				ui pre_best_solution_size = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
+				ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 #ifdef _SECOND_ORDER_PRUNING_
 				if (ctcp_enabled)
 				{
@@ -764,7 +763,7 @@ private:
 			B.pop_back();
 
 			// First branch moves u to S
-			ui pre_best_solution_size = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
+			ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 #ifdef _SECOND_ORDER_PRUNING_
 			if (ctcp_enabled)
 			{
@@ -793,7 +792,7 @@ private:
 				t_old_removed_edges_n = removed_edges_n;
 #endif
 				bool succeed = remove_u_from_S_with_prune(S_end, R_end, level);
-				if (succeed && lb > pre_best_solution_size)
+				if (succeed && lb > pre_lb)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
 				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
 					BB_search(S_end, R_end, level + 1);
@@ -2185,515 +2184,338 @@ private:
 			cursor = R_end;
 		return cursor;
 	}
-	bool alt_RB(ui &S_end, ui &R_end, ui level)
-	{
 
-		ui old_S_end = S_end;
-		// Saving S, as it should be recovered with same location when returning from this function.
-		for (ui i = 0; i < old_S_end; i++)
-			S2[i] = SR[i];
 
-		auto SR_left = partition_left_right(S_end, R_end);
-		bool ret = true;
-		ui S_l = SR_left.first, R_l = SR_left.second;
-		ui UB_l = R_l - S_end, LB_l = 0;
+// ===== AltRB helpers =====
 
-		while (true)
-		{
-			ui UB = compute_UB(S_end, R_end, S_l, R_l, left);
-			if (UB == UB_l)
-				break;
-			else
-				UB_l = UB;
-			ui LB_r = S_end + UB_l < lb + 1 ? lb + 1 - S_end - UB_l : 0;
+inline ui count_neighbors_in_vec(ui u, const std::vector<ui> &verts) const
+{
+    const char *row = matrix + (long long)u * n;
+    ui cnt = 0;
+    for (ui v : verts)
+        if (row[v])
+            ++cnt;
+    return cnt;
+}
 
-			// RR1 on C_r
-			if (!alt_reduction_rules(S_end, R_end, R_l, LB_l, LB_r, right, level))
-			{
-				ret = false;
-				break;
-			}
+inline ui count_nonneighbors_in_vec(ui u, const std::vector<ui> &verts) const
+{
+    return (ui)verts.size() - count_neighbors_in_vec(u, verts);
+}
 
-			ui UB_r = compute_UB(S_end, R_end, S_l, R_l, right);
-			LB_l = (S_end + UB_r < lb + 1) ? lb + 1 - S_end - UB_r : 0;
+// Remove a vertex from the current candidate part R (global in-place update).
+// Safe to call only when v is currently in [S_end, R_end).
+inline void remove_candidate_from_R(ui v, ui &S_end, ui &R_end)
+{
+    ui pos = SR_rid[v];
+    if (pos < S_end || pos >= R_end)
+        return;
 
-			//  RR1 on C_l
-			if (!alt_reduction_rules(S_end, R_end, R_l, LB_l, LB_r, left, level))
-			{
-				ret = false;
-				break;
-			}
+    --R_end;
+    if (pos != R_end)
+        swap_pos(pos, R_end);
 
-			// if (UB_r + UB_l + S_end == lb + 1)
-			// {
-			// 	// RR2 on C_l
-			// 	if (UB_l == R_l - S_end)
-			// 	{
-			// 		ret = Reduction2(S_end, R_l, R_end, level, left);
-			// 		break;
-			// 	}
-			// 	// RR2 on C_r
-			// 	else if (UB_r == R_end - R_l)
-			// 	{
-			// 		ret = Reduction2(S_end, R_l, R_end, level, right);
-			// 		break;
-			// 	}
-			// }
-		}
-		// restoring S
-		for (ui i = 0; i < old_S_end; i++)
-			SR[i] = S2[i], SR_rid[S2[i]] = i;
-		return ret;
-	}
-	void move_to_S(ui &S_end, ui R_end, ui u)
-	{
-		char *t_matrix = matrix + u * n;
-		for (ui i = 0; i < R_end; i++)
-		{
-			if (t_matrix[SR[i]])
-				degree_in_S[SR[i]]++;
-		}
-		swap_pos(SR_rid[u], S_end++);
-	}
-	bool can_move_to_S(ui S_end, ui R_end, ui u)
-	{
-		if (support(S_end, u) == 0)
-			return false;
-		char *t_matrix = matrix + u * n;
-		for (ui i = 0; i < S_end; i++)
-		{
-			if (!t_matrix[SR[i]] && support(S_end, SR[i]) == 0)
-				return false; // SR[i] is non-neighbor of u in S and it's saturated
-		}
-		return true;
-	}
+    // Update degrees of the remaining candidates.
+    char *row = matrix + (long long)v * n;
+    for (ui i = S_end; i < R_end; ++i)
+    {
+        ui u = SR[i];
+        if (row[u])
+            --degree[u];
+    }
 
-	bool remove_vertices_and_edges_with_prune_left(ui S_end, ui &R_end, ui &R_l, ui level)
-	{
-#ifdef _SECOND_ORDER_PRUNING_
-		while (!Qv.empty() || !Qe.empty())
-		{
-#else
-		while (!Qv.empty())
-		{
-#endif
-			while (!Qv.empty())
-			{
-				ui u = Qv.front();
-				Qv.pop(); // remove u
-				assert(SR[SR_rid[u]] == u);
-				assert(SR_rid[u] >= S_end && SR_rid[u] < R_end);
-				--R_end;
-				if (SR_rid[u] < R_l)
-					swap_pos(SR_rid[u], --R_l);
-				swap_pos(SR_rid[u], R_end);
+    degree[v] = 0;
+}
 
-				bool terminate = false;
-				ui neighbors_n = 0;
-				char *t_matrix = matrix + u * n;
-				for (ui i = 0; i < R_end; i++)
-					if (t_matrix[SR[i]])
-					{
-						ui w = SR[i];
-						neighbors[neighbors_n++] = w;
-						--degree[w];
-						if (degree[w] + K <= lb)
-						{
-							if (i < S_end)
-								terminate = true; // UB1
-							else if (level_id[w] > level)
-							{ // RR3
-								level_id[w] = level;
-								Qv.push(w);
-							}
-						}
-					}
+/*
+ * AltRB port for your array-based branch state.
+ * It mutates (S_end, R_end) in-place and returns the current upper bound.
+ *
+ * Call pattern:
+ *   ui ub = altRB(S_end, R_end, level);
+ *   if (ub <= lb) { restore...; return; }
+ */
+int altRB(ui &S_end, ui &R_end, ui level)
+{
+    altrb_cnt++;
 
-				// UB1
-				if (terminate)
-				{
-					for (ui i = 0; i < neighbors_n; i++)
-						++degree[neighbors[i]];
-					level_id[u] = n;
-					++R_end;
-					return false;
-				}
+    while (true)
+    {
+        // Snapshot of the current branch.
+        std::vector<ui> activeS(SR, SR + S_end);      // the current S
+        std::vector<ui> Pi0(SR + S_end, SR + R_end);  // current C, then shrunk to Pi_0
+        std::vector<ui> usefulS;                      // vertices of S that actually contributed a non-empty Pi_i
+        usefulS.reserve(S_end);
 
-#ifdef _SECOND_ORDER_PRUNING_
-				for (ui i = 1; i < neighbors_n; i++)
-				{
-					ui w = neighbors[i];
-					for (ui j = 0; j < i; j++)
-					{
-						ui v = neighbors[j];
-						assert(cn[v * n + w]);
-#ifndef NDEBUG
-						ui common_neighbors = 0;
-						for (ui k = S_end; k <= R_end; k++)
-							if (matrix[SR[k] * n + v] && matrix[SR[k] * n + w])
-								++common_neighbors;
-						assert(cn[v * n + w] == common_neighbors);
-						assert(cn[w * n + v] == common_neighbors);
-#endif
-						--cn[v * n + w];
-						--cn[w * n + v];
-#ifndef NDEBUG
-						common_neighbors = 0;
-						for (ui k = S_end; k < R_end; k++)
-							if (matrix[SR[k] * n + v] && matrix[SR[k] * n + w])
-								++common_neighbors;
-						assert(cn[v * n + w] == common_neighbors);
-						assert(cn[w * n + v] == common_neighbors);
-#endif
+        long long ub = (long long)S_end;
 
-						if (!upper_bound_based_prune(S_end, v, w))
-							continue;
+        // ----------------------------
+        // Partition / ComputeUB stage
+        // ----------------------------
+        while (!activeS.empty())
+        {
+            int sel_idx = -1;
+            ui sel_sz = 0;
+            int sel_allow = 0;
 
-						if (SR_rid[w] < S_end)
-							terminate = true; // v, w \in S --- UB2
-						else if (SR_rid[v] >= S_end)
-						{ // v, w, \in R --- RR5
-							if (matrix[v * n + w])
-								Qe.push(std::make_pair(v, w));
-						}
-						else if (level_id[w] > level)
-						{ // RR4
-							level_id[w] = level;
-							Qv.push(w);
-						}
-					}
-				}
-				if (terminate)
-					return false;
-#endif
-			}
+            for (ui i = 0; i < activeS.size(); )
+            {
+                ui v = activeS[i];
+                int allow_v = (int)K - (int)(S_end - degree_in_S[v]); // = K - loss_cnt[v]
 
-#ifdef _SECOND_ORDER_PRUNING_
-			if (Qe.empty())
-				break;
+                // Useless partition piece; drop v from consideration.
+                if (allow_v <= 0)
+                {
+                    activeS[i] = activeS.back();
+                    activeS.pop_back();
+                    continue;
+                }
 
-			ui v = Qe.front().first, w = Qe.front().second;
-			Qe.pop();
-			if (level_id[v] <= level || level_id[w] <= level || !matrix[v * n + w])
-				continue;
-			assert(SR_rid[v] >= S_end && SR_rid[v] < R_end && SR_rid[w] >= S_end && SR_rid[w] < R_end);
+                ui sz = count_nonneighbors_in_vec(v, Pi0);
 
-			if (degree[v] + K <= lb + 1)
-			{
-				level_id[v] = level;
-				Qv.push(v);
-			}
-			if (degree[w] + K <= lb + 1)
-			{
-				level_id[w] = level;
-				Qv.push(w);
-			}
-			if (!Qv.empty())
-				continue;
+                // If this Pi_i can contribute nothing beyond its allow, skip it.
+                if (sz <= (ui)allow_v)
+                {
+                    activeS[i] = activeS.back();
+                    activeS.pop_back();
+                    continue;
+                }
 
-#ifndef NDEBUG
-			// printf("remove edge between %u and %u\n", v, w);
-#endif
+                // Greedy: choose the vertex with the largest sz / allow_v ratio.
+                if (sel_idx == -1 ||
+                    (unsigned long long)sz * (unsigned long long)sel_allow >
+                        (unsigned long long)sel_sz * (unsigned long long)allow_v)
+                {
+                    sel_idx = (int)i;
+                    sel_sz = sz;
+                    sel_allow = allow_v;
+                }
 
-			assert(matrix[v * n + w]);
-			matrix[v * n + w] = matrix[w * n + v] = 0;
-			--degree[v];
-			--degree[w];
+                ++i;
+            }
 
-			if (removed_edges.size() == removed_edges_n)
-			{
-				removed_edges.push_back(std::make_pair(v, w));
-				++removed_edges_n;
-			}
-			else
-				removed_edges[removed_edges_n++] = std::make_pair(v, w);
+            if (sel_idx == -1)
+                break;
 
-			char *t_matrix = matrix + v * n;
-			for (ui i = 0; i < R_end; i++)
-				if (t_matrix[SR[i]])
-				{
-					--cn[w * n + SR[i]];
-					--cn[SR[i] * n + w];
-					if (!upper_bound_based_prune(S_end, w, SR[i]))
-						continue;
-					if (i < S_end)
-					{
-						if (level_id[w] > level)
-						{
-							level_id[w] = level;
-							Qv.push(w);
-						}
-					}
-					else if (matrix[w * n + SR[i]])
-						Qe.push(std::make_pair(w, SR[i]));
-				}
-			t_matrix = matrix + w * n;
-			for (ui i = 0; i < R_end; i++)
-				if (t_matrix[SR[i]])
-				{
-					--cn[v * n + SR[i]];
-					--cn[SR[i] * n + v];
-					if (!upper_bound_based_prune(S_end, v, SR[i]))
-						continue;
-					if (i < S_end)
-					{
-						if (level_id[v] > level)
-						{
-							level_id[v] = level;
-							Qv.push(v);
-						}
-					}
-					else if (matrix[v * n + SR[i]])
-						Qe.push(std::make_pair(v, SR[i]));
-				}
-#endif
-		}
-		return true;
-	}
+            ui sel = activeS[sel_idx];
+            activeS[sel_idx] = activeS.back();
+            activeS.pop_back();
 
-	bool prune_R(ui S_end, ui &R_end, ui level)
-	{
-		while (!Qv.empty())
-			Qv.pop();
-		// prune vertices in remaining R
-		for (ui i = S_end; i < R_end; i++)
-			if (!can_move_to_S(S_end, R_end, SR[i]))
-				Qv.push(SR[i]);
-		return remove_vertices_and_edges_with_prune(S_end, R_end, level);
-	}
-	enum Partition
-	{
-		left,
-		right
-	};
-	ui compute_UB(ui S_end, ui R_end, ui S_l, ui R_l, Partition side)
-	{
-		// when computing for left side
-		// if (side == right)
-		// 	return color_ub_partial_C(R_l, R_end);
-		ui Sa, Sb, Ra, Rb;
-		if (side == left)
-			Sa = 0, Sb = S_l, Ra = S_end, Rb = R_l;
-		else
-			Sa = S_l, Sb = S_end, Ra = R_l, Rb = R_end;
+            usefulS.push_back(sel);
+            ub += (long long)sel_allow;
 
-		for (ui i = Sa; i < Sb; i++)
-		{
-			ui u = SR[i];
-			psz[i] = 0;
-			if (support(S_end, u) == 0)
-				continue;
-			// skipping it, because this is a boundary vertex, and it can't have any non-neighbor candidate
-			ui *t_LPI = LPI + i * n;
-			for (ui j = Ra; j < Rb; j++)
-			{
-				ui v = SR[j];
-				if (!matrix[u * n + v])
-					t_LPI[psz[i]++] = v;
-			}
-		}
+            // Shrink Pi_0 to vertices adjacent to sel.
+            std::vector<ui> nextPi0;
+            nextPi0.reserve(Pi0.size());
+            char *row = matrix + (long long)sel * n;
+            for (ui v : Pi0)
+                if (row[v])
+                    nextPi0.push_back(v);
+            Pi0.swap(nextPi0);
+        }
 
-		ui cend = Rb;
-		ui UB = 0;
-		while (true)
-		{
-			ui maxpi = -1, mincost = 0;
-			double maxdise = 0;
-			for (ui i = Sa; i < Sb; i++)
-			{
-				ui u = SR[i];
-				if (psz[i] == 0)
-					continue;
-				double cost = min(support(S_end, u), psz[i]);
-				double dise = psz[i] / cost;
-				if (dise > maxdise)
-					maxpi = i, maxdise = dise, mincost = cost;
-			}
-			if (maxpi == -1)
-				break;
-			// remove pi* from C
-			UB += mincost;
-			ui *t_LPI = LPI + maxpi * n;
-			for (ui i = 0; i < psz[maxpi]; i++)
-			{
-				// removing from C
-				ui v = t_LPI[i];
-				swap_pos(SR_rid[v], --cend);
-			}
+        long long ret = ub + (long long)Pi0.size();
+        if (ret <= (long long)lb)
+            return (int)ret;
 
-			// remove maxpi from every pi
-			psz[maxpi] = 0;
-			for (ui i = Sa; i < Sb; i++)
-			{
-				ui j = 0;
-				ui *t_LPI = LPI + i * n;
-				for (ui k = 0; k < psz[i]; k++)
-					if (SR_rid[t_LPI[k]] < cend)
-						t_LPI[j++] = t_LPI[k];
-				psz[i] = j;
-			}
-		}
-		assert(cend >= Ra);
-		return UB + cend - Ra;
-	}
+        // ----------------------------
+        // Step 2: reduce Pi_0
+        // ----------------------------
+        bool changed = false;
 
-	ui color_ub_partial_C(ui S_end, ui R_end)
-	{
-		ui UB = 0;
-		while (R_end > S_end)
-		{
-			double ubc = tryColor(S_end, R_end);
-			for (ui v : ISc)
-				swap_pos(v, --R_end);
-			UB += ubc;
-		}
-		return UB;
-	}
-	bool Reduction2(ui &S_end, ui R_l, ui &R_end, ui level, Partition side)
-	{
-		ui old_S_end = S_end;
-		bool ret = true;
-		ui Ra, Rb;
-		if (side == left)
-			Ra = S_end, Rb = R_l;
-		else
-			Ra = R_l, Rb = R_end;
-		for (ui i = Ra; i < Rb; i++)
-		{
-			if (!can_move_to_S(S_end, R_end, SR[i]))
-			{
-				ret = false;
-				break;
-			}
-			move_to_S(S_end, R_end, SR[i]);
-		}
+        std::vector<char> alive(n, 0);
+        std::vector<int> pi0_deg(n, 0);
+        std::queue<ui> q;
 
-		if (ret)
-			ret = prune_R(S_end, R_end, level);
-		return ret;
-	}
+        for (ui v : Pi0)
+            alive[v] = 1;
 
-	bool alt_reduction_rules(ui S_end, ui &R_end, ui &R_l, ui LB_l, ui LB_r, Partition side, ui level)
-	{
-		ui Ra, Rb, R_end_temp = R_end;
-		if (side == left)
-			Ra = S_end, Rb = R_l;
-		else
-			Ra = R_l, Rb = R_end;
+        const long long LB_Pi0 = (long long)lb + 1 - ub;
 
-		while (!Qv.empty())
-			Qv.pop();
+        if (LB_Pi0 > (long long)K - 1)
+        {
+            // Initial degrees inside Pi_0.
+            for (ui v : Pi0)
+            {
+                ui cnt = 0;
+                char *row = matrix + (long long)v * n;
+                for (ui w : Pi0)
+                    if (alive[w] && row[w])
+                        ++cnt;
+                pi0_deg[v] = (int)cnt;
+            }
 
-		for (ui i = Ra; i < Rb; i++)
-		{
-			ui u = SR[i];
-			char *t_matrix = matrix + u * n;
-			ui neigh_l = degree_in_S[u], neigh_r = degree_in_S[u];
-			for (ui j = S_end; j < R_end_temp; j++)
-			{
-				if (t_matrix[SR[j]])
-					if (j < R_l)
-						neigh_l++;
-					else
-						neigh_r++;
-			}
-			if (side == left)
-			{
-				if (neigh_l + K < LB_l + S_end or neigh_r + K < LB_r + S_end + 1)
-				{
-					swap_pos(i, --R_l);
-					swap_pos(R_l, --R_end_temp);
-					Rb--;
-					level_id[u] = level;
-					Qv.push(u);
-				}
-			}
-			else
-			{
-				if (neigh_l + K < LB_l + S_end + 1 or neigh_r + K < LB_r + S_end)
-				{
-					swap_pos(i, --R_end_temp);
-					Rb--;
-					level_id[u] = level;
-					Qv.push(u);
-				}
-			}
-		}
-		return remove_vertices_and_edges_with_prune_left(S_end, R_end, R_l, level);
-	}
-	pair<ui, ui> partition_left_right(ui S_end, ui R_end)
-	{
-		for (ui i = 0; i < S_end; i++)
-		{
-			ui u = SR[i];
-			psz[u] = 0;
-			if (support(S_end, u) == 0)
-				continue;
-			// skipping it, because this is a boundary vertex, and it can't have any non-neighbor candidate
-			ui *t_LPI = LPI + u * n;
-			char *t_matrix = matrix + u * n;
-			for (ui j = S_end; j < R_end; j++)
-			{
-				ui v = SR[j];
-				if (!t_matrix[v])
-					t_LPI[psz[u]++] = v;
-			}
-		}
-		ui S_l = 0, R_l = S_end;
-		ui UB = 0;
+            // Queue vertices in Pi_0 that fail the lower-bound requirement.
+            for (ui v : Pi0)
+            {
+                int threshold = (int)LB_Pi0 + (int)(S_end - degree_in_S[v]) - (int)K;
+                if (pi0_deg[v] < threshold)
+                    q.push(v);
+            }
 
-		while (true)
-		{
-			ui maxpi = -1;
-			double maxdise = 1;
-			for (ui i = S_l; i < S_end; i++)
-			{
-				ui u = SR[i];
-				if (psz[u] == 0 or support(S_end, u) == 0)
-					continue;
-				// double cost = min(support(S_end, u), psz[u]);
-				// double dise = psz[u] / min(support(S_end, u), psz[u]);
-				double dise = (double)psz[u] / support(S_end, u);
-				if (dise > maxdise)
-					maxpi = u, maxdise = dise;
-			}
-			if (maxdise == 1)
-				break;
-			else
-			{
-				// remove pi* from C
-				ui *t_LPI = LPI + maxpi * n;
-				for (ui i = 0; i < psz[maxpi]; i++)
-				{
-					// removing from C
-					ui v = t_LPI[i];
-					swap_pos(SR_rid[v], R_l++);
-				}
-				// remove maxpi from every pi
-				psz[maxpi] = 0;
-				swap_pos(SR_rid[maxpi], S_l++);
-				for (ui i = S_l; i < S_end; i++)
-				{
-					ui j = 0;
-					ui u = SR[i];
-					ui *t_LPI = LPI + u * n;
-					for (ui k = 0; k < psz[u]; k++)
-						if (SR_rid[t_LPI[k]] >= R_l)
-							t_LPI[j++] = t_LPI[k];
-					psz[u] = j;
-				}
-			}
-		}
-		return {S_l, R_l};
-	}
-	void print_array(const char *str, const ui *array, ui idx_start, ui idx_end, ui l)
-	{
-		for (ui i = 0; i < l; i++)
-			printf(" ");
-		printf("%s:", str);
-		for (ui i = idx_start; i < idx_end; i++)
-			printf(" %u", array[i]);
-		printf("\n");
-	}
+            while (!q.empty())
+            {
+                ui v = q.front();
+                q.pop();
+                if (!alive[v])
+                    continue;
+
+                alive[v] = 0;
+                changed = true;
+                remove_candidate_from_R(v, S_end, R_end);
+
+                // Update remaining Pi_0 degrees.
+                char *row = matrix + (long long)v * n;
+                for (ui w : Pi0)
+                {
+                    if (!alive[w] || !row[w])
+                        continue;
+
+                    --pi0_deg[w];
+                    int threshold = (int)LB_Pi0 + (int)(S_end - degree_in_S[w]) - (int)K;
+                    if (pi0_deg[w] < threshold)
+                        q.push(w);
+                }
+            }
+
+            // Recompute live Pi_0 size after reductions.
+            ui live_pi0 = 0;
+            for (ui v : Pi0)
+                if (alive[v])
+                    ++live_pi0;
+            ret = ub + (long long)live_pi0;
+
+            if (ret <= (long long)lb)
+                return (int)ret;
+        }
+
+        // ----------------------------
+        // Step 3/4: RR1 on current C, then RR2 if tight
+        // ----------------------------
+        std::vector<ui> snapshotC(SR + S_end, SR + R_end);
+
+        ui live_pi0 = 0;
+        for (ui v : Pi0)
+            if (alive[v])
+                ++live_pi0;
+
+        for (ui u : snapshotC)
+        {
+            if (SR_rid[u] < S_end || SR_rid[u] >= R_end)
+                continue;
+
+            ui neighbor_cnt = 0;
+            ui non_neighbor_cnt = 0;
+            for (ui v : Pi0)
+            {
+                if (!alive[v])
+                    continue;
+                if (matrix[(long long)u * n + v])
+                    ++neighbor_cnt;
+                else
+                    ++non_neighbor_cnt;
+            }
+
+            int loss_u = (int)S_end - (int)degree_in_S[u];
+
+            // u is in Pi_0
+            if (alive[u])
+            {
+                long long ub_u = (long long)S_end + 1
+                               + (long long)neighbor_cnt
+                               + (long long)std::min((int)non_neighbor_cnt - 1, (int)K - 1 - loss_u)
+                               + (ub - (long long)S_end);
+
+                if (ub_u <= (long long)lb)
+                {
+                    remove_candidate_from_R(u, S_end, R_end);
+                    alive[u] = 0;
+                    changed = true;
+                    continue;
+                }
+
+                int nn_useful = 0;
+                for (ui x : usefulS)
+                    if (!matrix[(long long)u * n + x])
+                        ++nn_useful;
+
+                ub_u -= nn_useful;
+                if (ub_u <= (long long)lb)
+                {
+                    remove_candidate_from_R(u, S_end, R_end);
+                    alive[u] = 0;
+                    changed = true;
+                }
+            }
+            // u is in Pi_i (i > 0)
+            else
+            {
+                long long ub_u = (long long)S_end + 1
+                               + (long long)neighbor_cnt
+                               + (long long)std::min((int)non_neighbor_cnt, (int)K - 1 - loss_u)
+                               + (ub - (long long)S_end) - 1;
+
+                if (ub_u <= (long long)lb)
+                {
+                    remove_candidate_from_R(u, S_end, R_end);
+                    changed = true;
+                    continue;
+                }
+
+                int nn_useful = 0;
+                for (ui x : usefulS)
+                    if (!matrix[(long long)u * n + x])
+                        ++nn_useful;
+
+                ub_u = ub_u + 1 - nn_useful;
+                if (ub_u <= (long long)lb)
+                {
+                    remove_candidate_from_R(u, S_end, R_end);
+                    changed = true;
+                }
+            }
+        }
+
+        live_pi0 = 0;
+        for (ui v : Pi0)
+            if (alive[v])
+                ++live_pi0;
+        ret = ub + (long long)live_pi0;
+
+        if (ret <= (long long)lb)
+            return (int)ret;
+
+        // RR2: if the bound is tight, force all live Pi_0 vertices into S.
+        if (live_pi0 > 0 && ret == (long long)lb + 1)
+        {
+            std::vector<ui> force;
+            force.reserve(live_pi0);
+            for (ui v : Pi0)
+                if (alive[v] && SR_rid[v] >= S_end && SR_rid[v] < R_end)
+                    force.push_back(v);
+
+            for (ui v : force)
+            {
+                if (SR_rid[v] < S_end || SR_rid[v] >= R_end)
+                    continue;
+                if (!move_u_to_S_with_prune(v, S_end, R_end, level))
+                    return lb;
+                changed = true;
+            }
+
+            if (S_end > lb)
+                store_solution(S_end);
+            if (R_end > lb && is_kplex(R_end))
+                store_solution(R_end);
+        }
+
+        if (!changed)
+            return (int)ret;
+
+        // The branch got tighter; repeat AltRB on the new state.
+        if (R_end <= lb + 1 || lb >= _UB_)
+            return lb;
+    }
+}
 };
 #endif

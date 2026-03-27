@@ -193,7 +193,7 @@ get_results(){
             done
         done
         echo >> "$OUTFILE"
-    done < ../ds.txt
+    done < ../ds-problems.txt
 }
 get_results
 echo "Results computed at $(date)"
