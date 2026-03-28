@@ -146,13 +146,13 @@ void StrongHeuris()
             if (lb >= g.n)
             {
                 g.n = 0;
-                StrongHeuris_time = t_extend.get_time();
+                StrongHeuris_time += t_extend.get_time();
                 print_heuris_log();
                 exit(0);
             }
         }
     }
-    StrongHeuris_time = t_extend.get_time();
+    StrongHeuris_time += t_extend.get_time();
 }
 
 /**
@@ -163,10 +163,10 @@ void EgoHeuris()
     Timer t("ego-degen");
     int ego_lb=g.ego_degen(&solution);
     StrongHeuris_time = t.get_time();
+    cout<<"ego degen lb: "<<ego_lb<<endl;
     if( ego_lb > lb)
     {
         lb = ego_lb;
-        cout<<"ego degen lb: "<<lb<<endl;
         g.weak_reduce(lb);
         
         // strong reduce
@@ -201,7 +201,7 @@ void heuris()
     if(PARA.heuristic=="EGO-Heur")
     {
         EgoHeuris();
-        return;
+        // return;
     }
 
     StrongHeuris(); // generate n subgraphs and compute larger lb
