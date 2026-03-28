@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v0v2
+#SBATCH --job-name=v4
 #SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -22,6 +22,10 @@ TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
+HEUR="EGO-Heur"
+BR='S-Br R-Br Pivot-Br'
+CT="CTCP"
+cp ../UMKPEX .
 # -------- TEMPLATE --------
 build_cmd() {
     CMD=(
@@ -59,12 +63,11 @@ export -f get_outfile
 # -------- CREATE TASKS --------
 create_tasks(){
     rm -f "$TASKFILE"
-    BR='S-Br R-Br Pivot-Br'
 
     while read -r ds k; do 
-        for heur in EGO-Heur kPEX-Heur; do
+        for heur in $HEUR; do
             for br in $BR; do 
-                for ct in CTCP ; do
+                for ct in $CT ; do
                     build_cmd
                     cmd=$(printf '%q ' "${CMD[@]}")
                     echo "$cmd" >> "$TASKFILE"
@@ -163,8 +166,8 @@ get_results(){
     BR='S-Br R-Br Pivot-Br'
 
     while read -r ds k; do 
-        for heur in kPEX-Heur EGO-Heur; do
-            for ct in CTCP; do
+        for heur in $HEUR; do
+            for ct in $CT; do
                 for br in $BR; do 
                     build_cmd
 
