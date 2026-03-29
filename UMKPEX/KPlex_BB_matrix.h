@@ -10,6 +10,8 @@ ll dfs_cnt = 0;
 #define CSIZE (R_end - S_end)
 class KPLEX_BB_MATRIX
 {
+	using Set = MyBitset;
+
 private:
 	long long n;
 	vector<int> ids;
@@ -55,6 +57,14 @@ private:
 	bool found_larger = false;
 	bool ctcp_enabled = false;
 	bool all_kplex_search, forward_sol;
+
+	// AltRB Stuff
+	// info of the search tree
+	vector<int> loss_cnt; // loss_cnt[v] = |S| - |N(v) \cap S|, i.e., non-neighbors of v in S
+	vector<int> deg;	  // deg[u] = degree of u in S+C
+	vector<int> one_loss_non_neighbor_cnt;
+	vector<int> que; // queue
+	Graph_adjacent *ptr_g;
 
 public:
 	ui best_n_edges;
@@ -178,6 +188,8 @@ public:
 
 	void load_graph(Graph_adjacent &g)
 	{
+		ptr_g = &g;
+
 		ids = g.vertex_id;
 		n = g.size();
 		if (((long long)n) * n > matrix_size)
@@ -421,15 +433,17 @@ private:
 				n_edges += degree_in_S[SR[i]];
 		}
 		forward_sol = false;
-
-		printf("!!! BB_Search found a kplex of size: %u, n_edges: %u \n", size, n_edges);
-		lb = size;
-		found_larger = true;
-		solution.clear();
-		for (ui i = 0; i < lb; i++)
+		Set S(n);
+		for (ui i = 0; i < size; i++)
 		{
-			solution.insert(ids[SR[i]]);
+			S.set(SR[i]);
 		}
+
+		update_lb(S);
+
+		// printf("!!! BB_Search found a kplex of size: %u, n_edges: %u \n", size, n_edges);
+		// lb = size;
+		// found_larger = true;
 		best_n_edges = n_edges;
 	}
 
@@ -2243,7 +2257,7 @@ private:
 	 *   ui ub = altRB(S_end, R_end, level);
 	 *   if (ub <= lb) { restore...; return; }
 	 */
-	int altRB(ui &S_end, ui &R_end, ui level)
+	int altRB_(ui &S_end, ui &R_end, ui level)
 	{
 		altrb_cnt++;
 
@@ -2278,7 +2292,6 @@ private:
 			return ans;
 		};
 
-
 		while (true)
 		{
 			// ensure clean state before running AltRB logic
@@ -2308,6 +2321,9 @@ private:
 
 					if (allow_v <= 0)
 					{
+						for (ui i = S_end; i < R_end; i++)
+							if (!is_neigh_uv(SR[i], v))
+								cout << "Error";
 						activeS[i] = activeS.back();
 						activeS.pop_back();
 						continue;
@@ -2536,10 +2552,13 @@ private:
 				for (ui v : force)
 				{
 					// check if v can be moved to S.
-					if(support(S_end, v)==0) return finish(lb);
-					for(ui i=0;i<S_end;i++) {
-						ui w=SR[i];
-						if(support(S_end, w)==0 && !is_neigh_uv(v, w))return finish(lb);
+					if (support(S_end, v) == 0)
+						return finish(lb);
+					for (ui i = 0; i < S_end; i++)
+					{
+						ui w = SR[i];
+						if (support(S_end, w) == 0 && !is_neigh_uv(v, w))
+							return finish(lb);
 					}
 					if (!move_u_to_S_with_prune(v, S_end, R_end, level))
 						return finish(lb);
@@ -2558,6 +2577,530 @@ private:
 			if (R_end <= lb + 1 || lb >= _UB_)
 				return finish(lb);
 		}
+	}
+
+	ui neigh_count(ui u, Set &P)
+	{
+		char *row = matrix + u * n;
+		ui count = 0;
+		for (ui v : P)
+		{
+			if (row[v])
+				count++;
+		}
+		return count;
+	}
+	ui non_neigh_count(ui u, Set &P)
+	{
+		char *row = matrix + u * n;
+		ui count = 0;
+		for (ui v : P)
+		{
+			if (!row[v])
+				count++;
+		}
+		return count;
+	}
+
+	void neigh_intersect(ui u, Set &P)
+	{
+		char *row = matrix + u * n;
+		ui count = 0;
+		for (ui v : P)
+		{
+			if (!row[v])
+				P.reset(v);
+		}
+	}
+
+	void non_neigh_intersect(ui u, Set &P)
+	{
+		char *row = matrix + u * n;
+		ui count = 0;
+		for (ui v : P)
+		{
+			if (row[v])
+				P.reset(v);
+		}
+	}
+
+	void reduce_Pi_0(Set &P, int cnt, Set &C)
+	{
+		// if |P|<cnt, then P must be reduce to empty; if cnt<=k, then we can't reduce any vertex
+		if (cnt <= paramK || P.size() < cnt)
+			return;
+		double start_core_reduce = get_system_time_microsecond();
+		auto &deg = PI; // we reuse the array to decrease time cost
+		for (int u : P)
+		{
+			// int d = A[u].intersect(P);
+			int d = neigh_count(u, P);
+
+			if (d < cnt + loss_cnt[u] - paramK)
+			{
+				for (int v : P)
+				{
+					if (v == u)
+						break;
+					if (is_neigh_uv(u, v))
+						deg[v]--;
+				}
+				P.reset(u);
+				C.reset(u);
+			}
+			else
+				deg[u] = d;
+		}
+		int hh = 0, tt = -1;
+		auto &q = que; // faster than std::queue
+		for (int u : P)
+			if (deg[u] < cnt + loss_cnt[u] - paramK)
+			{
+				q[++tt] = u;
+			}
+		while (hh <= tt)
+		{
+			int u = q[hh++];
+			P.reset(u);
+			C.reset(u);
+			for (int v : P)
+			{
+				if (is_neigh_uv(u, v))
+				{
+					--deg[v];
+					if (deg[v] + 1 == cnt + loss_cnt[v] - paramK)
+					{
+						q[++tt] = v;
+					}
+				}
+			}
+		}
+	}
+
+	int bound_and_reduce(Set &S, Set &C)
+	{
+		Timer part_timer;
+		int initial_C_size = C.size();
+		auto copy_S = S;
+		auto copy_C = C;
+		int S_sz = S.size();
+		int ub = S_sz;
+		Set useful_S(S.range); // for v in useful_S, Pi_v is generated
+		// DisePUB: Partition
+		while (copy_S.size())
+		{
+			int sel = -1, size = 0, allow = 0;
+			for (int v : copy_S)
+			{
+				// int sz = non_A[v].intersect(copy_C);
+				int sz = non_neigh_count(v, copy_C);
+				int allow_v = (paramK - loss_cnt[v]);
+				if (sz <= allow_v) // Pi_i is useless
+				{
+					copy_S.reset(v);
+				}
+				else
+				{
+					if (sel == -1 || size * allow_v < sz * allow) // (size/ub_cnt)<(sz/cnt)
+					{
+						sel = v;
+						size = sz;
+						allow = allow_v;
+					}
+				}
+			}
+			if (sel == -1)
+				break;
+			if (lb + 1 > ub && size * 1.0 / allow <= copy_C.size() * 1.0 / (lb + 1 - ub))
+				break;
+			copy_S.reset(sel);
+			useful_S.set(sel);
+			ub += allow;
+			// copy_C &= A[sel]; // remove the non-neighbors of sel
+			neigh_intersect(sel, copy_C);
+		}
+
+		// now copy_C = Pi_0
+		auto &Pi_0 = copy_C;
+#ifndef SeqRB
+		reduce_Pi_0(Pi_0, lb + 1 - ub, C);
+#endif
+		int ret = ub + Pi_0.size();
+		if (ret <= lb) // pruned
+			return ret;
+
+#ifndef SeqRB
+		// RR1
+		// assume we need to include at least $h$ vertices from S+Pi_0; $h$=lb+1-(ub-|S|);
+		// then for u∈Pi_i, u must has at least $h-k+1$ neighbors from S+Pi_0
+		if (paramK > 5)
+		{
+			Timer t;
+			int LB_Pi_0 = lb + 1 - ub;
+			if (LB_Pi_0 > paramK - 1)
+			{
+				auto temp = C;
+				temp ^= Pi_0; // temp = C - Pi_0 = Pi_i
+				// u∈Pi_i, then u has at least (lb+1-sigma_(min(|Pi_i|, k-|S\N(v_i)|))-(k-1) = neighbor_cnt) neighbors in Pi_0∪S
+				for (int u : temp)
+				{
+					int threshold = LB_Pi_0 - (paramK - 1 - loss_cnt[u]);
+					// if (A[u].intersect(Pi_0) < threshold)
+					if (neigh_count(u, Pi_0) < threshold)
+						C.reset(u);
+				}
+			}
+		}
+
+		{
+			Timer t;
+			int Pi_0_size = Pi_0.size();
+			int ub_Pi_I = ub - S_sz;
+			for (int u : C)
+			{
+				// int neighbor_cnt = Pi_0.intersect(A[u]);
+				int neighbor_cnt = neigh_count(u, Pi_0);
+				int non_neighbor_cnt = Pi_0_size - neighbor_cnt;
+				if (Pi_0[u])
+				{
+					int ub_u = S_sz + 1 + neighbor_cnt + min(non_neighbor_cnt - 1, paramK - 1 - loss_cnt[u]) + ub_Pi_I;
+					if (ub_u <= lb)
+					{
+						C.reset(u);
+						Pi_0.reset(u);
+						Pi_0_size--;
+						ret--;
+						if (ret <= lb)
+							return ret;
+					}
+					else
+					{
+						// ub_u -= useful_S.intersect(non_A[u]);
+						ub_u -= non_neigh_count(u, useful_S);
+						if (ub_u <= lb)
+						{
+							C.reset(u);
+							Pi_0.reset(u);
+							Pi_0_size--;
+							ret--;
+						}
+					}
+				}
+				else
+				{
+					int ub_u = S_sz + 1 + neighbor_cnt + min(non_neighbor_cnt, paramK - 1 - loss_cnt[u]) + ub_Pi_I - 1;
+					if (ub_u <= lb)
+					{
+						C.reset(u);
+					}
+					else
+					{
+						// ub_u = ub_u + 1 - useful_S.intersect(non_A[u]);
+						ub_u = ub_u + 1 - non_neigh_count(u, useful_S);
+						if (ub_u <= lb)
+							C.reset(u);
+					}
+				}
+			}
+		}
+		// RR2
+		if (ret == lb + 1 && Pi_0.size())
+		{
+			S |= Pi_0;
+			C ^= Pi_0;
+			Timer start_fast_reduce;
+			bool S_is_plex, g_is_plex;
+			fast_reduction(S, C, g_is_plex, S_is_plex);
+
+			if (!S_is_plex)
+				return lb;
+			if (g_is_plex)
+			{
+				update_lb(S, C);
+				return lb;
+			}
+		}
+#endif
+		if (C.size() < initial_C_size) // goto next iteration
+			return bound_and_reduce(S, C);
+		return ret;
+	}
+
+	void fast_reduction(Set &S, Set &C, bool &g_is_plex, bool &S_is_plex)
+	{
+
+		compute_loss_cnt(S, C, S_is_plex);
+		if (!S_is_plex)
+			return;
+
+		S_is_plex = true;
+		// compute degree of subgraph S∪C
+		auto V = C;
+		V |= S;
+		g_is_plex = 1;
+		int sz = V.size();
+		// u is k-satisfied <==> deg[u]+k >= n
+		// u is C_near-satisfied <==> deg[u]+k+1 >= n and u in C
+		Set satisfied(S.range);
+		Set C_near_satisfied(S.range);
+		int S_size = S.size();
+		for (int v : V)
+		{
+			// int neighbor_in_C = A[v].intersect(C);
+			int neighbor_in_C = neigh_count(v, C);
+			// weak reduce: if d[v] + k <= lb, then remove v
+			// note that if we change $sz$, it may affect the later process when finding vertices must include;
+			// to avoid bugs, we choose not to decrease $sz$
+			if (S[v])
+			{
+				if (S_size + neighbor_in_C + paramK - loss_cnt[v] <= lb)
+				{
+					S_is_plex = false;
+					return;
+				}
+			}
+			else
+			{
+				// v is in C
+				if (S_size + neighbor_in_C + paramK - loss_cnt[v] <= lb)
+				{
+					V.reset(v);
+					C.reset(v);
+					continue;
+				}
+			}
+			deg[v] = S_size - loss_cnt[v] + neighbor_in_C;
+			// deg[v] = A[v].intersect(V);
+			if (deg[v] + paramK >= sz)
+			{
+				satisfied.set(v);
+				if (C[v])
+					C_near_satisfied.set(v);
+			}
+			else
+			{
+				g_is_plex = false;
+				if (deg[v] + paramK + 1 == sz && C[v])
+					C_near_satisfied.set(v);
+			}
+		}
+		if (g_is_plex)
+			return;
+		// now we consider the vertices that must be included
+		int satis_cnt = satisfied.size();
+		bool S_changed = false;
+		for (int u : C_near_satisfied)
+		{
+			bool must_include = 0;
+			// case 1
+			if (deg[u] + 2 >= sz)
+			{
+				must_include = 1;
+			}
+			else
+			{
+				// we consider the non-neighbors of u (excluding u itself)
+				// int satisfied_non_neighbor = satisfied.intersect(non_A[u]);
+				// int tot_non_neighbor = non_A[u].intersect(V);
+				int satisfied_non_neighbor = non_neigh_count(u, satisfied);
+				int tot_non_neighbor = non_neigh_count(u, V);
+				if (satisfied[u])
+				{
+					satisfied_non_neighbor--;
+				}
+				tot_non_neighbor--;
+				// case 2: u is satisfied and all non-neighbors of u are satisfied
+				if (satisfied_non_neighbor == tot_non_neighbor)
+				{
+					if (satisfied[u])
+						must_include = 1;
+				}
+				if (loss_cnt[u] > 0)
+					continue;
+				// case 3: deg[u]>=n-k-1 and only one non-neighbor of u is un-satisfied
+				else if (satisfied_non_neighbor + 1 == tot_non_neighbor)
+				{
+					must_include = 1;
+				}
+				// case 4: deg[u]>=n-k-1 and all the un-satisfied non-neighbors form an independent vertex set
+				else
+				{
+					auto non_neighbor = V;
+					// non_neighbor &= non_A[u];
+					non_neigh_intersect(u, non_neighbor);
+					auto &un_satisfied_non_neighbor = non_neighbor;
+					un_satisfied_non_neighbor.sub(satisfied);
+					// assert(un_satisfied_non_neighbor.size() >= 2);
+					bool is_independent = true;
+					for (int a : un_satisfied_non_neighbor)
+					{
+						for (int b : un_satisfied_non_neighbor)
+						{
+							if (b >= a)
+								break;
+							if (is_neigh_uv(a, b))
+							{
+								is_independent = false;
+								break;
+							}
+						}
+						if (!is_independent)
+							break;
+					}
+					if (is_independent)
+						must_include = 1;
+				}
+			}
+			if (must_include)
+			{
+				S.set(u);
+				C.reset(u);
+				S_changed = true;
+				break; // each time we only include one vertex that must be included
+			}
+		}
+		// S is changed, so we need to re-compute loss_cnt[] and deg[]
+		if (S_changed)
+		{
+			fast_reduction(S, C, g_is_plex, S_is_plex);
+		}
+	}
+
+	void update_lb(Set &S)
+	{
+		int sz = S.size();
+		if (sz > lb)
+		{
+			lb = sz;
+			solution.clear();
+			for (int v : S)
+				solution.insert(v);
+			solution = ptr_g->get_ori_vertices(solution);
+			assert(solution.size() == lb);
+			printf("Find a larger plex : %d\n", sz);
+			fflush(stdout);
+		}
+	}
+	/**
+	 * @brief plex=S+C
+	 */
+	void update_lb(Set &S, Set &C)
+	{
+		int sz = S.size() + C.size();
+		if (sz > lb)
+		{
+			lb = sz;
+			solution.clear();
+			for (int v : S)
+				solution.insert(v);
+			for (int v : C)
+				solution.insert(v);
+			solution = ptr_g->get_ori_vertices(solution);
+			assert(solution.size() == lb);
+			printf("Find a larger plex : %d\n", sz);
+			fflush(stdout);
+		}
+	}
+	/**
+	 * @brief compute loss_cnt[] & remove u if S+u is not a plex
+	 * @param S_is_plex serve as return
+	 */
+	void compute_loss_cnt(Set &S, Set &C, bool &S_is_plex)
+	{
+		for (int v : S)
+		{
+			// loss_cnt[v] = non_A[v].intersect(S); // v∈S, delta[v] = the number of non-neighbors of v in S
+			loss_cnt[v] = non_neigh_count(v, S);
+			if (loss_cnt[v] > paramK)
+			{
+				S_is_plex = false;
+				return;
+			}
+			else if (loss_cnt[v] == paramK) // v has k non-neighbors in S, so all non-neighbors of v can be removed
+											// C &= A[v];
+				neigh_intersect(v, C);
+		}
+		S_is_plex = true;
+		update_lb(S);
+		for (int u : C)
+		{
+			// loss_cnt[u] = non_A[u].intersect(S); // u∈C, delta[u] = the number of non-neighbors of u in S
+			loss_cnt[u] = non_neigh_count(u, S);
+			if (loss_cnt[u] >= paramK) // u has at least k non-neighbors in S, so u can be removed
+				C.reset(u);
+		}
+	}
+
+	int altRB(ui &S_end, ui &R_end, ui level)
+	{
+		Set S(n), C(n);
+		for (ui i = 0; i < S_end; i++)
+			S.set(SR[i]);
+		for (ui i = S_end; i < R_end; i++)
+			C.set(SR[i]);
+		bool S_is_plex, g_is_plex;
+		fast_reduction(S, C, g_is_plex, S_is_plex); // existing techniques
+
+		if (!S_is_plex)
+			return lb;
+		if (g_is_plex)
+		{
+			update_lb(S, C);
+			return lb;
+		}
+
+		int ub = bound_and_reduce(S, C); // AltRB
+		if (ub <= lb)
+			return ub;
+
+		for (ui i = S_end; i < R_end;)
+		{
+			ui u = SR[i];
+			if (!(C.test(SR[i]) || S.test(SR[i])))
+			{
+				swap_pos(i, --R_end);
+				degree[u] = degree_in_S[u] = 0;
+				level_id[u] = level;
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		S_end = 0;
+		for (ui u : S)
+		{
+			SR[S_end] = u;
+			SR_rid[u] = S_end++;
+		}
+
+		R_end=S_end;
+		for (ui u : C)
+		{
+			SR[R_end] = u;
+			SR_rid[u] = R_end++;
+		}
+
+		for (ui i = 0; i < R_end; ++i)
+		{
+			ui v = SR[i];
+			ui dinS = 0, dinR = 0;
+			char *row = matrix + (long long)v * n;
+
+			for (ui j = 0; j < S_end; ++j)
+				if (row[SR[j]])
+					++dinS;
+
+			for (ui j = S_end; j < R_end; ++j)
+				if (row[SR[j]])
+					++dinR;
+
+			degree_in_S[v] = dinS;
+			degree[v] = dinS + dinR;
+		}
+
+		return ub;
 	}
 };
 #endif

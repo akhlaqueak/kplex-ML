@@ -48,6 +48,7 @@ private:
     double reduce_kPlexT_time;
     ll AltRB_cnt, AltRB_iteration_cnt;
 
+
 public:
     set<int> solution;
     Branch(Graph_reduced &input, int _lb) : G_input(input), lb(_lb), bool_array(input.n),
