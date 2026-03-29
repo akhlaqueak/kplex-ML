@@ -22,8 +22,8 @@ TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
-HEUR="kPEX-Heur"
-BR='S-Br R-Br Pivot-Br'
+HEUR="EGO-Heur"
+BR='S-Br'
 CT="CTCP"
 # -------- TEMPLATE --------
 build_cmd() {
