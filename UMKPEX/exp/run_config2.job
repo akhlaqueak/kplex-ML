@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v4
+#SBATCH --job-name=v0v4
 #SBATCH --ntasks=216
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -22,7 +22,7 @@ TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
-HEUR="EGO-Heur"
+HEUR="kPEX EGO-Heur"
 BR='S-Br R-Br Pivot-Br'
 CT="CTCP"
 cp ../UMKPEX .
