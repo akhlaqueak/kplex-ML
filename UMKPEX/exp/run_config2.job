@@ -22,8 +22,8 @@ TIMEOUT_GRACE="30s"         # grace period before SIGKILL
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
-HEUR="kPEX EGO-Heur"
-BR='S-Br R-Br Pivot-Br'
+HEUR="kPEX-Heur EGO-Heur"
+BR='S-Br'
 CT="CTCP"
 cp ../UMKPEX .
 # -------- TEMPLATE --------
@@ -135,7 +135,7 @@ echo "SLURM job id: ${SLURM_JOB_ID:-local}"
 ######################################
 # Parallel execution
 ######################################
-srun --label bash -c '
+srun --cpu-bind=cores --exclusive --label bash -c '
 # IMPORTANT: do NOT use set -e here
 set -o pipefail
 
@@ -162,8 +162,6 @@ echo "Job finished at $(date)"
 # -------- COLLECT RESULTS --------
 get_results(){
     rm -f "$OUTFILE"
-
-    BR='S-Br R-Br Pivot-Br'
 
     while read -r ds k; do 
         for heur in $HEUR; do
