@@ -61,9 +61,7 @@ private:
 	// AltRB Stuff
 	// info of the search tree
 	vector<int> loss_cnt; // loss_cnt[v] = |S| - |N(v) \cap S|, i.e., non-neighbors of v in S
-	vector<int> deg;	  // deg[u] = degree of u in S+C
-	vector<int> one_loss_non_neighbor_cnt;
-	vector<int> que; // queue
+
 	Graph_adjacent *ptr_g;
 
 public:
@@ -189,9 +187,10 @@ public:
 	void load_graph(Graph_adjacent &g)
 	{
 		ptr_g = &g;
-
 		ids = g.vertex_id;
 		n = g.size();
+		loss_cnt.resize(n);
+
 		if (((long long)n) * n > matrix_size)
 		{
 			do
@@ -2652,7 +2651,7 @@ private:
 				deg[u] = d;
 		}
 		int hh = 0, tt = -1;
-		auto &q = que; // faster than std::queue
+		ui* q = S2; // faster than std::queue
 		for (int u : P)
 			if (deg[u] < cnt + loss_cnt[u] - paramK)
 			{
@@ -2839,6 +2838,7 @@ private:
 		V |= S;
 		g_is_plex = 1;
 		int sz = V.size();
+		ui* deg=S2;
 		// u is k-satisfied <==> deg[u]+k >= n
 		// u is C_near-satisfied <==> deg[u]+k+1 >= n and u in C
 		Set satisfied(S.range);
@@ -2870,7 +2870,6 @@ private:
 				}
 			}
 			deg[v] = S_size - loss_cnt[v] + neighbor_in_C;
-			// deg[v] = A[v].intersect(V);
 			if (deg[v] + paramK >= sz)
 			{
 				satisfied.set(v);
