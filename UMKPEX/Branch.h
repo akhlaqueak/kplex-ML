@@ -213,7 +213,6 @@ public:
                     g.edge_reduction(id_u, lb);
                     higher_order_reduce_time += tt.get_time();
                 }
-
                 if (PARA.algorithm == "UMKP+")
                 {
                     bb_solver.load_graph(g);

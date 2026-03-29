@@ -31,7 +31,7 @@ private:
 
 	ui K;
 	ui *best_solution;
-	ui lb;
+	int lb;
 	ui _UB_;
 
 	ui *neighbors;
@@ -2207,377 +2207,6 @@ private:
 		return cursor;
 	}
 
-	// ===== AltRB helpers =====
-
-	inline ui count_neighbors_in_vec(ui u, const std::vector<ui> &verts) const
-	{
-		const char *row = matrix + (long long)u * n;
-		ui cnt = 0;
-		for (ui v : verts)
-			if (row[v])
-				++cnt;
-		return cnt;
-	}
-
-	inline ui count_nonneighbors_in_vec(ui u, const std::vector<ui> &verts) const
-	{
-		return (ui)verts.size() - count_neighbors_in_vec(u, verts);
-	}
-
-	// Remove a vertex from the current candidate part R (global in-place update).
-	// Safe to call only when v is currently in [S_end, R_end).
-	inline void remove_candidate_from_R(ui v, ui &S_end, ui &R_end)
-	{
-		ui pos = SR_rid[v];
-		if (pos < S_end || pos >= R_end)
-			return;
-
-		--R_end;
-		if (pos != R_end)
-			swap_pos(pos, R_end);
-
-		// Update degrees of the remaining candidates.
-		char *row = matrix + (long long)v * n;
-		for (ui i = S_end; i < R_end; ++i)
-		{
-			ui u = SR[i];
-			if (row[u])
-				--degree[u];
-		}
-
-		degree[v] = 0;
-	}
-
-	/*
-	 * AltRB port for your array-based branch state.
-	 * It mutates (S_end, R_end) in-place and returns the current upper bound.
-	 *
-	 * Call pattern:
-	 *   ui ub = altRB(S_end, R_end, level);
-	 *   if (ub <= lb) { restore...; return; }
-	 */
-	int altRB_(ui &S_end, ui &R_end, ui level)
-	{
-		altrb_cnt++;
-
-		// ----------------------------
-		// LOCAL FIX: rebuild cache
-		// ----------------------------
-		auto rebuild_cache = [&]()
-		{
-			for (ui i = 0; i < R_end; ++i)
-			{
-				ui v = SR[i];
-				ui dinS = 0, dinR = 0;
-				char *row = matrix + (long long)v * n;
-
-				for (ui j = 0; j < S_end; ++j)
-					if (row[SR[j]])
-						++dinS;
-
-				for (ui j = S_end; j < R_end; ++j)
-					if (row[SR[j]])
-						++dinR;
-
-				degree_in_S[v] = dinS;
-				degree[v] = dinS + dinR;
-			}
-		};
-
-		// wrap all returns to keep state consistent
-		auto finish = [&](int ans) -> int
-		{
-			rebuild_cache();
-			return ans;
-		};
-
-		while (true)
-		{
-			// ensure clean state before running AltRB logic
-			rebuild_cache();
-
-			// Snapshot
-			std::vector<ui> activeS(SR, SR + S_end);
-			std::vector<ui> Pi0(SR + S_end, SR + R_end);
-			std::vector<ui> usefulS;
-			usefulS.reserve(S_end);
-
-			long long ub = (long long)S_end;
-
-			// ----------------------------
-			// Partition / ComputeUB
-			// ----------------------------
-			while (!activeS.empty())
-			{
-				int sel_idx = -1;
-				ui sel_sz = 0;
-				int sel_allow = 0;
-
-				for (ui i = 0; i < activeS.size();)
-				{
-					ui v = activeS[i];
-					int allow_v = (int)K - (int)(S_end - degree_in_S[v]);
-
-					if (allow_v <= 0)
-					{
-						for (ui i = S_end; i < R_end; i++)
-							if (!is_neigh_uv(SR[i], v))
-								cout << "Error";
-						activeS[i] = activeS.back();
-						activeS.pop_back();
-						continue;
-					}
-
-					ui sz = count_nonneighbors_in_vec(v, Pi0);
-
-					if (sz <= (ui)allow_v)
-					{
-						activeS[i] = activeS.back();
-						activeS.pop_back();
-						continue;
-					}
-
-					if (sel_idx == -1 ||
-						(unsigned long long)sz * (unsigned long long)sel_allow >
-							(unsigned long long)sel_sz * (unsigned long long)allow_v)
-					{
-						sel_idx = (int)i;
-						sel_sz = sz;
-						sel_allow = allow_v;
-					}
-
-					++i;
-				}
-
-				if (sel_idx == -1)
-					break;
-
-				ui sel = activeS[sel_idx];
-				activeS[sel_idx] = activeS.back();
-				activeS.pop_back();
-
-				usefulS.push_back(sel);
-				ub += (long long)sel_allow;
-
-				std::vector<ui> nextPi0;
-				nextPi0.reserve(Pi0.size());
-				char *row = matrix + (long long)sel * n;
-
-				for (ui v : Pi0)
-					if (row[v])
-						nextPi0.push_back(v);
-
-				Pi0.swap(nextPi0);
-			}
-
-			long long ret = ub + (long long)Pi0.size();
-			if (ret <= (long long)lb)
-				return finish((int)ret);
-
-			// ----------------------------
-			// Step 2: Pi0 reduction
-			// ----------------------------
-			bool changed = false;
-
-			std::vector<char> alive(n, 0);
-			std::vector<int> pi0_deg(n, 0);
-			std::queue<ui> q;
-
-			for (ui v : Pi0)
-				alive[v] = 1;
-
-			const long long LB_Pi0 = (long long)lb + 1 - ub;
-
-			if (LB_Pi0 > (long long)K - 1)
-			{
-				for (ui v : Pi0)
-				{
-					ui cnt = 0;
-					char *row = matrix + (long long)v * n;
-					for (ui w : Pi0)
-						if (alive[w] && row[w])
-							++cnt;
-					pi0_deg[v] = (int)cnt;
-				}
-
-				for (ui v : Pi0)
-				{
-					int threshold = (int)LB_Pi0 + (int)(S_end - degree_in_S[v]) - (int)K;
-					if (pi0_deg[v] < threshold)
-						q.push(v);
-				}
-
-				while (!q.empty())
-				{
-					ui v = q.front();
-					q.pop();
-					if (!alive[v])
-						continue;
-
-					alive[v] = 0;
-					changed = true;
-
-					remove_candidate_from_R(v, S_end, R_end);
-
-					char *row = matrix + (long long)v * n;
-					for (ui w : Pi0)
-					{
-						if (!alive[w] || !row[w])
-							continue;
-
-						--pi0_deg[w];
-						int threshold = (int)LB_Pi0 + (int)(S_end - degree_in_S[w]) - (int)K;
-						if (pi0_deg[w] < threshold)
-							q.push(w);
-					}
-				}
-
-				ui live_pi0 = 0;
-				for (ui v : Pi0)
-					if (alive[v])
-						++live_pi0;
-
-				ret = ub + (long long)live_pi0;
-				if (ret <= (long long)lb)
-					return finish((int)ret);
-			}
-
-			// ----------------------------
-			// RR1 + RR2
-			// ----------------------------
-			std::vector<ui> snapshotC(SR + S_end, SR + R_end);
-
-			ui live_pi0 = 0;
-			for (ui v : Pi0)
-				if (alive[v])
-					++live_pi0;
-
-			for (ui u : snapshotC)
-			{
-				if (SR_rid[u] < S_end || SR_rid[u] >= R_end)
-					continue;
-
-				ui neighbor_cnt = 0, non_neighbor_cnt = 0;
-
-				for (ui v : Pi0)
-				{
-					if (!alive[v])
-						continue;
-
-					if (matrix[(long long)u * n + v])
-						++neighbor_cnt;
-					else
-						++non_neighbor_cnt;
-				}
-
-				int loss_u = (int)S_end - (int)degree_in_S[u];
-
-				long long ub_u;
-
-				if (alive[u])
-				{
-					ub_u = (long long)S_end + 1 + neighbor_cnt +
-						   std::min((int)non_neighbor_cnt - 1, (int)K - 1 - loss_u) +
-						   (ub - (long long)S_end);
-
-					if (ub_u <= (long long)lb)
-					{
-						remove_candidate_from_R(u, S_end, R_end);
-						alive[u] = 0;
-						changed = true;
-						continue;
-					}
-
-					int nn_useful = 0;
-					for (ui x : usefulS)
-						if (!matrix[(long long)u * n + x])
-							++nn_useful;
-
-					ub_u -= nn_useful;
-
-					if (ub_u <= (long long)lb)
-					{
-						remove_candidate_from_R(u, S_end, R_end);
-						alive[u] = 0;
-						changed = true;
-					}
-				}
-				else
-				{
-					ub_u = (long long)S_end + 1 + neighbor_cnt +
-						   std::min((int)non_neighbor_cnt, (int)K - 1 - loss_u) +
-						   (ub - (long long)S_end) - 1;
-
-					if (ub_u <= (long long)lb)
-					{
-						remove_candidate_from_R(u, S_end, R_end);
-						changed = true;
-						continue;
-					}
-
-					int nn_useful = 0;
-					for (ui x : usefulS)
-						if (!matrix[(long long)u * n + x])
-							++nn_useful;
-
-					ub_u = ub_u + 1 - nn_useful;
-
-					if (ub_u <= (long long)lb)
-					{
-						remove_candidate_from_R(u, S_end, R_end);
-						changed = true;
-					}
-				}
-			}
-
-			live_pi0 = 0;
-			for (ui v : Pi0)
-				if (alive[v])
-					++live_pi0;
-
-			ret = ub + (long long)live_pi0;
-
-			if (ret <= (long long)lb)
-				return finish((int)ret);
-
-			// RR2
-			if (live_pi0 > 0 && ret == (long long)lb + 1)
-			{
-				std::vector<ui> force;
-				for (ui v : Pi0)
-					if (alive[v] && SR_rid[v] >= S_end && SR_rid[v] < R_end)
-						force.push_back(v);
-
-				for (ui v : force)
-				{
-					// check if v can be moved to S.
-					if (support(S_end, v) == 0)
-						return finish(lb);
-					for (ui i = 0; i < S_end; i++)
-					{
-						ui w = SR[i];
-						if (support(S_end, w) == 0 && !is_neigh_uv(v, w))
-							return finish(lb);
-					}
-					if (!move_u_to_S_with_prune(v, S_end, R_end, level))
-						return finish(lb);
-					changed = true;
-				}
-
-				if (S_end > lb)
-					store_solution(S_end);
-				if (R_end > lb && is_kplex(R_end))
-					store_solution(R_end);
-			}
-
-			if (!changed)
-				return finish((int)ret);
-
-			if (R_end <= lb + 1 || lb >= _UB_)
-				return finish(lb);
-		}
-	}
-
 	ui neigh_count(ui u, Set &P)
 	{
 		char *row = matrix + u * n;
@@ -2603,9 +2232,9 @@ private:
 
 	void neigh_intersect(ui u, Set &P)
 	{
+		auto tempP=P;
 		char *row = matrix + u * n;
-		ui count = 0;
-		for (ui v : P)
+		for (ui v : tempP)
 		{
 			if (!row[v])
 				P.reset(v);
@@ -2614,9 +2243,9 @@ private:
 
 	void non_neigh_intersect(ui u, Set &P)
 	{
+		auto tempP=P;
 		char *row = matrix + u * n;
-		ui count = 0;
-		for (ui v : P)
+		for (ui v : tempP)
 		{
 			if (row[v])
 				P.reset(v);
@@ -2629,7 +2258,8 @@ private:
 		if (cnt <= paramK || P.size() < cnt)
 			return;
 		double start_core_reduce = get_system_time_microsecond();
-		auto &deg = PI; // we reuse the array to decrease time cost
+		ui* deg = neighbors; // we reuse the array to decrease time cost
+		ui *q = nonneighbors; // faster than std::queue
 		for (int u : P)
 		{
 			// int d = A[u].intersect(P);
@@ -2651,7 +2281,6 @@ private:
 				deg[u] = d;
 		}
 		int hh = 0, tt = -1;
-		ui* q = S2; // faster than std::queue
 		for (int u : P)
 			if (deg[u] < cnt + loss_cnt[u] - paramK)
 			{
@@ -2838,7 +2467,7 @@ private:
 		V |= S;
 		g_is_plex = 1;
 		int sz = V.size();
-		ui* deg=S2;
+		ui *deg = neighbors;
 		// u is k-satisfied <==> deg[u]+k >= n
 		// u is C_near-satisfied <==> deg[u]+k+1 >= n and u in C
 		Set satisfied(S.range);
@@ -3037,11 +2666,13 @@ private:
 			S.set(SR[i]);
 		for (ui i = S_end; i < R_end; i++)
 			C.set(SR[i]);
-		bool S_is_plex, g_is_plex;
+		bool S_is_plex=true, g_is_plex = false;
 		fast_reduction(S, C, g_is_plex, S_is_plex); // existing techniques
 
 		if (!S_is_plex)
+		{
 			return lb;
+		}
 		if (g_is_plex)
 		{
 			update_lb(S, C);
@@ -3067,14 +2698,15 @@ private:
 			}
 		}
 
-		S_end = 0;
 		for (ui u : S)
 		{
-			SR[S_end] = u;
-			SR_rid[u] = S_end++;
+			if(SR_rid[u]>=S_end){
+				SR[S_end] = u;
+				SR_rid[u] = S_end++;
+			}
 		}
 
-		R_end=S_end;
+		R_end = S_end;
 		for (ui u : C)
 		{
 			SR[R_end] = u;
@@ -3097,6 +2729,7 @@ private:
 
 			degree_in_S[v] = dinS;
 			degree[v] = dinS + dinR;
+			level_id[v] = n;
 		}
 
 		return ub;

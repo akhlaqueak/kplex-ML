@@ -25,6 +25,7 @@ SECONDS=0
 HEUR="EGO-Heur"
 BR='S-Br'
 CT="CTCP"
+SKIP_TIMEOUT=true
 # -------- TEMPLATE --------
 build_cmd() {
     CMD=(
@@ -83,6 +84,14 @@ run_task() {
     echo "START $(date) :: $cmd"
 
     outfile=$(get_outfile "$cmd")
+    # 🔍 Check if outfile exists and last line contains TIMEOUT
+    if [[ "${SKIP_TIMEOUT:-false}" == true && -f "$outfile" ]]; then
+        last_line=$(tail -n 1 "$outfile")
+        if [[ "$last_line" == "TIMEOUT"* ]]; then
+            echo "SKIP (already TIMEOUT) :: $cmd"
+            return 0
+        fi
+    fi
 
     read -r -a args <<< "$cmd"
     timeout --signal=TERM \
@@ -161,9 +170,6 @@ echo "Job finished at $(date)"
 # -------- COLLECT RESULTS --------
 get_results(){
     rm -f "$OUTFILE"
-
-    BR='S-Br R-Br Pivot-Br'
-
     while read -r ds k; do 
         for heur in $HEUR; do
             for ct in $CT; do
@@ -200,5 +206,5 @@ get_results(){
 }
 get_results
 echo "Results computed at $(date)"
-echo "Total execution time: $SECONDS seconds"
+echo "Total execution time: $((SECONDS / 60)) minutes"
 
