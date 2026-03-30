@@ -347,7 +347,7 @@ private:
 			solution.clear();
 			for (ui i = idx; i < n; i++)
 				solution.insert(ids[peel_sequence[i]]);
-			printf("Degen find a solution of size %u\n", lb);
+			printf("Degen found a solution of size %u\n", lb);
 		}
 
 		R_end = 0;
@@ -2605,7 +2605,7 @@ private:
 				solution.insert(v);
 			solution = ptr_g->get_ori_vertices(solution);
 			assert(solution.size() == lb);
-			printf("Find a larger plex : %d\n", sz);
+			printf("BBSearch Found a larger plex : %d\n", sz);
 			fflush(stdout);
 		}
 	}

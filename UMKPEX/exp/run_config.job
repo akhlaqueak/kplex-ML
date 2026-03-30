@@ -143,7 +143,7 @@ echo "SLURM job id: ${SLURM_JOB_ID:-local}"
 ######################################
 # Parallel execution
 ######################################
-srun --label bash -c '
+srun --cpu-bind=cores --exclusive --label bash -c '
 # IMPORTANT: do NOT use set -e here
 set -o pipefail
 
