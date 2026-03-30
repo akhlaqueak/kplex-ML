@@ -9,6 +9,7 @@
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
+module load mpi4py
 
 set -euo pipefail
 alias python=python3
