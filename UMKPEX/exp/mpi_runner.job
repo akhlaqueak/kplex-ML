@@ -9,6 +9,7 @@
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
+module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
