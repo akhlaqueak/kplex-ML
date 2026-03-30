@@ -25,7 +25,7 @@ SECONDS=0
 HEUR="EGO-Heur"
 BR='S-Br'
 CT="CTCP"
-SKIP_TIMEOUT=true
+SKIP_TIMEOUT=false
 # -------- TEMPLATE --------
 build_cmd() {
     CMD=(
