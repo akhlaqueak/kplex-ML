@@ -2697,10 +2697,10 @@ private:
 				i++;
 			}
 		}
-
+		ui old_S_end = S_end;
 		for (ui u : S)
 		{
-			if(SR_rid[u]>=S_end){
+			if(SR_rid[u]>=old_S_end){
 				SR[S_end] = u;
 				SR_rid[u] = S_end++;
 			}
