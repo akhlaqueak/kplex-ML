@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# command to run:
-# srun -n 8 python -u mpi_dynamic.py "$TASKFILE"
 from mpi4py import MPI
 import os
 import shlex
@@ -16,11 +14,12 @@ TASK_TIMEOUT = int(os.environ.get("TASK_TIMEOUT", "3600"))
 TIMEOUT_GRACE = int(os.environ.get("TIMEOUT_GRACE", "30"))
 SKIP_TIMEOUT = os.environ.get("SKIP_TIMEOUT", "false").lower() == "true"
 
+
 def get_outfile(cmd: str) -> str:
-    # Replace this with your existing outfile naming rule if needed.
     safe = cmd.strip().replace("/", "_").replace(" ", "_")
     os.makedirs("logs", exist_ok=True)
     return os.path.join("logs", safe + ".out")
+
 
 def last_line_starts_with_timeout(path: str) -> bool:
     if not os.path.isfile(path):
@@ -38,54 +37,62 @@ def last_line_starts_with_timeout(path: str) -> bool:
     except OSError:
         return False
 
+
 def run_task(cmd: str):
+    rank = MPI.COMM_WORLD.Get_rank()
     outfile = get_outfile(cmd)
 
     if SKIP_TIMEOUT and last_line_starts_with_timeout(outfile):
-        print(f"SKIP (already TIMEOUT) :: {cmd}", flush=True)
+        print(f"[rank {rank}] SKIP (already TIMEOUT) :: {cmd}", flush=True)
         return 0, outfile, "SKIP"
 
-    print(f"START :: {cmd}", flush=True)
+    print(f"[rank {rank}] START :: {cmd}", flush=True)
 
     args = shlex.split(cmd)
     if not args:
         return 0, outfile, "EMPTY"
 
-    # Your shell script runs "./${args[@]}".
+    # FIX: removed "./" assumption → use command directly
     run_cmd = [
         "timeout",
         "--signal=TERM",
         f"--kill-after={TIMEOUT_GRACE}",
         str(TASK_TIMEOUT),
-        f"./{args[0]}",
-        *args[1:],
+        *args,
     ]
 
-    with open(outfile, "w") as f:
-        rc = subprocess.run(
-            run_cmd,
-            stdout=f,
-            stderr=subprocess.STDOUT
-        ).returncode
+    print(f"[rank {rank}] EXEC: {run_cmd}", flush=True)
+
+    try:
+        with open(outfile, "w") as f:
+            rc = subprocess.run(
+                run_cmd,
+                stdout=f,
+                stderr=subprocess.STDOUT
+            ).returncode
+    except Exception as e:
+        print(f"[rank {rank}] EXCEPTION: {e}", flush=True)
+        return -1, outfile, "EXCEPTION"
 
     if rc == 0:
-        print(f"SUCCESS  {cmd}", flush=True)
+        print(f"[rank {rank}] SUCCESS {cmd}", flush=True)
         return rc, outfile, "SUCCESS"
     elif rc == 124:
         with open(outfile, "a") as f:
             f.write(f"TIMEOUT  {cmd}\n")
-        print(f"TIMEOUT  {cmd}", flush=True)
+        print(f"[rank {rank}] TIMEOUT {cmd}", flush=True)
         return rc, outfile, "TIMEOUT"
     elif rc == 137:
         with open(outfile, "a") as f:
             f.write(f"KILLED  {cmd}\n")
-        print(f"KILLED  {cmd}", flush=True)
+        print(f"[rank {rank}] KILLED {cmd}", flush=True)
         return rc, outfile, "KILLED"
     else:
         with open(outfile, "a") as f:
             f.write(f"FAILED  {cmd} (exit={rc})\n")
-        print(f"FAILED  {cmd} (exit={rc})", flush=True)
+        print(f"[rank {rank}] FAILED {cmd} (exit={rc})", flush=True)
         return rc, outfile, "FAILED"
+
 
 def load_tasks(taskfile: str):
     tasks = []
@@ -99,15 +106,17 @@ def load_tasks(taskfile: str):
             tasks.append(cmd)
     return tasks
 
+
 def master(comm, size, taskfile: str):
     tasks = load_tasks(taskfile)
     next_idx = 0
     stopped = 0
     nworkers = size - 1
 
-    print(f"Loaded {len(tasks)} tasks", flush=True)
+    print(f"[MASTER] Loaded {len(tasks)} tasks", flush=True)
 
     status = MPI.Status()
+
     while stopped < nworkers:
         msg = comm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         src = status.Get_source()
@@ -115,17 +124,22 @@ def master(comm, size, taskfile: str):
 
         if tag == TAG_READY:
             if next_idx < len(tasks):
-                comm.send(tasks[next_idx], dest=src, tag=TAG_TASK)
+                task = tasks[next_idx]
+                print(f"[MASTER] Assigning task {next_idx} to rank {src}", flush=True)
+                comm.send(task, dest=src, tag=TAG_TASK)
                 next_idx += 1
             else:
                 comm.send(None, dest=src, tag=TAG_STOP)
 
         elif tag == TAG_DONE:
             cmd, rc, outfile, state = msg
-            print(f"[rank {src}] {state}: {cmd}", flush=True)
+            print(f"[MASTER] [rank {src}] {state}: {cmd}", flush=True)
 
         elif tag == TAG_STOP:
             stopped += 1
+
+    print("[MASTER] All workers stopped.", flush=True)
+
 
 def worker(comm, rank: int):
     while True:
@@ -136,16 +150,22 @@ def worker(comm, rank: int):
         tag = status.Get_tag()
 
         if tag == TAG_STOP or task is None:
+            print(f"[rank {rank}] STOP received", flush=True)
             comm.send(None, dest=0, tag=TAG_STOP)
             break
 
+        print(f"[rank {rank}] Received task: {task}", flush=True)
+
         rc, outfile, state = run_task(task)
         comm.send((task, rc, outfile, state), dest=0, tag=TAG_DONE)
+
 
 def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+
+    print(f"[INIT] rank={rank} size={size} host={os.uname()[1]}", flush=True)
 
     if len(sys.argv) < 2:
         if rank == 0:
@@ -160,6 +180,7 @@ def main():
         worker(comm, rank)
 
     comm.Barrier()
+
 
 if __name__ == "__main__":
     main()
