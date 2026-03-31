@@ -82,15 +82,10 @@ create_tasks() {
     done < ../ds.txt
 }
 
-# create_tasks
+create_tasks
 
-# srun --cpu-bind=cores python3 -u mpi_dynamic.py "$TASKFILE"
+srun --cpu-bind=cores python3 -u mpi_dynamic.py "$TASKFILE"
 
-srun --mpi=pmix python3 - <<'EOF'
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
-print(f"Hello from rank {comm.Get_rank()} out of {comm.Get_size()}")
-EOF
 
 echo "Job finished at $(date)"
 
