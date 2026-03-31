@@ -19,8 +19,8 @@ alias python=python3
 ######################################
 ALGO="kPEX"
 TASKFILE="tasks-$SLURM_JOB_NAME.txt"
-TASK_TIMEOUT="30m"
-TIMEOUT_GRACE="30s"
+TASK_TIMEOUT="1800"
+TIMEOUT_GRACE="30"
 DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
