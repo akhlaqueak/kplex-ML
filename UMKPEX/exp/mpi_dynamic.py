@@ -16,10 +16,41 @@ SKIP_TIMEOUT = os.environ.get("SKIP_TIMEOUT", "false").lower() == "true"
 
 
 def get_outfile(cmd: str) -> str:
-    safe = cmd.strip().replace("/", "_").replace(" ", "_")
-    os.makedirs("logs", exist_ok=True)
-    return os.path.join("logs", safe + ".out")
+    args = shlex.split(cmd)
 
+    # Skip program name
+    args = args[1:]
+
+    parts = []
+    skip_next = False
+
+    for i, arg in enumerate(args):
+        if skip_next:
+            skip_next = False
+            continue
+
+        # Skip flags like -x
+        if arg.startswith("-"):
+            # If flag has a value, include only the value
+            if i + 1 < len(args) and not args[i + 1].startswith("-"):
+                val = args[i + 1]
+                parts.append(os.path.basename(val))
+                skip_next = True
+            continue
+        else:
+            # Non-flag argument → include basename
+            parts.append(os.path.basename(arg))
+
+    # Sanitize
+    safe_parts = []
+    for p in parts:
+        p = p.replace("/", "_").replace(" ", "_")
+        safe_parts.append(p)
+
+    filename = "_".join(safe_parts)
+
+    os.makedirs("logs", exist_ok=True)
+    return os.path.join("logs", filename + ".out")
 
 def last_line_starts_with_timeout(path: str) -> bool:
     if not os.path.isfile(path):
@@ -52,13 +83,19 @@ def run_task(cmd: str):
     if not args:
         return 0, outfile, "EMPTY"
 
-    # FIX: removed "./" assumption → use command directly
+    exe = args[0]
+
+    # If executable is not absolute path and exists in current dir → prefix ./
+    if not os.path.isabs(exe) and os.path.exists(exe):
+        exe = f"./{exe}"
+
     run_cmd = [
         "timeout",
         "--signal=TERM",
         f"--kill-after={TIMEOUT_GRACE}",
         str(TASK_TIMEOUT),
-        *args,
+        exe,
+        *args[1:],
     ]
 
     print(f"[rank {rank}] EXEC: {run_cmd}", flush=True)
