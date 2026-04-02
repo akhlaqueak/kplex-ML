@@ -25,7 +25,7 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
 HEUR="kPEX-Heur EGO-Heur"
-BR='S-Br'
+BR='S-Br R-Br Pivot-Br'
 CT="CTCP"
 
 mkdir -p logs

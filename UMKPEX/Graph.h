@@ -96,7 +96,7 @@ public:
         ui* rid=new ui[n];
         ui* degree=new ui[n];
         char* vis=new char[n];
-        int pre_lb = solution->size();
+        int pre_lb = degeneracy_and_reduce(2 * paramK - 2, solution);
         degenerate(peel_sequence);
         std::copy(edge_to, edge_to+m, edges);
         if (pend == nullptr)
