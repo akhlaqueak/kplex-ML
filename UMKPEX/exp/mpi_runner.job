@@ -25,7 +25,7 @@ DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE="output-$SLURM_JOB_NAME.txt"
 SECONDS=0
 HEUR="kPEX-Heur EGO-Heur"
-BR='S-Br R-Br Pivot-Br'
+BR='S-Br'
 CT="CTCP"
 
 mkdir -p logs
@@ -37,7 +37,8 @@ export SKIP_TIMEOUT=false
 
 build_cmd() {
     CMD=(
-        "$ds.bin"
+        UMKPEX
+        "$DS_LOC/$ds.bin"
         "$k"
         -branching "$br"
         -heuristic "$heur"
@@ -52,7 +53,7 @@ get_outfile() {
 
     local base
     base=$(basename "$2")
-    # base="${base%.*}"
+    base="${base%.*}"
 
     local outfile="$1_$base"
 
@@ -61,7 +62,7 @@ get_outfile() {
         [[ $arg != -* ]] && outfile+="_$arg"
     done
 
-    printf "logs/%s.out\n" "${outfile// /_}"
+    printf "logs/%s.log\n" "${outfile// /_}"
 }
 export -f get_outfile
 
@@ -97,7 +98,7 @@ get_results() {
                     build_cmd
                     cmd=$(printf '%q ' "${CMD[@]}")
                     fname=$(get_outfile "$cmd")
-                    # echo $fname
+
                     if [[ -f "$fname" ]]; then
                         matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
                     else
