@@ -96,7 +96,8 @@ public:
         ui* rid=new ui[n];
         ui* degree=new ui[n];
         char* vis=new char[n];
-        int pre_lb = degeneracy_and_reduce(2 * paramK - 2, solution);
+
+        int pre_lb = lb;
         degenerate(peel_sequence);
         std::copy(edge_to, edge_to+m, edges);
         if (pend == nullptr)
@@ -1337,8 +1338,8 @@ public:
                 ui u = heap.get_min_node();
                 max_core = max(max_core, pd[u]);
                 core[u] = max_core;
+                seq[heap.sz-1] = u;
                 heap.delete_node(u);
-                seq[heap.sz] = u;
                 rm[u] = 1;
                 // update the degrees of the rest vertices
                 for (ui i = pstart[u]; i < pstart[u + 1]; i++)
@@ -1354,8 +1355,8 @@ public:
             while (heap.sz)
             {
                 ui u = heap.get_min_node();
+                seq[heap.sz-1] = u;
                 heap.delete_node(u);
-                seq[heap.sz] = u;
                 plex.push_back(u);
                 max_core = max(max_core, pd[u]);
                 core[u] = max_core;

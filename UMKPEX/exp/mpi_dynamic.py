@@ -3,89 +3,90 @@ from mpi4py import MPI
 import os
 import shlex
 import subprocess
-import sys
+from pathlib import Path
 
 TAG_READY = 1
 TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-TASK_TIMEOUT = int(os.environ.get("TASK_TIMEOUT", "3600"))
-TIMEOUT_GRACE = int(os.environ.get("TIMEOUT_GRACE", "30"))
-SKIP_TIMEOUT = os.environ.get("SKIP_TIMEOUT", "false").lower() == "true"
+HEUR = ["kPEX-Heur", "Both-Heur"]
+BR = ["S-Br", "R-Br", "Pivot-Br"]
+CT = ["CTCP"]
+
+ALGO = "kPEX"
+BOUND = "AltRB"
+
+TASK_TIMEOUT = 1800
+TIMEOUT_GRACE = 30
+DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
+OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
+LOG_DIR = Path("logs")
+DS_FILE = Path("../ds.txt")
+
+
+def ensure_log_dir() -> None:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get_outfile(cmd: str) -> str:
     args = shlex.split(cmd)
 
-    # Skip program name
-    args = args[1:]
+    if len(args) < 2:
+        raise ValueError(f"Invalid command format: {cmd}")
 
-    parts = []
-    skip_next = False
+    base = os.path.basename(args[1])
+    outfile = os.path.splitext(base)[0]
 
-    for i, arg in enumerate(args):
-        if skip_next:
-            skip_next = False
-            continue
+    for arg in args[2:]:
+        if not arg.startswith("-"):
+            outfile += f"_{arg}"
 
-        # Skip flags like -x
-        if arg.startswith("-"):
-            # If flag has a value, include only the value
-            if i + 1 < len(args) and not args[i + 1].startswith("-"):
-                val = args[i + 1]
-                parts.append(os.path.basename(val))
-                skip_next = True
-            continue
-        else:
-            # Non-flag argument → include basename
-            parts.append(os.path.basename(arg))
+    outfile = outfile.replace(" ", "_")
+    return str(LOG_DIR / f"{outfile}.log")
 
-    # Sanitize
-    safe_parts = []
-    for p in parts:
-        p = p.replace("/", "_").replace(" ", "_")
-        safe_parts.append(p)
 
-    filename = "_".join(safe_parts)
+def get_cmd(ds, k, br, heur, algo, bound, ct):
+    return [
+        "UMKPEX",
+        f"{DS_LOC}/{ds}.bin",
+        k,
+        "-branching", br,
+        "-heuristic", heur,
+        "-algorithm", algo,
+        "-bounding", bound,
+        "-ctcp", ct,
+    ]
 
-    os.makedirs("logs", exist_ok=True)
-    return os.path.join("logs", filename + ".out")
 
-def last_line_starts_with_timeout(path: str) -> bool:
-    if not os.path.isfile(path):
-        return False
-    try:
-        with open(path, "rb") as f:
-            f.seek(0, os.SEEK_END)
-            size = f.tell()
-            if size == 0:
-                return False
-            block = min(4096, size)
-            f.seek(-block, os.SEEK_END)
-            data = f.read().decode("utf-8", errors="ignore").splitlines()
-            return bool(data) and data[-1].startswith("TIMEOUT")
-    except OSError:
-        return False
+def generate_tasks():
+    tasks = []
+
+    with open(DS_FILE) as f:
+        for line in f:
+            if not line.strip():
+                continue
+
+            ds, k = line.strip().split()
+
+            for heur in HEUR:
+                for br in BR:
+                    for ct in CT:
+                        cmd = get_cmd(ds, k, br, heur, ALGO, BOUND, ct)
+                        tasks.append(" ".join(shlex.quote(x) for x in cmd))
+
+    return tasks
 
 
 def run_task(cmd: str):
     rank = MPI.COMM_WORLD.Get_rank()
+    ensure_log_dir()
+
     outfile = get_outfile(cmd)
 
-    if SKIP_TIMEOUT and last_line_starts_with_timeout(outfile):
-        print(f"[rank {rank}] SKIP (already TIMEOUT) :: {cmd}", flush=True)
-        return 0, outfile, "SKIP"
-
-    print(f"[rank {rank}] START :: {cmd}", flush=True)
-
     args = shlex.split(cmd)
-    if not args:
-        return 0, outfile, "EMPTY"
-
     exe = args[0]
 
-    # If executable is not absolute path and exists in current dir → prefix ./
     if not os.path.isabs(exe) and os.path.exists(exe):
         exe = f"./{exe}"
 
@@ -98,54 +99,31 @@ def run_task(cmd: str):
         *args[1:],
     ]
 
-    print(f"[rank {rank}] EXEC: {run_cmd}", flush=True)
-
     try:
         with open(outfile, "w") as f:
-            rc = subprocess.run(
+            proc = subprocess.run(
                 run_cmd,
                 stdout=f,
-                stderr=subprocess.STDOUT
-            ).returncode
+                stderr=subprocess.STDOUT,
+                check=False,
+            )
+            rc = proc.returncode
     except Exception as e:
         print(f"[rank {rank}] EXCEPTION: {e}", flush=True)
         return -1, outfile, "EXCEPTION"
 
-    if rc == 0:
-        print(f"[rank {rank}] SUCCESS {cmd}", flush=True)
-        return rc, outfile, "SUCCESS"
-    elif rc == 124:
+    if rc == 124:
         with open(outfile, "a") as f:
-            f.write(f"TIMEOUT  {cmd}\n")
-        print(f"[rank {rank}] TIMEOUT {cmd}", flush=True)
-        return rc, outfile, "TIMEOUT"
-    elif rc == 137:
+            f.write(f"\nTIMEOUT {cmd}\n")
+    elif rc != 0:
         with open(outfile, "a") as f:
-            f.write(f"KILLED  {cmd}\n")
-        print(f"[rank {rank}] KILLED {cmd}", flush=True)
-        return rc, outfile, "KILLED"
-    else:
-        with open(outfile, "a") as f:
-            f.write(f"FAILED  {cmd} (exit={rc})\n")
-        print(f"[rank {rank}] FAILED {cmd} (exit={rc})", flush=True)
-        return rc, outfile, "FAILED"
+            f.write(f"\nERROR rc={rc}\n")
+
+    return rc, outfile, "DONE"
 
 
-def load_tasks(taskfile: str):
-    tasks = []
-    with open(taskfile, "r") as f:
-        for line in f:
-            cmd = line.rstrip("\n")
-            if not cmd.strip():
-                continue
-            if cmd.lstrip().startswith("#"):
-                continue
-            tasks.append(cmd)
-    return tasks
-
-
-def master(comm, size, taskfile: str):
-    tasks = load_tasks(taskfile)
+def master(comm, size):
+    tasks = generate_tasks()
     next_idx = 0
     stopped = 0
     nworkers = size - 1
@@ -161,24 +139,23 @@ def master(comm, size, taskfile: str):
 
         if tag == TAG_READY:
             if next_idx < len(tasks):
-                task = tasks[next_idx]
-                print(f"[MASTER] Assigning task {next_idx} to rank {src}", flush=True)
-                comm.send(task, dest=src, tag=TAG_TASK)
+                comm.send(tasks[next_idx], dest=src, tag=TAG_TASK)
                 next_idx += 1
             else:
                 comm.send(None, dest=src, tag=TAG_STOP)
 
         elif tag == TAG_DONE:
-            cmd, rc, outfile, state = msg
-            print(f"[MASTER] [rank {src}] {state}: {cmd}", flush=True)
+            task, rc, outfile, state = msg
+            if rc != 0:
+                print(f"[MASTER] rank {src} finished with rc={rc}: {outfile}", flush=True)
 
         elif tag == TAG_STOP:
             stopped += 1
 
-    print("[MASTER] All workers stopped.", flush=True)
+    print("[MASTER] All workers stopped", flush=True)
 
 
-def worker(comm, rank: int):
+def worker(comm, rank):
     while True:
         comm.send(None, dest=0, tag=TAG_READY)
 
@@ -187,14 +164,52 @@ def worker(comm, rank: int):
         tag = status.Get_tag()
 
         if tag == TAG_STOP or task is None:
-            print(f"[rank {rank}] STOP received", flush=True)
             comm.send(None, dest=0, tag=TAG_STOP)
             break
 
-        print(f"[rank {rank}] Received task: {task}", flush=True)
-
         rc, outfile, state = run_task(task)
         comm.send((task, rc, outfile, state), dest=0, tag=TAG_DONE)
+
+
+def collect_results():
+    print("[POST] Collecting results...", flush=True)
+
+    with open(OUTFILE, "w") as out:
+        with open(DS_FILE) as f:
+            for line in f:
+                if not line.strip():
+                    continue
+
+                ds, k = line.strip().split()
+
+                for heur in HEUR:
+                    for br in BR:
+                        for ct in CT:
+                            cmd_str = get_cmd(ds, k, br, heur, ALGO, BOUND, ct)
+                            fname = get_outfile(" ".join(shlex.quote(x) for x in cmd_str))
+
+                            if os.path.isfile(fname):
+                                try:
+                                    with open(fname) as fh:
+                                        lines = fh.readlines()
+                                        last = lines[-1].strip() if lines else ""
+                                except Exception:
+                                    last = ""
+                            else:
+                                last = ""
+
+                            if last.startswith(">>"):
+                                parts = last.split()
+                                values = []
+                                for i in range(1, len(parts), 2):
+                                    values.append(parts[i])
+                                out.write(" ".join(values) + " ")
+                            else:
+                                out.write("x x x x x x ")
+
+                out.write("\n")
+
+    print(f"[POST] Wrote {OUTFILE}", flush=True)
 
 
 def main():
@@ -202,21 +217,15 @@ def main():
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    print(f"[INIT] rank={rank} size={size} host={os.uname()[1]}", flush=True)
-
-    if len(sys.argv) < 2:
-        if rank == 0:
-            print(f"Usage: {sys.argv[0]} TASKFILE", file=sys.stderr)
-        sys.exit(1)
-
-    taskfile = sys.argv[1]
-
     if rank == 0:
-        master(comm, size, taskfile)
+        master(comm, size)
     else:
         worker(comm, rank)
 
     comm.Barrier()
+
+    if rank == 0:
+        collect_results()
 
 
 if __name__ == "__main__":

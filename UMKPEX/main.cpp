@@ -162,6 +162,7 @@ void EgoHeuris()
 {
     Timer t("ego-degen");
     int ego_lb=g.ego_degen(&solution);
+
     StrongHeuris_time = t.get_time();
     cout<<"ego degen lb: "<<ego_lb<<endl;
     if( ego_lb > lb)
@@ -197,13 +198,10 @@ void heuris()
 {
     input_n = g.n;
     FastHeuris();
-    
-    if(PARA.heuristic=="EGO-Heur")
-    {
+    if(PARA.heuristic!="kPEX-Heur")
         EgoHeuris();
-        // return;
-    }
-
+    if(PARA.heuristic=="EGO-Heur")
+        return;
     StrongHeuris(); // generate n subgraphs and compute larger lb
 }
 

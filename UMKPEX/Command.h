@@ -49,12 +49,12 @@ public:
       bounding = "AltRB";
     }
 
-    vector<string> heuristics={"kPEX-Heur", "EGO-Heur"};
+    vector<string> heuristics={"kPEX-Heur", "EGO-Heur", "Both-Heur"};
     if(find(heuristics.begin(), heuristics.end(), heuristic)==heuristics.end()) {
-      cout<<"Not a valid selection for Heuristic, using 'kPEX-Heur'"<<endl;
+      cout<<"Not a valid selection for Heuristic, using 'Both-Heur'"<<endl;
       cout<<"Valid Heuristic methods: "; for(auto& b: heuristics) cout<<b<<" ";
       cout<<endl;
-      heuristic = "kPEX-Heur";
+      heuristic = "Both-Heur";
     }
 
     vector<string> ctcp_methods={"CTCP", "CF-CTCP"};

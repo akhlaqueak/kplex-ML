@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v0v4
+#SBATCH --job-name=v0v2v4
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -9,121 +9,19 @@
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
+
 module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
-alias python=python3
-######################################
-# USER INPUT
-######################################
-ALGO="kPEX"
-TASKFILE="tasks-$SLURM_JOB_NAME.txt"
-TASK_TIMEOUT="1800"
-TIMEOUT_GRACE="30"
-DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
-OUTFILE="output-$SLURM_JOB_NAME.txt"
-SECONDS=0
-HEUR="kPEX-Heur EGO-Heur"
-BR='S-Br R-Br Pivot-Br'
-CT="CTCP"
+
 
 mkdir -p logs
 cp -f ../UMKPEX .
-
-export TASK_TIMEOUT
-export TIMEOUT_GRACE
-export SKIP_TIMEOUT=false
-
-build_cmd() {
-    CMD=(
-        UMKPEX
-        "$DS_LOC/$ds.bin"
-        "$k"
-        -branching "$br"
-        -heuristic "$heur"
-        -algorithm "$ALGO"
-        -bounding AltRB
-        -ctcp "$ct"
-    )
-}
-
-get_outfile() {
-    eval "set -- $1"
-
-    local base
-    base=$(basename "$2")
-    base="${base%.*}"
-
-    local outfile="$1_$base"
-
-    shift 2
-    for arg in "$@"; do
-        [[ $arg != -* ]] && outfile+="_$arg"
-    done
-
-    printf "logs/%s.log\n" "${outfile// /_}"
-}
-export -f get_outfile
-
-create_tasks() {
-    rm -f "$TASKFILE"
-
-    while read -r ds k; do
-        for heur in $HEUR; do
-            for br in $BR; do
-                for ct in $CT; do
-                    build_cmd
-                    cmd=$(printf '%q ' "${CMD[@]}")
-                    echo "$cmd" >> "$TASKFILE"
-                done
-            done
-        done
-    done < ../ds.txt
-}
-
-create_tasks
-
-srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py "$TASKFILE"
+echo "Job started at $(date)"
+SECONDS=0
+# ---- LAUNCH ONLY ----
+srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py
 
 echo "Job finished at $(date)"
-
-get_results() {
-    rm -f "$OUTFILE"
-
-    while read -r ds k; do
-        for heur in $HEUR; do
-            for ct in $CT; do
-                for br in $BR; do
-                    build_cmd
-                    cmd=$(printf '%q ' "${CMD[@]}")
-                    fname=$(get_outfile "$cmd")
-
-                    if [[ -f "$fname" ]]; then
-                        matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
-                    else
-                        matched=""
-                    fi
-
-                    if [[ -n "$matched" ]]; then
-                        read -ra f <<< "$matched"
-                        values=""
-                        for ((i=1; i<${#f[@]}; i+=2)); do
-                            values+="${f[i]} "
-                        done
-                        values=${values% }
-                    else
-                        values="x x x x x x"
-                    fi
-
-                    printf "%s " "$values" >> "$OUTFILE"
-                done
-            done
-        done
-        echo >> "$OUTFILE"
-    done < ../ds.txt
-}
-
-get_results
-echo "Results computed at $(date)"
-echo "Total execution time: $SECONDS seconds"
+echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"
