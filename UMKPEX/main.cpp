@@ -201,7 +201,7 @@ void heuris()
     if(PARA.heuristic=="EGO-Heur")
     {
         EgoHeuris();
-        // return;
+        return;
     }
 
     StrongHeuris(); // generate n subgraphs and compute larger lb

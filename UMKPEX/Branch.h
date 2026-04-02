@@ -237,7 +237,7 @@ public:
                 subgraph_pruned_cnt++;
             }
             // cout << "========== Time Processing: " << u << "Time: " << get_system_time_microsecond() - start_induce << endl;
-            // cout << "========== DFS Count: " << dfs_cnt << endl;
+            cout << "========== DFS Count: " << dfs_cnt << endl;
             // dfs_cnt = 0;
             // cout << " AltRB hits: " << altrb_cnt << endl;
             // altrb_cnt = 0;
