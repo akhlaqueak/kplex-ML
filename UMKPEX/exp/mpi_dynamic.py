@@ -10,8 +10,8 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-HEUR = ["kPEX-Heur", "Both-Heur"]
-BR = ["S-Br", "R-Br", "Pivot-Br"]
+HEUR = ["EGO-Heur"]
+BR = ["S-Br"]
 CT = ["CTCP"]
 
 ALGO = "kPEX"
@@ -21,7 +21,7 @@ TASK_TIMEOUT = 1800
 TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
-LOG_DIR = Path("logs1")
+LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
@@ -118,6 +118,11 @@ def run_task(cmd: str):
     outfile = get_outfile(cmd)
 
     args = shlex.split(cmd)
+    if not args:
+        print(f"[rank {rank}] EMPTY TASK", flush=True)
+        return 0, outfile, "EMPTY"
+
+    print(f"[rank {rank}] START :: {cmd}", flush=True)
     exe = args[0]
 
     if not os.path.isabs(exe) and os.path.exists(exe):
@@ -132,6 +137,8 @@ def run_task(cmd: str):
         *args[1:],
     ]
 
+    print(f"[rank {rank}] EXEC: {run_cmd}", flush=True)
+
     try:
         with open(outfile, "w") as f:
             proc = subprocess.run(
@@ -145,14 +152,24 @@ def run_task(cmd: str):
         print(f"[rank {rank}] EXCEPTION: {e}", flush=True)
         return -1, outfile, "EXCEPTION"
 
-    if rc == 124:
+    if rc == 0:
+        print(f"[rank {rank}] SUCCESS :: {cmd}", flush=True)
+        return rc, outfile, "SUCCESS"
+    elif rc == 124:
         with open(outfile, "a") as f:
             f.write(f"\nTIMEOUT {cmd}\n")
-    elif rc != 0:
+        print(f"[rank {rank}] TIMEOUT :: {cmd}", flush=True)
+        return rc, outfile, "TIMEOUT"
+    elif rc == 137:
         with open(outfile, "a") as f:
-            f.write(f"\nERROR rc={rc}\n")
+            f.write(f"\nKILLED {cmd}\n")
+        print(f"[rank {rank}] KILLED :: {cmd}", flush=True)
+        return rc, outfile, "KILLED"
 
-    return rc, outfile, "DONE"
+    with open(outfile, "a") as f:
+        f.write(f"\nERROR rc={rc}\n")
+    print(f"[rank {rank}] FAILED :: {cmd} (rc={rc})", flush=True)
+    return rc, outfile, "FAILED"
 
 
 def master(comm, size):
@@ -172,15 +189,16 @@ def master(comm, size):
 
         if tag == TAG_READY:
             if next_idx < len(tasks):
-                comm.send(tasks[next_idx], dest=src, tag=TAG_TASK)
+                task = tasks[next_idx]
+                print(f"[MASTER] Assigning task {next_idx} to rank {src}", flush=True)
+                comm.send(task, dest=src, tag=TAG_TASK)
                 next_idx += 1
             else:
                 comm.send(None, dest=src, tag=TAG_STOP)
 
         elif tag == TAG_DONE:
             task, rc, outfile, state = msg
-            if rc != 0:
-                print(f"[MASTER] rank {src} finished with rc={rc}: {outfile}", flush=True)
+            print(f"[MASTER] [rank {src}] {state}: {task}", flush=True)
 
         elif tag == TAG_STOP:
             stopped += 1
@@ -197,9 +215,11 @@ def worker(comm, rank):
         tag = status.Get_tag()
 
         if tag == TAG_STOP or task is None:
+            print(f"[rank {rank}] STOP received", flush=True)
             comm.send(None, dest=0, tag=TAG_STOP)
             break
 
+        print(f"[rank {rank}] Received task: {task}", flush=True)
         rc, outfile, state = run_task(task)
         comm.send((task, rc, outfile, state), dest=0, tag=TAG_DONE)
 
