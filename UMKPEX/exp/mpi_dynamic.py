@@ -98,7 +98,7 @@ def extract_result_values(path: str):
 
     parts = result_line.split()
     values = []
-    idx = 1
+    idx = 0
 
     while idx < len(parts):
         token = parts[idx]
@@ -249,7 +249,7 @@ def collect_results():
                             if values:
                                 out.write(" ".join(values) + " ")
                             else:
-                                out.write("x ")
+                                out.write("x x x x x x")
 
                 out.write("\n")
 

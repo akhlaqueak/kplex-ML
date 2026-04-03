@@ -52,7 +52,7 @@ def get_outfile(cmd: str) -> str:
     os.makedirs("logs", exist_ok=True)
     return os.path.join("logs", filename + ".out")
 
-def last_line_starts_with_timeout(path: str) -> bool:
+def last_line_starts_with_failed(path: str) -> bool:
     if not os.path.isfile(path):
         return False
     try:
@@ -64,7 +64,7 @@ def last_line_starts_with_timeout(path: str) -> bool:
             block = min(4096, size)
             f.seek(-block, os.SEEK_END)
             data = f.read().decode("utf-8", errors="ignore").splitlines()
-            return bool(data) and data[-1].startswith("TIMEOUT")
+            return bool(data) and data[-1].startswith("FAILED")
     except OSError:
         return False
 
@@ -73,9 +73,9 @@ def run_task(cmd: str):
     rank = MPI.COMM_WORLD.Get_rank()
     outfile = get_outfile(cmd)
 
-    if SKIP_TIMEOUT and last_line_starts_with_timeout(outfile):
-        print(f"[rank {rank}] SKIP (already TIMEOUT) :: {cmd}", flush=True)
-        return 0, outfile, "SKIP"
+    if not last_line_starts_with_failed(outfile):
+        print(f"[rank {rank}] SKIP (last line is not FAILED) :: {cmd}", flush=True)
+        return 0, outfile, "SKIP_NOT_FAILED"
 
     print(f"[rank {rank}] START :: {cmd}", flush=True)
 
@@ -215,8 +215,6 @@ def main():
         master(comm, size, taskfile)
     else:
         worker(comm, rank)
-
-    comm.Barrier()
 
 
 if __name__ == "__main__":
