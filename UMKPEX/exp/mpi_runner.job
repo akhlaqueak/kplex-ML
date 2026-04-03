@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v0v4
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=48
+#SBATCH --job-name=test
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
-#SBATCH --time=48:00:00
+#SBATCH --time=4:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -15,16 +15,14 @@ module load mpi4py
 
 set -euo pipefail
 
-# Avoid the UCX/UCT BTL that crashed during MPI_Init, but keep the
-# cluster's default transport selection otherwise.
+
 SECONDS=0
 
-mkdir -p logs
 cp -f ../UMKPEX .
 echo "Job started at $(date)"
 
 # ---- LAUNCH ONLY ----
-srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py
+srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py "something"
 
 echo "Job finished at $(date)"
 echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"

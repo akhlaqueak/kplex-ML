@@ -21,7 +21,7 @@ TASK_TIMEOUT = 1800
 TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
-LOG_DIR = Path("logs")
+LOG_DIR = Path("logs1")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
