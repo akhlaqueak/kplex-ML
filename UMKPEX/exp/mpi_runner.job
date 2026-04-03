@@ -17,13 +17,12 @@ set -euo pipefail
 
 # Avoid the UCX/UCT BTL that crashed during MPI_Init, but keep the
 # cluster's default transport selection otherwise.
-export OMPI_MCA_btl="^uct"
 SECONDS=0
 
 mkdir -p logs
 cp -f ../UMKPEX .
 echo "Job started at $(date)"
-python3 -c "from mpi4py import MPI; print(MPI.Get_library_version().strip())" || true
+
 # ---- LAUNCH ONLY ----
 srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py
 
