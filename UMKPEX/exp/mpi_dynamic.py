@@ -22,7 +22,8 @@ TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
-DS_FILE = Path("../ds.txt")
+SCRIPT_DIR = Path(__file__).resolve().parent
+DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
 
 def ensure_log_dir() -> None:
@@ -76,6 +77,38 @@ def generate_tasks():
                         tasks.append(" ".join(shlex.quote(x) for x in cmd))
 
     return tasks
+
+
+def extract_result_values(path: str):
+    try:
+        with open(path) as fh:
+            lines = fh.readlines()
+    except Exception:
+        return None
+
+    result_line = ""
+    for line in reversed(lines):
+        stripped = line.strip()
+        if stripped.startswith(">>"):
+            result_line = stripped
+            break
+
+    if not result_line:
+        return None
+
+    parts = result_line.split()
+    values = []
+    idx = 1
+
+    while idx < len(parts):
+        token = parts[idx]
+        if token.endswith(":") and idx + 1 < len(parts):
+            values.append(parts[idx + 1])
+            idx += 2
+            continue
+        idx += 1
+
+    return values or None
 
 
 def run_task(cmd: str):
@@ -189,23 +222,14 @@ def collect_results():
                             fname = get_outfile(" ".join(shlex.quote(x) for x in cmd_str))
 
                             if os.path.isfile(fname):
-                                try:
-                                    with open(fname) as fh:
-                                        lines = fh.readlines()
-                                        last = lines[-1].strip() if lines else ""
-                                except Exception:
-                                    last = ""
+                                values = extract_result_values(fname)
                             else:
-                                last = ""
+                                values = None
 
-                            if last.startswith(">>"):
-                                parts = last.split()
-                                values = []
-                                for i in range(1, len(parts), 2):
-                                    values.append(parts[i])
+                            if values:
                                 out.write(" ".join(values) + " ")
                             else:
-                                out.write("x x x x x x ")
+                                out.write("x ")
 
                 out.write("\n")
 

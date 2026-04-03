@@ -15,11 +15,13 @@ module load mpi4py
 
 set -euo pipefail
 
+export OMPI_MCA_pml="ob1"
+export OMPI_MCA_btl="self,vader,tcp"
+SECONDS=0
 
 mkdir -p logs
 cp -f ../UMKPEX .
 echo "Job started at $(date)"
-SECONDS=0
 # ---- LAUNCH ONLY ----
 srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py
 
