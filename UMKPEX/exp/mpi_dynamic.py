@@ -10,12 +10,11 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-HEUR = ["EGO-Heur"]
-BR = ["S-Br"]
-CT = ["CTCP"]
-
-ALGO = "kPEX"
-BOUND = "AltRB"
+HEUR = os.environ.get("HEUR", "EGO-Heur").split()
+BR = os.environ.get("BR", "S-Br").split()
+CT = os.environ.get("CT", "CTCP").split()
+ALGO = os.environ.get("ALGO", "kPEX")
+BOUND = os.environ.get("BOUND", "AltRB")
 
 TASK_TIMEOUT = 1800
 TIMEOUT_GRACE = 30
