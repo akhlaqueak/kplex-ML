@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=kPEX
+#SBATCH --ntasks=216
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=48:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+
+set -euo pipefail
+
+
+######################################
+# USER INPUT (ONLY THIS)
+######################################
+# SLURM_JOB_NAME="kPEX"
+ALGO="$SLURM_JOB_NAME"
+TASKFILE="tasks-$ALGO-v4.txt"        # each line = full command to execute
+TASK_TIMEOUT="30m"           # timeout per task (e.g. 300s, 10m, 1h)
+TIMEOUT_GRACE="30s"         # grace period before SIGKILL
+DS_LOC="/home/akhlaque.ak@gmail.com/graphs/large-collection"
+OUTFILE="output-$ALGO-v4.txt"
+create_tasks(){
+    rm -f $TASKFILE
+    BR='S-Br R-Br Pivot-Br'
+    while read -r ds k; do 
+        # for heur in kPEX-Heur EGO-Heur; do
+        for heur in kPEX-Heur; do
+            for br in $BR; do 
+                # for ct in CTCP CF-CTCP; do
+                for ct in CTCP; do
+                #   for bound in AltRB None; do 
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct v4"
+                    echo "$cmd" >> "$TASKFILE"
+                #   done
+                done
+            done
+        done
+    done < ../ds.txt
+}
+create_tasks
+
+
+######################################
+# USER-MODIFIABLE FUNCTION
+######################################
+
+get_outfile() {
+    read -r -a args <<< "$1"
+
+    local base
+    base=$(basename "${args[1]}")
+    base="${base%.*}"
+
+    local outfile="${args[0]}_${base}"
+
+    for arg in "${args[@]:2}"; do
+        [[ $arg != -* ]] && outfile+="_$arg"
+    done
+
+    printf "logs/%s.log\n" "${outfile// /_}"
+}
+
+export -f get_outfile
+
+run_task() {
+    local cmd="$1"
+    local outfile
+    local rc
+
+    echo "START $(date) :: $cmd"
+
+    outfile=$(get_outfile "$cmd")
+
+    # Run ONLY if file exists AND last line starts with FAILED
+    # if [[ -f "$outfile" ]] && tail -n 1 "$outfile" | grep -q "^FAILED"; then
+        read -r -a args <<< "$cmd"
+
+        timeout --signal=TERM \
+                --kill-after="$TIMEOUT_GRACE" \
+                "$TASK_TIMEOUT" \
+                "./${args[@]}" > "$outfile" 2>&1
+
+        rc=$?
+
+        case $rc in
+            0)
+                echo "SUCCESS  $cmd"
+                ;;
+            124)
+                echo "TIMEOUT  $cmd" >> "$outfile"
+                echo "TIMEOUT  $cmd"
+                ;;
+            137)
+                echo "KILLED  $cmd" >> "$outfile"
+                echo "KILLED  $cmd"
+                ;;
+            *)
+                echo "FAILED  $cmd (exit=$rc)" >> "$outfile"
+                echo "FAILED  $cmd (exit=$rc)"
+                ;;
+        esac
+    # else
+    #     echo "SKIP (no FAILED at end): $outfile"
+    # fi
+
+    return 0
+}
+
+# 🔑 REQUIRED: export function and variables for worker shells
+export -f run_task
+export TASKFILE TASK_TIMEOUT TIMEOUT_GRACE
+
+######################################
+# Sanity checks
+######################################
+if [[ ! -s "$TASKFILE" ]]; then
+    echo "Task file '$TASKFILE' is missing or empty"
+    exit 1
+fi
+
+echo "Job started at $(date)"
+echo "Task file: $TASKFILE"
+echo "Timeout per task: $TASK_TIMEOUT"
+echo "SLURM job id: ${SLURM_JOB_ID:-local}"
+
+######################################
+# Parallel execution
+######################################
+srun --label bash -c '
+# IMPORTANT: do NOT use set -e here
+set -o pipefail
+
+cd "$SLURM_SUBMIT_DIR" || exit 1
+
+rank=${SLURM_PROCID:-0}
+nworkers=${SLURM_NTASKS:-1}
+
+# Distribute tasks by stride
+sed -n "$((rank+1))~$nworkers p" "$TASKFILE" |
+while IFS= read -r cmd || [[ -n "$cmd" ]]; do
+    # Skip empty lines and comments
+    [[ -z "${cmd//[[:space:]]/}" ]] && continue
+    [[ "${cmd## }" == \#* ]] && continue
+
+    echo "[Rank $rank] Running: $cmd"
+
+    run_task "$cmd"
+done
+'
+
+echo "Job finished at $(date)"
+
+get_results(){
+    rm -f $OUTFILE
+    BR='S-Br R-Br Pivot-Br'
+    while read -r ds k; do 
+        for heur in kPEX-Heur; do
+            for ct in CTCP; do
+                for br in $BR; do 
+                    cmd="UMKPEX $DS_LOC/$ds.bin $k -branching $br -heuristic $heur -algorithm $ALGO -bounding AltRB -ctcp $ct v4"
+                    fname=$(get_outfile "$cmd")
+                    values=""
+                    matched=$(tail -n 1 "$fname" | grep -m1 '^>>' || true)
+                    if [[ -n "$matched" ]]; then
+                        read -ra f <<< "$matched"
+
+                        values=""
+                        for ((i=1; i<${#f[@]}; i+=2)); do
+                            values+="${f[i]} "
+                        done
+                        values=${values% }
+                    else
+                        values="x x x x x x"
+                    fi
+                    printf "%s " "$values" >> "$OUTFILE"
+                done
+            done
+        done
+        echo >> "$OUTFILE"
+    done < ../ds.txt
+}
+get_results
+echo "Results computed at $(date)"
+
+
+# for v in v0 v1 v2 v3; do 
+#     for br in S R P; do 
+#         for t in heur-kp mkp heur ctcp bnb total; do
+#             echo -en "$v-$br-$t "
+#         done 
+#     done
+# done
