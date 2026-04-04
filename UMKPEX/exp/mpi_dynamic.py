@@ -260,12 +260,10 @@ def main():
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    if rank == 0:
-        master(comm, size)
-    else:
-        worker(comm, rank)
-
-    comm.Barrier()
+    # if rank == 0:
+    #     master(comm, size)
+    # else:
+    #     worker(comm, rank)
 
     if rank == 0:
         collect_results()
