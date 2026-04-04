@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v2
+#SBATCH --job-name=noAltRB
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
