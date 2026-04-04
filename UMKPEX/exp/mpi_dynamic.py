@@ -248,7 +248,7 @@ def collect_results():
                             if values:
                                 out.write(" ".join(values) + " ")
                             else:
-                                out.write("x x x x x x")
+                                out.write("x x x x x x ")
 
                 out.write("\n")
 
