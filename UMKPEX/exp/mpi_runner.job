@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=AltRB
+#SBATCH --job-name=kPEX-noAltRB
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -16,10 +16,10 @@ module load mpi4py
 set -euo pipefail
 
 export HEUR="Both-Heur"
-export BR="Binary-Br"
+export BR="S-Br R-Br Pivot-Br Binary-Br"
 export CT="CTCP"
 export ALGO="kPEX"
-export BOUND="AltRB"
+export BOUND="None"
 
 SECONDS=0
 
