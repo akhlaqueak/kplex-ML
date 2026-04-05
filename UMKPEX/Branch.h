@@ -86,13 +86,15 @@ public:
         // reducing methods from kPlexT
         if (paramK > 10)
             reduce_kPlexT(S, C);
-
-        // AltRB: bounding & stronger reduction (our novel method)
-        int ub = get_UB(S, C);
-        if (ub <= lb)
-        {
-            return;
+            
+        if(PARA.bounding=="AltRB"){
+            int ub = get_UB(S, C);
+            if (ub <= lb)
+            {
+                return;
+            }
         }
+        // AltRB: bounding & stronger reduction (our novel method)
 
         if (paramK > 15)
         {

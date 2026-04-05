@@ -13,7 +13,7 @@ public:
   {
     algorithm = GetOptionValue("-algorithm", "kPEX");
     branching = GetOptionValue("-branching", "None");
-    bounding = GetOptionValue("-bounding", "None");
+    bounding = GetOptionValue("-bounding", "AltRB");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
     ctcp = GetOptionValue("-ctcp", "CF-CTCP");
     heuristic = GetOptionValue("-heuristic", "kPEX-Heur");
