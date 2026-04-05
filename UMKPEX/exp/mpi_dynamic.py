@@ -15,6 +15,7 @@ BR = os.environ.get("BR", "S-Br").split()
 CT = os.environ.get("CT", "CTCP").split()
 ALGO = os.environ.get("ALGO", "kPEX")
 BOUND = os.environ.get("BOUND", "AltRB")
+RESULT_WIDTH = 6
 
 TASK_TIMEOUT = 1800
 TIMEOUT_GRACE = 30
@@ -239,16 +240,13 @@ def collect_results():
                         for ct in CT:
                             cmd_str = get_cmd(ds, k, br, heur, ALGO, BOUND, ct)
                             fname = get_outfile(" ".join(shlex.quote(x) for x in cmd_str))
-
+                            values=None
                             if os.path.isfile(fname):
                                 values = extract_result_values(fname)
-                            else:
-                                values = None
-
-                            if values:
-                                out.write(" ".join(values) + " ")
-                            else:
-                                out.write("x x x x x x ")
+                            if not values:
+                                values = ["x"] * RESULT_WIDTH
+                                
+                            out.write(" ".join(values) + " ")
 
                 out.write("\n")
 
@@ -260,10 +258,10 @@ def main():
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-    # if rank == 0:
-    #     master(comm, size)
-    # else:
-    #     worker(comm, rank)
+    if rank == 0:
+        master(comm, size)
+    else:
+        worker(comm, rank)
 
     if rank == 0:
         collect_results()
