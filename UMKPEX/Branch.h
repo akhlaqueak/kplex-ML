@@ -84,7 +84,7 @@ public:
         }
 
         // reducing methods from kPlexT
-        if (paramK > 10)
+        // if (paramK > 10)
             reduce_kPlexT(S, C);
             
         if(PARA.bounding=="AltRB"){

@@ -2683,6 +2683,8 @@ private:
 		if (ub <= lb)
 			return ub;
 
+		if(S.size()==S_end && C.size()==(R_end-S_end)) return ub;
+		
 		for (ui i = S_end; i < R_end;)
 		{
 			ui u = SR[i];
