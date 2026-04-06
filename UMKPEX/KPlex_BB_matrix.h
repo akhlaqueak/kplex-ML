@@ -61,7 +61,8 @@ private:
 	// AltRB Stuff
 	// info of the search tree
 	vector<int> loss_cnt; // loss_cnt[v] = |S| - |N(v) \cap S|, i.e., non-neighbors of v in S
-
+    vector<int> one_loss_non_neighbor_cnt;
+	Set one_loss_vertices_in_C;
 	Graph_adjacent *ptr_g;
 
 public:
@@ -190,6 +191,8 @@ public:
 		ids = g.vertex_id;
 		n = g.size();
 		loss_cnt.resize(n);
+        one_loss_non_neighbor_cnt.resize(n);
+        one_loss_vertices_in_C = Set(n);
 
 		if (((long long)n) * n > matrix_size)
 		{
@@ -646,6 +649,11 @@ private:
 					restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 					return;
 				}
+				// if (bound(S_end, R_end) >= R_end)
+				// {
+				// 	restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
+				// 	return;
+				// }
 			}
 		}
 
@@ -2650,12 +2658,15 @@ private:
 		}
 		S_is_plex = true;
 		update_lb(S);
+        one_loss_vertices_in_C.clear();
 		for (int u : C)
 		{
 			// loss_cnt[u] = non_A[u].intersect(S); // u∈C, delta[u] = the number of non-neighbors of u in S
 			loss_cnt[u] = non_neigh_count(u, S);
 			if (loss_cnt[u] >= paramK) // u has at least k non-neighbors in S, so u can be removed
 				C.reset(u);
+			else if (loss_cnt[u] == 1)
+			one_loss_vertices_in_C.set(u);
 		}
 	}
 
@@ -2680,6 +2691,9 @@ private:
 		}
 
 		int ub = bound_and_reduce(S, C); // AltRB
+		if (ub <= lb)
+			return ub;
+		ub = only_part_UB(S, C);
 		if (ub <= lb)
 			return ub;
 
@@ -2736,5 +2750,97 @@ private:
 
 		return ub;
 	}
+
+	    /**
+     * @brief partition ub without reduction rules
+     */
+    int only_part_UB(Set &S, Set &C, int u = -1)
+    {
+        Timer part_timer;
+        // auto &loss = deg;
+        auto &loss = neighbors;
+        for (int v : S)
+            // loss[v] = non_A[v].intersect(S);
+			loss[v]=non_neigh_count(v, S);
+
+        auto copy_S = S;
+        auto copy_C = C;
+        int S_sz = S.size();
+        int ub = S_sz;
+        // we will utilize Pi_u
+        if (u != -1)
+        {
+            // int sz = non_A[u].intersect(copy_C);
+			int sz=non_neigh_count(u, copy_C);
+            int cnt = paramK - loss[u];
+            copy_S.reset(u);
+            ub += cnt;
+            // copy_C &= A[u];
+			neigh_intersect(u, copy_C);
+        }
+        for (int v : copy_S)
+        {
+            // one_loss_non_neighbor_cnt[v] = non_A[v].intersect(one_loss_vertices_in_C);
+            one_loss_non_neighbor_cnt[v] = non_neigh_count(v, one_loss_vertices_in_C);
+        }
+        while (copy_S.size())
+        {
+            int sel = -1, size = 0, ub_cnt = 0;
+            for (int v : copy_S)
+            {
+                // int sz = non_A[v].intersect(copy_C);
+				int sz=non_neigh_count(u, copy_C);
+				int cnt = (paramK - loss[v]);
+                if (sz <= cnt) // Pi_i is useless
+                {
+                    copy_S.reset(v);
+                }
+                else
+                {
+                    // int one_loss_cnt = non_A[v].intersect(one_loss_vertices_in_C);
+                    int one_loss_cnt = one_loss_non_neighbor_cnt[v];
+                    if (one_loss_cnt >= cnt)
+                    {
+                        sel = v;
+                        ub_cnt = cnt;
+                        break;
+                    }
+                    if (sel == -1 || size * cnt < sz * ub_cnt) // (size/ub_cnt)<(sz/cnt)
+                    {
+                        sel = v;
+                        size = sz;
+                        ub_cnt = cnt;
+                        // break;
+                    }
+                }
+            }
+            if (sel == -1)
+                break;
+            copy_S.reset(sel);
+            ub += ub_cnt;
+            // copy_C &= A[sel]; // remove the non-neighbors of sel
+			neigh_intersect(sel, copy_C);
+        }
+        // now copy_C = Pi_0
+        auto &Pi_0 = copy_C;
+        int ret = ub + Pi_0.size();
+        if (u == -1 && ret == lb + 1 && Pi_0.size())
+        {
+            S |= Pi_0;
+            C ^= Pi_0;
+            Timer start_fast_reduce;
+            bool S_is_plex, g_is_plex;
+            fast_reduction(S, C, g_is_plex, S_is_plex);
+
+            if (!S_is_plex)
+                return lb;
+            if (g_is_plex)
+            {
+                update_lb(S, C);
+                return lb;
+            }
+        }
+        return ret;
+    }
 };
 #endif
