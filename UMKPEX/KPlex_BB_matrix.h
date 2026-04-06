@@ -2693,9 +2693,9 @@ private:
 		int ub = bound_and_reduce(S, C); // AltRB
 		if (ub <= lb)
 			return ub;
-		ub = only_part_UB(S, C);
-		if (ub <= lb)
-			return ub;
+		// ub = only_part_UB(S, C);
+		// if (ub <= lb)
+		// 	return ub;
 
 		if(S.size()==S_end && C.size()==(R_end-S_end)) return ub;
 		
