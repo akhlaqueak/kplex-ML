@@ -16,7 +16,8 @@ module load mpi4py
 set -euo pipefail
 
 export HEUR="Both-Heur"
-export BR="S-Br R-Br Pivot-Br Binary-Br"
+export BR="Pivot-Br"
+# export BR="S-Br R-Br Pivot-Br Binary-Br"
 export CT="CTCP"
 export ALGO="kPEX"
 export BOUND="None"
