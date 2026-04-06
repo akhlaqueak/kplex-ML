@@ -20,7 +20,7 @@ export HEUR="Both-Heur"
 export BR="S-Br R-Br"
 export CT="CTCP"
 export ALGO="UMKP+"
-export BOUND="AltRB"
+export BOUND="AltRB+Part"
 
 SECONDS=0
 
