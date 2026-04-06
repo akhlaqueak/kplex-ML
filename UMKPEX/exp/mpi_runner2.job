@@ -17,7 +17,7 @@ set -euo pipefail
 
 export HEUR="Both-Heur"
 # export BR="S-Br R-Br Pivot-Br"
-export BR="S-Br R-Br"
+export BR="Pivot-Br"
 export CT="CTCP"
 export ALGO="UMKP+"
 export BOUND="AltRB+Part"
