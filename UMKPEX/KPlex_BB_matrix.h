@@ -2789,7 +2789,7 @@ private:
             for (int v : copy_S)
             {
                 // int sz = non_A[v].intersect(copy_C);
-				int sz=non_neigh_count(u, copy_C);
+				int sz=non_neigh_count(v, copy_C);
 				int cnt = (paramK - loss[v]);
                 if (sz <= cnt) // Pi_i is useless
                 {
