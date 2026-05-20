@@ -1,0 +1,640 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{73}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{}, \showDOI{}, and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showDOI}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showDOI #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showDOI      \undefined \def \showDOI       #1{#1}\fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[\protect\citeauthoryear{??}{cuh}{[n.d.]}]%
+        {cuhk}
+ \bibinfo{year}{[n.d.]}\natexlab{}.
+\newblock \bibinfo{title}{{BigGraph@CUHK}}.
+\newblock \bibinfo{howpublished}{\url{http://www.cse.cuhk.edu.hk/systems/graph/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{??}{gnn}{[n.d.]}]%
+        {gnn_tutorial}
+ \bibinfo{year}{[n.d.]}\natexlab{}.
+\newblock \bibinfo{title}{{GNN Tutorials}}.
+\newblock \bibinfo{howpublished}{\url{https://graph-neural-networks.github.io/}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Abdelhamid, Abdelaziz, Kalnis, Khayyat, and Jamour}{Abdelhamid et~al\mbox{.}}{2016}]%
+        {scalemine}
+\bibfield{author}{\bibinfo{person}{Ehab Abdelhamid}, \bibinfo{person}{Ibrahim Abdelaziz}, \bibinfo{person}{Panos Kalnis}, \bibinfo{person}{Zuhair Khayyat}, {and} \bibinfo{person}{Fuad~T. Jamour}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Scalemine: scalable parallel frequent subgraph mining in a single large graph}. In \bibinfo{booktitle}{\emph{{SC}}}. \bibinfo{pages}{716--727}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Alibaba}{Alibaba}{2020}]%
+        {AlibabaEuler}
+\bibfield{author}{\bibinfo{person}{Alibaba}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \bibinfo{title}{Euler}.
+\newblock \bibinfo{howpublished}{\url{https://github.com/alibaba/euler}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Alsentzer, Finlayson, Li, and Zitnik}{Alsentzer et~al\mbox{.}}{2020}]%
+        {DBLP:conf/nips/AlsentzerFLZ20}
+\bibfield{author}{\bibinfo{person}{Emily Alsentzer}, \bibinfo{person}{Samuel~G. Finlayson}, \bibinfo{person}{Michelle~M. Li}, {and} \bibinfo{person}{Marinka Zitnik}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Subgraph Neural Networks}. In \bibinfo{booktitle}{\emph{{NeurIPS}}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Cai, Yan, Wu, Ma, Cheng, and Yu}{Cai et~al\mbox{.}}{2021}]%
+        {DBLP:conf/eurosys/Cai0WMCY21}
+\bibfield{author}{\bibinfo{person}{Zhenkun Cai}, \bibinfo{person}{Xiao Yan}, \bibinfo{person}{Yidi Wu}, \bibinfo{person}{Kaihao Ma}, \bibinfo{person}{James Cheng}, {and} \bibinfo{person}{Fan Yu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{DGCL:} an efficient communication library for distributed {GNN} training}. In \bibinfo{booktitle}{\emph{EuroSys '21: Sixteenth European Conference on Computer Systems, Online Event, United Kingdom, April 26-28, 2021}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{130--144}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3447786.3456233}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Chen, Liu, Zhao, Yan, Yan, and Cheng}{Chen et~al\mbox{.}}{2018}]%
+        {DBLP:conf/eurosys/ChenLZYYC18}
+\bibfield{author}{\bibinfo{person}{Hongzhi Chen}, \bibinfo{person}{Miao Liu}, \bibinfo{person}{Yunjian Zhao}, \bibinfo{person}{Xiao Yan}, \bibinfo{person}{Da Yan}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{G-Miner: an efficient task-oriented graph mining system}. In \bibinfo{booktitle}{\emph{EuroSys}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{32:1--32:12}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Chen, Dathathri, Gill, and Pingali}{Chen et~al\mbox{.}}{2020}]%
+        {pangolin}
+\bibfield{author}{\bibinfo{person}{Xuhao Chen}, \bibinfo{person}{Roshan Dathathri}, \bibinfo{person}{Gurbinder Gill}, {and} \bibinfo{person}{Keshav Pingali}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Pangolin: An Efficient and Flexible Graph Mining System on {CPU} and {GPU}}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{13}, \bibinfo{number}{8} (\bibinfo{year}{2020}), \bibinfo{pages}{1190--1205}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Chu and Cheng}{Chu and Cheng}{2012}]%
+        {DBLP:journals/tkdd/ChuC12}
+\bibfield{author}{\bibinfo{person}{Shumo Chu} {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Triangle listing in massive networks}.
+\newblock \bibinfo{journal}{\emph{{ACM} Trans. Knowl. Discov. Data}} \bibinfo{volume}{6}, \bibinfo{number}{4} (\bibinfo{year}{2012}), \bibinfo{pages}{17:1--17:32}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{dos Santos~Dias, Teixeira, Guedes, Jr., and Parthasarathy}{dos Santos~Dias et~al\mbox{.}}{2019}]%
+        {fractal}
+\bibfield{author}{\bibinfo{person}{Vin{\'{\i}}cius~Vitor dos Santos~Dias}, \bibinfo{person}{Carlos H.~C. Teixeira}, \bibinfo{person}{Dorgival~O. Guedes}, \bibinfo{person}{Wagner~Meira Jr.}, {and} \bibinfo{person}{Srinivasan Parthasarathy}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Fractal: {A} General-Purpose Graph Pattern Mining System}. In \bibinfo{booktitle}{\emph{{SIGMOD} Conference 2019}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{1357--1374}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Elseidy, Abdelhamid, Skiadopoulos, and Kalnis}{Elseidy et~al\mbox{.}}{2014}]%
+        {DBLP:journals/pvldb/ElseidyASK14}
+\bibfield{author}{\bibinfo{person}{Mohammed Elseidy}, \bibinfo{person}{Ehab Abdelhamid}, \bibinfo{person}{Spiros Skiadopoulos}, {and} \bibinfo{person}{Panos Kalnis}.} \bibinfo{year}{2014}\natexlab{}.
+\newblock \showarticletitle{{GRAMI:} Frequent Subgraph and Pattern Mining in a Single Large Graph}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{7}, \bibinfo{number}{7} (\bibinfo{year}{2014}), \bibinfo{pages}{517--528}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Frasca, Bevilacqua, Bronstein, and Maron}{Frasca et~al\mbox{.}}{2022}]%
+        {DBLP:conf/nips/FrascaBBM22}
+\bibfield{author}{\bibinfo{person}{Fabrizio Frasca}, \bibinfo{person}{Beatrice Bevilacqua}, \bibinfo{person}{Michael~M. Bronstein}, {and} \bibinfo{person}{Haggai Maron}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Understanding and Extending Subgraph GNNs by Rethinking Their Symmetries}. In \bibinfo{booktitle}{\emph{{NeurIPS}}}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Gandhi and Iyer}{Gandhi and Iyer}{2021}]%
+        {DBLP:conf/osdi/GandhiI21}
+\bibfield{author}{\bibinfo{person}{Swapnil Gandhi} {and} \bibinfo{person}{Anand~Padmanabha Iyer}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{P3:} Distributed Deep Graph Learning at Scale}. In \bibinfo{booktitle}{\emph{15th {USENIX} Symposium on Operating Systems Design and Implementation, {OSDI} 2021, July 14-16, 2021}}. \bibinfo{publisher}{{USENIX} Association}, \bibinfo{pages}{551--568}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/osdi21/presentation/gandhi}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Guo, Yan, {\"{O}}zsu, Jiang, and Khalil}{Guo et~al\mbox{.}}{2020b}]%
+        {quasiclique}
+\bibfield{author}{\bibinfo{person}{Guimu Guo}, \bibinfo{person}{Da Yan}, \bibinfo{person}{M.~Tamer {\"{O}}zsu}, \bibinfo{person}{Zhe Jiang}, {and} \bibinfo{person}{Jalal Khalil}.} \bibinfo{year}{2020}\natexlab{b}.
+\newblock \showarticletitle{Scalable Mining of Maximal Quasi-Cliques: An Algorithm-System Codesign Approach}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{14}, \bibinfo{number}{4} (\bibinfo{year}{2020}), \bibinfo{pages}{573--585}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Guo, Li, Sha, He, Xiao, and Tan}{Guo et~al\mbox{.}}{2020a}]%
+        {pbe}
+\bibfield{author}{\bibinfo{person}{Wentian Guo}, \bibinfo{person}{Yuchen Li}, \bibinfo{person}{Mo Sha}, \bibinfo{person}{Bingsheng He}, \bibinfo{person}{Xiaokui Xiao}, {and} \bibinfo{person}{Kian{-}Lee Tan}.} \bibinfo{year}{2020}\natexlab{a}.
+\newblock \showarticletitle{GPU-Accelerated Subgraph Enumeration on Partitioned Graphs}. In \bibinfo{booktitle}{\emph{{SIGMOD}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{1067--1082}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Hamilton, Ying, and Leskovec}{Hamilton et~al\mbox{.}}{2017}]%
+        {DBLP:conf/nips/HamiltonYL17}
+\bibfield{author}{\bibinfo{person}{William~L. Hamilton}, \bibinfo{person}{Zhitao Ying}, {and} \bibinfo{person}{Jure Leskovec}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{Inductive Representation Learning on Large Graphs}. In \bibinfo{booktitle}{\emph{Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, December 4-9, 2017, Long Beach, CA, {USA}}}. \bibinfo{pages}{1024--1034}.
+\newblock
+\urldef\tempurl%
+\url{https://proceedings.neurips.cc/paper/2017/hash/5dd9db5e033da9c6fb5ba83c7a7ebea9-Abstract.html}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Jenkins, Arkatkar, Owens, Choudhary, and Samatova}{Jenkins et~al\mbox{.}}{2011}]%
+        {DBLP:conf/europar/JenkinsAOCS11}
+\bibfield{author}{\bibinfo{person}{John Jenkins}, \bibinfo{person}{Isha Arkatkar}, \bibinfo{person}{John~D. Owens}, \bibinfo{person}{Alok~N. Choudhary}, {and} \bibinfo{person}{Nagiza~F. Samatova}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Lessons Learned from Exploring the Backtracking Paradigm on the {GPU}}. In \bibinfo{booktitle}{\emph{Euro-Par 2011 Parallel Processing - 17th International Conference, Euro-Par 2011, Bordeaux, France, August 29 - September 2, 2011, Proceedings, Part {II}}} \emph{(\bibinfo{series}{Lecture Notes in Computer Science})}, Vol.~\bibinfo{volume}{6853}. \bibinfo{publisher}{Springer}, \bibinfo{pages}{425--437}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Jiang, Zhou, Jin, Li, Zhao, Li, and Cheng}{Jiang et~al\mbox{.}}{2022}]%
+        {vsgm}
+\bibfield{author}{\bibinfo{person}{Guanxian Jiang}, \bibinfo{person}{China~Qihui Zhou}, \bibinfo{person}{Tatiana Jin}, \bibinfo{person}{Boyang Li}, \bibinfo{person}{Yunjian Zhao}, \bibinfo{person}{Yichao Li}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{VSGM: View-Based GPU-Accelerated Subgraph Matching on Large Graphs}. In \bibinfo{booktitle}{\emph{{SC}}}. \bibinfo{publisher}{IEEE Computer Society}, \bibinfo{pages}{739--753}.
+\newblock
+\showISSN{2167-4337}
+
+
+\bibitem[\protect\citeauthoryear{Karypis and Kumar}{Karypis and Kumar}{1998}]%
+        {DBLP:journals/siamsc/KarypisK98}
+\bibfield{author}{\bibinfo{person}{George Karypis} {and} \bibinfo{person}{Vipin Kumar}.} \bibinfo{year}{1998}\natexlab{}.
+\newblock \showarticletitle{A Fast and High Quality Multilevel Scheme for Partitioning Irregular Graphs}.
+\newblock \bibinfo{journal}{\emph{{SIAM} J. Sci. Comput.}} \bibinfo{volume}{20}, \bibinfo{number}{1} (\bibinfo{year}{1998}), \bibinfo{pages}{359--392}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1137/S1064827595287997}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Khalil, Yan, Guo, and Yuan}{Khalil et~al\mbox{.}}{2022}]%
+        {quasiclique_vldbj}
+\bibfield{author}{\bibinfo{person}{Jalal Khalil}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Guimu Guo}, {and} \bibinfo{person}{Lyuheng Yuan}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Parallel mining of large maximal quasi-cliques}.
+\newblock \bibinfo{journal}{\emph{{VLDB} J.}} \bibinfo{volume}{31}, \bibinfo{number}{4} (\bibinfo{year}{2022}), \bibinfo{pages}{649--674}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Khalil, Yan, Yuan, Han, Adhikari, Long, and Zhou}{Khalil et~al\mbox{.}}{2024}]%
+        {DBLP:conf/icde/Khalil0YHAL024}
+\bibfield{author}{\bibinfo{person}{Jalal Khalil}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Jiao Han}, \bibinfo{person}{Saugat Adhikari}, \bibinfo{person}{Cheng Long}, {and} \bibinfo{person}{Yang Zhou}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{FSM-Explorer: An Interactive Tool for Frequent Subgraph Pattern Mining From a Big Graph}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{5405--5408}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Liu, Chen, Li, Wu, Zhu, He, Peng, Chen, Chen, and Guo}{Liu et~al\mbox{.}}{2021}]%
+        {DBLP:journals/corr/abs-2112-08541}
+\bibfield{author}{\bibinfo{person}{Tianfeng Liu}, \bibinfo{person}{Yangrui Chen}, \bibinfo{person}{Dan Li}, \bibinfo{person}{Chuan Wu}, \bibinfo{person}{Yibo Zhu}, \bibinfo{person}{Jun He}, \bibinfo{person}{Yanghua Peng}, \bibinfo{person}{Hongzheng Chen}, \bibinfo{person}{Hongzhi Chen}, {and} \bibinfo{person}{Chuanxiong Guo}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{{BGL:} GPU-Efficient {GNN} Training by Optimizing Graph Data {I/O} and Preprocessing}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2112.08541} (\bibinfo{year}{2021}).
+\newblock
+\showeprint[arXiv]{2112.08541}
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2112.08541}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Liu, Zhou, Yang, Li, Chen, and Hu}{Liu et~al\mbox{.}}{2022}]%
+        {DBLP:conf/iclr/LiuZYLCH22}
+\bibfield{author}{\bibinfo{person}{Zirui Liu}, \bibinfo{person}{Kaixiong Zhou}, \bibinfo{person}{Fan Yang}, \bibinfo{person}{Li Li}, \bibinfo{person}{Rui Chen}, {and} \bibinfo{person}{Xia Hu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{EXACT:} Scalable Graph Neural Networks Training via Extreme Activation Compression}. In \bibinfo{booktitle}{\emph{{ICLR}}}. \bibinfo{publisher}{OpenReview.net}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Ma, Gong, Wu, Yi, Yang, Li, Peng, Xie, Bao, Liu, and Xu}{Ma et~al\mbox{.}}{2024}]%
+        {DBLP:journals/pvldb/MaGWYYLPXBLX24}
+\bibfield{author}{\bibinfo{person}{Yuxin Ma}, \bibinfo{person}{Ping Gong}, \bibinfo{person}{Tianming Wu}, \bibinfo{person}{Jiawei Yi}, \bibinfo{person}{Chengru Yang}, \bibinfo{person}{Cheng Li}, \bibinfo{person}{Qirong Peng}, \bibinfo{person}{Guiming Xie}, \bibinfo{person}{Yongcheng Bao}, \bibinfo{person}{Haifeng Liu}, {and} \bibinfo{person}{Yinlong Xu}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Eliminating Data Processing Bottlenecks in {GNN} Training over Large Graphs via Two-level Feature Compression}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{17}, \bibinfo{number}{11} (\bibinfo{year}{2024}), \bibinfo{pages}{2854--2866}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Mawhirter, Reinehr, Holmes, Liu, and Wu}{Mawhirter et~al\mbox{.}}{2021}]%
+        {graphzero}
+\bibfield{author}{\bibinfo{person}{Daniel Mawhirter}, \bibinfo{person}{Sam Reinehr}, \bibinfo{person}{Connor Holmes}, \bibinfo{person}{Tongping Liu}, {and} \bibinfo{person}{Bo Wu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{GraphZero: {A} High-Performance Subgraph Matching System}.
+\newblock \bibinfo{journal}{\emph{{ACM} {SIGOPS} Oper. Syst. Rev.}} \bibinfo{volume}{55}, \bibinfo{number}{1} (\bibinfo{year}{2021}), \bibinfo{pages}{21--37}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Mawhirter and Wu}{Mawhirter and Wu}{2019}]%
+        {DBLP:conf/sosp/Mawhirter019}
+\bibfield{author}{\bibinfo{person}{Daniel Mawhirter} {and} \bibinfo{person}{Bo Wu}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{AutoMine: harmonizing high-level abstraction and high performance for graph mining}. In \bibinfo{booktitle}{\emph{{SOSP}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{509--523}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Md, Misra, Ma, Mohanty, Georganas, Heinecke, Kalamkar, Ahmed, and Avancha}{Md et~al\mbox{.}}{2021}]%
+        {DistGNN}
+\bibfield{author}{\bibinfo{person}{Vasimuddin Md}, \bibinfo{person}{Sanchit Misra}, \bibinfo{person}{Guixiang Ma}, \bibinfo{person}{Ramanarayan Mohanty}, \bibinfo{person}{Evangelos Georganas}, \bibinfo{person}{Alexander Heinecke}, \bibinfo{person}{Dhiraj~D. Kalamkar}, \bibinfo{person}{Nesreen~K. Ahmed}, {and} \bibinfo{person}{Sasikanth Avancha}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{DistGNN: scalable distributed training for large-scale graph neural networks}. In \bibinfo{booktitle}{\emph{{SC}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{76}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Pan and Zhu}{Pan and Zhu}{2013}]%
+        {DBLP:conf/ijcai/PanZ13}
+\bibfield{author}{\bibinfo{person}{Shirui Pan} {and} \bibinfo{person}{Xingquan Zhu}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Graph Classification with Imbalanced Class Distributions and Noise}. In \bibinfo{booktitle}{\emph{{IJCAI}}}, \bibfield{editor}{\bibinfo{person}{Francesca Rossi}} (Ed.). \bibinfo{publisher}{{IJCAI/AAAI}}, \bibinfo{pages}{1586--1592}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Paradesi, Caragea, and Hsu}{Paradesi et~al\mbox{.}}{2007}]%
+        {DBLP:conf/bibe/ParadesiCH07}
+\bibfield{author}{\bibinfo{person}{Martin S.~R. Paradesi}, \bibinfo{person}{Doina Caragea}, {and} \bibinfo{person}{William~H. Hsu}.} \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Structural Prediction of Protein-Protein Interactions in Saccharomyces cerevisiae}. In \bibinfo{booktitle}{\emph{{IEEE BIBE}}}. \bibinfo{publisher}{{IEEE} Computer Society}, \bibinfo{pages}{1270--1274}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Peng, Chen, Shao, Shen, Chen, and Cao}{Peng et~al\mbox{.}}{2022}]%
+        {DBLP:journals/pvldb/PengCSSCC22}
+\bibfield{author}{\bibinfo{person}{Jingshu Peng}, \bibinfo{person}{Zhao Chen}, \bibinfo{person}{Yingxia Shao}, \bibinfo{person}{Yanyan Shen}, \bibinfo{person}{Lei Chen}, {and} \bibinfo{person}{Jiannong Cao}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{{SANCUS:} Staleness-Aware Communication-Avoiding Full-Graph Decentralized Training in Large-Scale Graph Neural Networks}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{15}, \bibinfo{number}{9} (\bibinfo{year}{2022}), \bibinfo{pages}{1937--1950}.
+\newblock
+\urldef\tempurl%
+\url{https://www.vldb.org/pvldb/vol15/p1937-peng.pdf}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Saigo, Nowozin, Kadowaki, Kudo, and Tsuda}{Saigo et~al\mbox{.}}{2009}]%
+        {DBLP:journals/ml/SaigoNKKT09}
+\bibfield{author}{\bibinfo{person}{Hiroto Saigo}, \bibinfo{person}{Sebastian Nowozin}, \bibinfo{person}{Tadashi Kadowaki}, \bibinfo{person}{Taku Kudo}, {and} \bibinfo{person}{Koji Tsuda}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{gBoost: a mathematical programming approach to graph classification and regression}.
+\newblock \bibinfo{journal}{\emph{Mach. Learn.}} \bibinfo{volume}{75}, \bibinfo{number}{1} (\bibinfo{year}{2009}), \bibinfo{pages}{69--89}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Shen, Chen, Fang, Zhang, Gao, and Yin}{Shen et~al\mbox{.}}{2024}]%
+        {DBLP:journals/pvldb/ShenCFZGY24}
+\bibfield{author}{\bibinfo{person}{Yanyan Shen}, \bibinfo{person}{Lei Chen}, \bibinfo{person}{Jingzhi Fang}, \bibinfo{person}{Xin Zhang}, \bibinfo{person}{Shihong Gao}, {and} \bibinfo{person}{Hongbo Yin}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Efficient Training of Graph Neural Networks on Large Graphs}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{17}, \bibinfo{number}{12} (\bibinfo{year}{2024}), \bibinfo{pages}{4237--4240}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Shi, Zhai, Xu, and Zhai}{Shi et~al\mbox{.}}{2020}]%
+        {graphpi}
+\bibfield{author}{\bibinfo{person}{Tianhui Shi}, \bibinfo{person}{Mingshu Zhai}, \bibinfo{person}{Yi Xu}, {and} \bibinfo{person}{Jidong Zhai}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{GraphPi: high performance graph pattern matching through effective redundancy elimination}. In \bibinfo{booktitle}{\emph{{SC}}}. \bibinfo{publisher}{{IEEE/ACM}}, \bibinfo{pages}{100}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Song, Gu, Qi, Wang, and Yu}{Song et~al\mbox{.}}{2022}]%
+        {DBLP:conf/icde/SongGQWY22}
+\bibfield{author}{\bibinfo{person}{Zhen Song}, \bibinfo{person}{Yu Gu}, \bibinfo{person}{Jianzhong Qi}, \bibinfo{person}{Zhigang Wang}, {and} \bibinfo{person}{Ge Yu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{EC-Graph: {A} Distributed Graph Neural Network System with Error-Compensated Compression}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{648--660}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Stolman, Levy, Seshadhri, and Sharma}{Stolman et~al\mbox{.}}{2022}]%
+        {DBLP:conf/sdm/StolmanL0S22}
+\bibfield{author}{\bibinfo{person}{Andrew Stolman}, \bibinfo{person}{Caleb Levy}, \bibinfo{person}{C. Seshadhri}, {and} \bibinfo{person}{Aneesh Sharma}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Classic Graph Structural Features Outperform Factorization-Based Graph Embedding Methods on Community Labeling}. In \bibinfo{booktitle}{\emph{{SDM}}}. \bibinfo{publisher}{{SIAM}}, \bibinfo{pages}{388--396}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Sun and Luo}{Sun and Luo}{2023}]%
+        {egsm}
+\bibfield{author}{\bibinfo{person}{Xibo Sun} {and} \bibinfo{person}{Qiong Luo}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Efficient GPU-Accelerated Subgraph Matching}.
+\newblock \bibinfo{journal}{\emph{Proc. {ACM} Manag. Data}} \bibinfo{volume}{1}, \bibinfo{number}{2} (\bibinfo{year}{2023}), \bibinfo{pages}{181:1--181:26}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Talukder and Zaki}{Talukder and Zaki}{2016}]%
+        {distgraph}
+\bibfield{author}{\bibinfo{person}{Nilothpal Talukder} {and} \bibinfo{person}{Mohammed~J. Zaki}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{A distributed approach for graph mining in massive networks}.
+\newblock \bibinfo{journal}{\emph{Data Min. Knowl. Discov.}} \bibinfo{volume}{30}, \bibinfo{number}{5} (\bibinfo{year}{2016}), \bibinfo{pages}{1024--1052}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Teixeira, Fonseca, Serafini, Siganos, Zaki, and Aboulnaga}{Teixeira et~al\mbox{.}}{2015}]%
+        {arab}
+\bibfield{author}{\bibinfo{person}{Carlos H.~C. Teixeira}, \bibinfo{person}{Alexandre~J. Fonseca}, \bibinfo{person}{Marco Serafini}, \bibinfo{person}{Georgos Siganos}, \bibinfo{person}{Mohammed~J. Zaki}, {and} \bibinfo{person}{Ashraf Aboulnaga}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Arabesque: a system for distributed graph mining}. In \bibinfo{booktitle}{\emph{{SOSP}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{425--440}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Thorpe, Qiao, Eyolfson, Teng, Hu, Jia, Wei, Vora, Netravali, Kim, and Xu}{Thorpe et~al\mbox{.}}{2021}]%
+        {DBLP:conf/osdi/ThorpeQETHJWVNK21}
+\bibfield{author}{\bibinfo{person}{John Thorpe}, \bibinfo{person}{Yifan Qiao}, \bibinfo{person}{Jonathan Eyolfson}, \bibinfo{person}{Shen Teng}, \bibinfo{person}{Guanzhou Hu}, \bibinfo{person}{Zhihao Jia}, \bibinfo{person}{Jinliang Wei}, \bibinfo{person}{Keval Vora}, \bibinfo{person}{Ravi Netravali}, \bibinfo{person}{Miryung Kim}, {and} \bibinfo{person}{Guoqing~Harry Xu}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Dorylus: Affordable, Scalable, and Accurate {GNN} Training with Distributed {CPU} Servers and Serverless Threads}. In \bibinfo{booktitle}{\emph{15th {USENIX} Symposium on Operating Systems Design and Implementation, {OSDI} 2021, July 14-16, 2021}}. \bibinfo{publisher}{{USENIX} Association}, \bibinfo{pages}{495--514}.
+\newblock
+\urldef\tempurl%
+\url{https://www.usenix.org/conference/osdi21/presentation/thorpe}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Wang, Hu, Zhang, Qin, Wang, and Zhang}{Wang et~al\mbox{.}}{2022a}]%
+        {DBLP:conf/sigmod/WangH000022}
+\bibfield{author}{\bibinfo{person}{Hanchen Wang}, \bibinfo{person}{Rong Hu}, \bibinfo{person}{Ying Zhang}, \bibinfo{person}{Lu Qin}, \bibinfo{person}{Wei Wang}, {and} \bibinfo{person}{Wenjie Zhang}.} \bibinfo{year}{2022}\natexlab{a}.
+\newblock \showarticletitle{Neural Subgraph Counting with Wasserstein Estimator}. In \bibinfo{booktitle}{\emph{{SIGMOD}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{160--175}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Wang, Zuo, Thorpe, Nguyen, and Xu}{Wang et~al\mbox{.}}{2018}]%
+        {rstream}
+\bibfield{author}{\bibinfo{person}{Kai Wang}, \bibinfo{person}{Zhiqiang Zuo}, \bibinfo{person}{John Thorpe}, \bibinfo{person}{Tien~Quang Nguyen}, {and} \bibinfo{person}{Guoqing~Harry Xu}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{RStream: Marrying Relational Algebra with Streaming for Efficient Graph Mining on a Single Machine}. In \bibinfo{booktitle}{\emph{{OSDI}}}. \bibinfo{publisher}{{USENIX} Association}, \bibinfo{pages}{763--782}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Wang, Chen, Wong, and He}{Wang et~al\mbox{.}}{2023}]%
+        {HongTu}
+\bibfield{author}{\bibinfo{person}{Qiange Wang}, \bibinfo{person}{Yao Chen}, \bibinfo{person}{Weng{-}Fai Wong}, {and} \bibinfo{person}{Bingsheng He}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{HongTu: Scalable Full-Graph {GNN} Training on Multiple GPUs}.
+\newblock \bibinfo{journal}{\emph{Proc. {ACM} Manag. Data}} \bibinfo{volume}{1}, \bibinfo{number}{4} (\bibinfo{year}{2023}), \bibinfo{pages}{246:1--246:27}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Wang, Zhang, Wang, Chen, Zhang, and Yu}{Wang et~al\mbox{.}}{2022b}]%
+        {DBLP:conf/sigmod/WangZWCZY22}
+\bibfield{author}{\bibinfo{person}{Qiange Wang}, \bibinfo{person}{Yanfeng Zhang}, \bibinfo{person}{Hao Wang}, \bibinfo{person}{Chaoyi Chen}, \bibinfo{person}{Xiaodong Zhang}, {and} \bibinfo{person}{Ge Yu}.} \bibinfo{year}{2022}\natexlab{b}.
+\newblock \showarticletitle{NeutronStar: Distributed {GNN} Training with Hybrid Dependency Management}. In \bibinfo{booktitle}{\emph{{SIGMOD} '22: International Conference on Management of Data, Philadelphia, PA, USA, June 12 - 17, 2022}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{1301--1315}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.1145/3514221.3526134}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Wei and Jiang}{Wei and Jiang}{2022}]%
+        {stmatch}
+\bibfield{author}{\bibinfo{person}{Yihua Wei} {and} \bibinfo{person}{Peng Jiang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{STMatch: Accelerating Graph Pattern Matching on {GPU} with Stack-Based Loop Optimizations}. In \bibinfo{booktitle}{\emph{{SC22:} International Conference for High Performance Computing, Networking, Storage and Analysis, Dallas, TX, USA, November 13-18, 2022}}, \bibfield{editor}{\bibinfo{person}{Felix Wolf}, \bibinfo{person}{Sameer Shende}, \bibinfo{person}{Candace Culhane}, \bibinfo{person}{Sadaf~R. Alam}, {and} \bibinfo{person}{Heike Jagode}} (Eds.). \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{53:1--53:13}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Xiang, Khan, Serra, Halappanavar, and Sukumaran{-}Rajam}{Xiang et~al\mbox{.}}{2021}]%
+        {cuts}
+\bibfield{author}{\bibinfo{person}{Lizhi Xiang}, \bibinfo{person}{Arif Khan}, \bibinfo{person}{Edoardo Serra}, \bibinfo{person}{Mahantesh Halappanavar}, {and} \bibinfo{person}{Aravind Sukumaran{-}Rajam}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{cuTS: scaling subgraph isomorphism on distributed multi-GPU systems using trie based data structure}. In \bibinfo{booktitle}{\emph{{SC}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{69}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Bu, Tian, and Deshpande}{Yan et~al\mbox{.}}{2017a}]%
+        {DBLP:journals/ftdb/YanBTD17}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Yingyi Bu}, \bibinfo{person}{Yuanyuan Tian}, {and} \bibinfo{person}{Amol Deshpande}.} \bibinfo{year}{2017}\natexlab{a}.
+\newblock \showarticletitle{Big Graph Analytics Platforms}.
+\newblock \bibinfo{journal}{\emph{Found. Trends Databases}} \bibinfo{volume}{7}, \bibinfo{number}{1-2} (\bibinfo{year}{2017}), \bibinfo{pages}{1--195}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Bu, Tian, Deshpande, and Cheng}{Yan et~al\mbox{.}}{2016a}]%
+        {DBLP:conf/sigmod/YanBTDC16}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Yingyi Bu}, \bibinfo{person}{Yuanyuan Tian}, \bibinfo{person}{Amol Deshpande}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2016}\natexlab{a}.
+\newblock \showarticletitle{Big Graph Analytics Systems}. In \bibinfo{booktitle}{\emph{{SIGMOD}}}, \bibfield{editor}{\bibinfo{person}{Fatma {\"{O}}zcan}, \bibinfo{person}{Georgia Koutrika}, {and} \bibinfo{person}{Sam Madden}} (Eds.). \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{2241--2243}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Cheng, Chen, Long, and Bangalore}{Yan et~al\mbox{.}}{2019}]%
+        {DBLP:conf/icpp/YanCCLB19}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Hongzhi Chen}, \bibinfo{person}{Cheng Long}, {and} \bibinfo{person}{Purushotham~V. Bangalore}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Lightweight Fault Tolerance in Pregel-Like Systems}. In \bibinfo{booktitle}{\emph{{ICPP}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{69:1--69:10}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Cheng, Lu, and Ng}{Yan et~al\mbox{.}}{2014a}]%
+        {DBLP:journals/pvldb/YanCLN14}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Yi Lu}, {and} \bibinfo{person}{Wilfred Ng}.} \bibinfo{year}{2014}\natexlab{a}.
+\newblock \showarticletitle{Blogel: {A} Block-Centric Framework for Distributed Computation on Real-World Graphs}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{7}, \bibinfo{number}{14} (\bibinfo{year}{2014}), \bibinfo{pages}{1981--1992}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Cheng, Lu, and Ng}{Yan et~al\mbox{.}}{2015}]%
+        {DBLP:conf/www/YanCLN15}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Yi Lu}, {and} \bibinfo{person}{Wilfred Ng}.} \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Effective Techniques for Message Reduction and Load Balancing in Distributed Graph Computation}. In \bibinfo{booktitle}{\emph{{WWW}}}, \bibfield{editor}{\bibinfo{person}{Aldo Gangemi}, \bibinfo{person}{Stefano Leonardi}, {and} \bibinfo{person}{Alessandro Panconesi}} (Eds.). \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{1307--1317}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Cheng, {\"{O}}zsu, Yang, Lu, Lui, Zhang, and Ng}{Yan et~al\mbox{.}}{2016b}]%
+        {DBLP:journals/pvldb/YanCOYLLZN16}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{James Cheng}, \bibinfo{person}{M.~Tamer {\"{O}}zsu}, \bibinfo{person}{Fan Yang}, \bibinfo{person}{Yi Lu}, \bibinfo{person}{John C.~S. Lui}, \bibinfo{person}{Qizhen Zhang}, {and} \bibinfo{person}{Wilfred Ng}.} \bibinfo{year}{2016}\natexlab{b}.
+\newblock \showarticletitle{A General-Purpose Query-Centric Framework for Querying Big Graphs}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{9}, \bibinfo{number}{7} (\bibinfo{year}{2016}), \bibinfo{pages}{564--575}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Cheng, Xing, Lu, Ng, and Bu}{Yan et~al\mbox{.}}{2014b}]%
+        {DBLP:journals/pvldb/YanCXLNB14}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Kai Xing}, \bibinfo{person}{Yi Lu}, \bibinfo{person}{Wilfred Ng}, {and} \bibinfo{person}{Yingyi Bu}.} \bibinfo{year}{2014}\natexlab{b}.
+\newblock \showarticletitle{Pregel Algorithms for Graph Connectivity Problems with Performance Guarantees}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{7}, \bibinfo{number}{14} (\bibinfo{year}{2014}), \bibinfo{pages}{1821--1832}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Guo, Chowdhury, {\"{O}}zsu, Ku, and Lui}{Yan et~al\mbox{.}}{2020a}]%
+        {g-thinker}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Guimu Guo}, \bibinfo{person}{Md~Mashiur~Rahman Chowdhury}, \bibinfo{person}{M.~Tamer {\"{O}}zsu}, \bibinfo{person}{Wei{-}Shinn Ku}, {and} \bibinfo{person}{John C.~S. Lui}.} \bibinfo{year}{2020}\natexlab{a}.
+\newblock \showarticletitle{G-thinker: {A} Distributed Framework for Mining Subgraphs in a Big Graph}. In \bibinfo{booktitle}{\emph{{ICDE} 2020}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{1369--1380}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Guo, Khalil, {\"{O}}zsu, Ku, and Lui}{Yan et~al\mbox{.}}{2022a}]%
+        {g-thinker_vldbj}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Guimu Guo}, \bibinfo{person}{Jalal Khalil}, \bibinfo{person}{M.~Tamer {\"{O}}zsu}, \bibinfo{person}{Wei{-}Shinn Ku}, {and} \bibinfo{person}{John C.~S. Lui}.} \bibinfo{year}{2022}\natexlab{a}.
+\newblock \showarticletitle{G-thinker: a general distributed framework for finding qualified subgraphs in a big graph with load balancing}.
+\newblock \bibinfo{journal}{\emph{{VLDB} J.}} \bibinfo{volume}{31}, \bibinfo{number}{2} (\bibinfo{year}{2022}), \bibinfo{pages}{287--320}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Huang, Liu, Chen, Cheng, Wu, and Zhang}{Yan et~al\mbox{.}}{2018}]%
+        {DBLP:journals/tpds/YanHLCCWZ18}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Yuzhen Huang}, \bibinfo{person}{Miao Liu}, \bibinfo{person}{Hongzhi Chen}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Huanhuan Wu}, {and} \bibinfo{person}{Chengcui Zhang}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{GraphD: Distributed Vertex-Centric Graph Processing Beyond the Memory Limit}.
+\newblock \bibinfo{journal}{\emph{{IEEE} Trans. Parallel Distributed Syst.}} \bibinfo{volume}{29}, \bibinfo{number}{1} (\bibinfo{year}{2018}), \bibinfo{pages}{99--114}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Qu, Guo, and Wang}{Yan et~al\mbox{.}}{2020b}]%
+        {prefixfpm}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Wenwen Qu}, \bibinfo{person}{Guimu Guo}, {and} \bibinfo{person}{Xiaoling Wang}.} \bibinfo{year}{2020}\natexlab{b}.
+\newblock \showarticletitle{PrefixFPM: {A} Parallel Framework for General-Purpose Frequent Pattern Mining}. In \bibinfo{booktitle}{\emph{{ICDE} 2020}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{1938--1941}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Qu, Guo, Wang, and Zhou}{Yan et~al\mbox{.}}{2022b}]%
+        {prefixfpm_vldbj}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Wenwen Qu}, \bibinfo{person}{Guimu Guo}, \bibinfo{person}{Xiaoling Wang}, {and} \bibinfo{person}{Yang Zhou}.} \bibinfo{year}{2022}\natexlab{b}.
+\newblock \showarticletitle{PrefixFPM: a parallel framework for general-purpose mining of frequent and closed patterns}.
+\newblock \bibinfo{journal}{\emph{{VLDB} J.}} \bibinfo{volume}{31}, \bibinfo{number}{2} (\bibinfo{year}{2022}), \bibinfo{pages}{253--286}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Tian, and Cheng}{Yan et~al\mbox{.}}{2017b}]%
+        {DBLP:series/sbcs/YanTC17}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Yuanyuan Tian}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2017}\natexlab{b}.
+\newblock \bibinfo{booktitle}{\emph{Systems for Big Graph Analytics}}.
+\newblock \bibinfo{publisher}{Springer}.
+\newblock
+\showISBNx{978-3-319-58216-0}
+\urldef\tempurl%
+\url{https://doi.org/10.1007/978-3-319-58217-7}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Yan, Yuan, Ahmad, and Adhikari}{Yan et~al\mbox{.}}{2024a}]%
+        {DBLP:conf/cikm/0001YAA24}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Akhlaque Ahmad}, {and} \bibinfo{person}{Saugat Adhikari}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{Systems for Scalable Graph Analytics and Machine Learning: Trends and Methods}. In \bibinfo{booktitle}{\emph{{CIKM}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{5547--5550}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yan, Yuan, Ahmad, Zheng, Chen, and Cheng}{Yan et~al\mbox{.}}{2024b}]%
+        {DBLP:conf/kdd/0001YAZCC24}
+\bibfield{author}{\bibinfo{person}{Da Yan}, \bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Akhlaque Ahmad}, \bibinfo{person}{Chenguang Zheng}, \bibinfo{person}{Hongzhi Chen}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{Systems for Scalable Graph Analytics and Machine Learning: Trends and Methods}. In \bibinfo{booktitle}{\emph{{KDD}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{6627--6632}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Ying, Lou, You, Wen, Canedo, and Leskovec}{Ying et~al\mbox{.}}{2020}]%
+        {DBLP:journals/corr/abs-2007-03092}
+\bibfield{author}{\bibinfo{person}{Rex Ying}, \bibinfo{person}{Zhaoyu Lou}, \bibinfo{person}{Jiaxuan You}, \bibinfo{person}{Chengtao Wen}, \bibinfo{person}{Arquimedes Canedo}, {and} \bibinfo{person}{Jure Leskovec}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Neural Subgraph Matching}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2007.03092} (\bibinfo{year}{2020}).
+\newblock
+\showeprint[arXiv]{2007.03092}
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2007.03092}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Yuan, Ahmad, Yan, Han, Adhikari, Yu, and Zhou}{Yuan et~al\mbox{.}}{2024a}]%
+        {aimd}
+\bibfield{author}{\bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Akhlaque Ahmad}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Jiao Han}, \bibinfo{person}{Saugat Adhikari}, \bibinfo{person}{Xiaodong Yu}, {and} \bibinfo{person}{Yang Zhou}.} \bibinfo{year}{2024}\natexlab{a}.
+\newblock \showarticletitle{G\({}^{\mbox{2}}\)-AIMD: {A} Memory-Efficient Subgraph-Centric Framework for Efficient Subgraph Finding on GPUs}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{3164--3177}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yuan, Guo, Yan, Adhikari, Khalil, Long, and Zou}{Yuan et~al\mbox{.}}{2025}]%
+        {gthinkerq}
+\bibfield{author}{\bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Guimu Guo}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Saugat Adhikari}, \bibinfo{person}{Jalal Khalil}, \bibinfo{person}{Cheng Long}, {and} \bibinfo{person}{Lei Zou}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{G-thinkerQ: A General Subgraph Querying System with a Unified Task-Based Programming Model}.
+\newblock \bibinfo{journal}{\emph{{IEEE} Trans. Knowl. Data Eng., accepted and to appear}} (\bibinfo{year}{2025}).
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yuan, Yan, Han, Ahmad, Zhou, and Jiang}{Yuan et~al\mbox{.}}{2024b}]%
+        {tdfs}
+\bibfield{author}{\bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Jiao Han}, \bibinfo{person}{Akhlaque Ahmad}, \bibinfo{person}{Yang Zhou}, {and} \bibinfo{person}{Zhe Jiang}.} \bibinfo{year}{2024}\natexlab{b}.
+\newblock \showarticletitle{Faster Depth-First Subgraph Matching on GPUs}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{3151--3163}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Yuan, Yan, Qu, Adhikari, Khalil, Long, and Wang}{Yuan et~al\mbox{.}}{2023}]%
+        {tfsm}
+\bibfield{author}{\bibinfo{person}{Lyuheng Yuan}, \bibinfo{person}{Da Yan}, \bibinfo{person}{Wenwen Qu}, \bibinfo{person}{Saugat Adhikari}, \bibinfo{person}{Jalal Khalil}, \bibinfo{person}{Cheng Long}, {and} \bibinfo{person}{Xiaoling Wang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{{T-FSM:} {A} Task-Based System for Massively Parallel Frequent Subgraph Pattern Mining from a Big Graph}.
+\newblock \bibinfo{journal}{\emph{Proc. {ACM} Manag. Data}} \bibinfo{volume}{1}, \bibinfo{number}{1}, \bibinfo{pages}{74:1--74:26}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Zeng, Zou, and {\"O}zsu}{Zeng et~al\mbox{.}}{2022}]%
+        {zeng2022sgsi}
+\bibfield{author}{\bibinfo{person}{Li Zeng}, \bibinfo{person}{Lei Zou}, {and} \bibinfo{person}{M~Tamer {\"O}zsu}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{SGSI--A Scalable GPU-friendly Subgraph Isomorphism Algorithm}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Knowledge and Data Engineering}} (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Zeng, Zou, {\"{O}}zsu, Hu, and Zhang}{Zeng et~al\mbox{.}}{2020}]%
+        {gsi}
+\bibfield{author}{\bibinfo{person}{Li Zeng}, \bibinfo{person}{Lei Zou}, \bibinfo{person}{M.~Tamer {\"{O}}zsu}, \bibinfo{person}{Lin Hu}, {and} \bibinfo{person}{Fan Zhang}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{GSI:} GPU-friendly Subgraph Isomorphism}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{1249--1260}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Zhang, Huang, Liu, Zhou, Hu, Song, Ge, Wang, Zhang, and Qi}{Zhang et~al\mbox{.}}{2020}]%
+        {DBLP:journals/pvldb/ZhangHL0HSGWZ020}
+\bibfield{author}{\bibinfo{person}{Dalong Zhang}, \bibinfo{person}{Xin Huang}, \bibinfo{person}{Ziqi Liu}, \bibinfo{person}{Jun Zhou}, \bibinfo{person}{Zhiyang Hu}, \bibinfo{person}{Xianzheng Song}, \bibinfo{person}{Zhibang Ge}, \bibinfo{person}{Lin Wang}, \bibinfo{person}{Zhiqiang Zhang}, {and} \bibinfo{person}{Yuan Qi}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{{AGL:} {A} Scalable System for Industrial-purpose Graph Machine Learning}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{13}, \bibinfo{number}{12} (\bibinfo{year}{2020}), \bibinfo{pages}{3125--3137}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.14778/3415478.3415539}
+\showDOI{\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Zhang, Hu, Wan, Wang, Sun, Wen, and Zhang}{Zhang et~al\mbox{.}}{2024}]%
+        {DBLP:conf/icde/ZhangHWW00024}
+\bibfield{author}{\bibinfo{person}{Meng Zhang}, \bibinfo{person}{Qinghao Hu}, \bibinfo{person}{Cheng Wan}, \bibinfo{person}{Haozhao Wang}, \bibinfo{person}{Peng Sun}, \bibinfo{person}{Yonggang Wen}, {and} \bibinfo{person}{Tianwei Zhang}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Sylvie: 3D-Adaptive and Universal System for Large-Scale Graph Neural Network Training}. In \bibinfo{booktitle}{\emph{{ICDE}}}. \bibinfo{publisher}{{IEEE}}, \bibinfo{pages}{3823--3836}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Zhang, Yan, and Cheng}{Zhang et~al\mbox{.}}{2016}]%
+        {DBLP:conf/sigmod/ZhangYC16}
+\bibfield{author}{\bibinfo{person}{Qizhen Zhang}, \bibinfo{person}{Da Yan}, {and} \bibinfo{person}{James Cheng}.} \bibinfo{year}{2016}\natexlab{}.
+\newblock \showarticletitle{Quegel: {A} General-Purpose System for Querying Big Graphs}. In \bibinfo{booktitle}{\emph{{SIGMOD}}}. \bibinfo{publisher}{{ACM}}, \bibinfo{pages}{2189--2192}.
+\newblock
+
+
+\bibitem[\protect\citeauthoryear{Zheng, Chen, Cheng, Song, Wu, Li, Cheng, Yang, and Zhang}{Zheng et~al\mbox{.}}{2022}]%
+        {DBLP:journals/pvldb/ZhengCCSWLCYZ22}
+\bibfield{author}{\bibinfo{person}{Chenguang Zheng}, \bibinfo{person}{Hongzhi Chen}, \bibinfo{person}{Yuxuan Cheng}, \bibinfo{person}{Zhezheng Song}, \bibinfo{person}{Yifan Wu}, \bibinfo{person}{Changji Li}, \bibinfo{person}{James Cheng}, \bibinfo{person}{Hao Yang}, {and} \bibinfo{person}{Shuai Zhang}.} \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{ByteGNN: Efficient Graph Neural Network Training at Large Scale}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{15}, \bibinfo{number}{6} (\bibinfo{year}{2022}), \bibinfo{pages}{1228--1242}.
+\newblock
+\urldef\tempurl%
+\url{https://www.vldb.org/pvldb/vol15/p1228-zheng.pdf}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Zheng, Ma, Wang, Zhou, Su, Song, Gan, Zhang, and Karypis}{Zheng et~al\mbox{.}}{2020}]%
+        {DBLP:journals/corr/abs-2010-05337}
+\bibfield{author}{\bibinfo{person}{Da Zheng}, \bibinfo{person}{Chao Ma}, \bibinfo{person}{Minjie Wang}, \bibinfo{person}{Jinjing Zhou}, \bibinfo{person}{Qidong Su}, \bibinfo{person}{Xiang Song}, \bibinfo{person}{Quan Gan}, \bibinfo{person}{Zheng Zhang}, {and} \bibinfo{person}{George Karypis}.} \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{DistDGL: Distributed Graph Neural Network Training for Billion-Scale Graphs}.
+\newblock \bibinfo{journal}{\emph{CoRR}}  \bibinfo{volume}{abs/2010.05337} (\bibinfo{year}{2020}).
+\newblock
+\showeprint[arXiv]{2010.05337}
+\urldef\tempurl%
+\url{https://arxiv.org/abs/2010.05337}
+\showURL{%
+\tempurl}
+
+
+\bibitem[\protect\citeauthoryear{Zhu, Zhao, Yang, Lin, Zhou, Ai, Li, and Zhou}{Zhu et~al\mbox{.}}{2019}]%
+        {DBLP:journals/pvldb/ZhuZYLZALZ19}
+\bibfield{author}{\bibinfo{person}{Rong Zhu}, \bibinfo{person}{Kun Zhao}, \bibinfo{person}{Hongxia Yang}, \bibinfo{person}{Wei Lin}, \bibinfo{person}{Chang Zhou}, \bibinfo{person}{Baole Ai}, \bibinfo{person}{Yong Li}, {and} \bibinfo{person}{Jingren Zhou}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{AliGraph: {A} Comprehensive Graph Neural Network Platform}.
+\newblock \bibinfo{journal}{\emph{Proc. {VLDB} Endow.}} \bibinfo{volume}{12}, \bibinfo{number}{12} (\bibinfo{year}{2019}), \bibinfo{pages}{2094--2105}.
+\newblock
+\urldef\tempurl%
+\url{https://doi.org/10.14778/3352063.3352127}
+\showDOI{\tempurl}
+
+
+\end{thebibliography}

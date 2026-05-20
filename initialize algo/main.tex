@@ -1,0 +1,76 @@
+% VLDB template version of 2020-08-03 enhances the ACM template, version 1.7.0:
+% https://www.acm.org/publications/proceedings-template
+% The ACM Latex guide provides further information about the ACM template
+
+\documentclass[sigconf, nonacm]{acmart}
+\usepackage{balance}
+\usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\algtext*{EndIf}
+\algtext*{EndFor}
+\algtext*{EndWhile}
+
+\begin{document}
+\title{Initialize Algorithm}
+\maketitle
+
+\begin{algorithm}[t]
+\caption{\textsc{Initialize}$(G,k)$}
+
+\begin{flushleft}
+\textbf{Input:} A graph $G=(V,E)$ and an integer $k>1$\\
+\textbf{Output:} The vertex set $S$ of a heuristic initial $k$-plex $G[S]$
+\end{flushleft}
+
+\begin{algorithmic}[1]
+\State $S, ub \gets \textsc{KPlex-Degen}(G,\emptyset)$, $lb \gets |S|$
+\State Apply CTCP for refining $G$ based on $lb$
+\State $S' \gets \textsc{EGo-Heuris}(G,S)$
+\If{$|S'| > |S|$}
+    \State $S \gets S'$, $lb \gets |S|$
+    \State \textbf{if} $|S|=ub$ \textbf{then return} $S$
+    \State Apply CTCP for refining $G$ based on $lb$
+\EndIf
+\State $S \gets \textsc{KPHeuris}(G,P)$
+\State \Return $S$
+
+\Statex
+\Statex \textbf{Procedure:} \textsc{KPHeuris}$(G,P)$
+
+\ForAll{$v_i \in V(G)$}
+    \State $g_v \gets G[\{v_i,v_{i+1},\ldots,v_n\}\cap N^{\leq 2}(v_i)]$
+    \State Apply CTCP for refining $g_v$ based on $lb$
+    \State $u_1,u_2,\ldots,u_n \gets$ the degeneracy order of vertices in $V(g_v)$
+    \State $P' \gets \emptyset$
+    \For{$i=n$ to $1$}
+        \If{$G[P'\cup\{u_i\}]$ is a $k$-plex}
+            \State $P' \gets P' \cup \{u_i\}$
+            \State \textbf{if} $|P'|=ub$ \textbf{then return} $P'$
+        \EndIf
+    \EndFor
+    \If{$|P'| > |P|$}
+        \State $P \gets P'$, $lb \gets |P|$
+        \State Apply CTCP for refining $G$ based on $lb$
+    \EndIf
+\EndFor
+\State \Return $P$
+
+\Statex
+\Statex \textbf{Procedure:} \textsc{EGo-Heuris}$(G,P)$
+
+\ForAll{$v_i \in V(G)$}
+    \State $g_v \gets G[\{v_i, v_{i+1}, \ldots, v_n\} \cap N_G(v_i)]$
+    \State Apply CTCP for refining $g_v$ based on $lb$
+    \State $P' \gets \textsc{KPlex-Degen}(g_v, P)$ \hfill \# \textit{Not computing $ub$ here}
+    \State \textbf{if} $|P'|=ub$ \textbf{then return} $P'$
+    \State \textbf{if} $|P'| > |P|$ \textbf{then} $P \gets P'$
+\EndFor
+\State \Return $P$
+\end{algorithmic}
+
+\end{algorithm}
+
+\end{document}
+\endinput

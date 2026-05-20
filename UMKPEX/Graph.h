@@ -244,7 +244,7 @@ public:
         return solution->size();
     }
     
-    int ego_degen_(set<ui> *solution = nullptr)
+    int ego_degen_bad(set<ui> *solution = nullptr)
     {
         // lb = max(degeneracy_and_reduce(2 * paramK - 2, solution), lb);
 
