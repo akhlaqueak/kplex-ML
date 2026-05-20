@@ -63,7 +63,7 @@ def generate_tasks():
 
             for alg in ALGOS:
                 if alg == "kPlexT":
-                    task = f"./{alg} -g {ds} -k {k} -b"
+                    task = f"./{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
                 else:
                     task = f"./{alg} {ds} {k}"
                 tasks.append(task)
