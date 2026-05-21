@@ -4,6 +4,7 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from mpi4py import MPI
 
 TAG_READY = 1
 TAG_TASK = 2
@@ -234,8 +235,6 @@ def main():
     if collect_only:
         collect_results()
         return
-
-    from mpi4py import MPI
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
