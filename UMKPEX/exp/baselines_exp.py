@@ -17,8 +17,8 @@ OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
-ALGOS="UMKPEX".split()
-# ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
+# ALGOS="UMKPEX".split()
+ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -245,7 +245,6 @@ def main():
         master(comm, size)
     else:
         worker(comm, rank)
-    ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
     if rank == 0:
         collect_results()
 
