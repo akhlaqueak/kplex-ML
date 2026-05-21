@@ -55,9 +55,9 @@ def get_t_total(filepath):
     try:
         with open(filepath, "r") as f:
             for line in f:
-                if not line.startswith(">>") or "t_Total:" not in line:
+                if not line.startswith(">>"):
                     continue
-                return float(line.split()[-1].strip().split()[0])
+                return float(line.split()[-1])
     except (OSError, ValueError, IndexError):
         return None
 
