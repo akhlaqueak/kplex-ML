@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-from mpi4py import MPI
 import os
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 TAG_READY = 1
@@ -57,7 +57,7 @@ def get_t_total(filepath):
             for line in f:
                 if not line.startswith(">>") or "t_Total:" not in line:
                     continue
-                return float(line.split("t_Total:", 1)[1].strip().split()[0])
+                return float(line.split()[-1].strip().split()[0])
     except (OSError, ValueError, IndexError):
         return None
 
@@ -83,8 +83,7 @@ def generate_tasks():
 
 
 
-def run_task(cmd: str):
-    rank = MPI.COMM_WORLD.Get_rank()
+def run_task(cmd: str, rank: int):
     ensure_log_dir()
 
     outfile = get_outfile(cmd)
@@ -192,7 +191,7 @@ def worker(comm, rank):
             break
 
         print(f"[rank {rank}] Received task: {task}", flush=True)
-        rc, outfile, state = run_task(task)
+        rc, outfile, state = run_task(task, rank)
         comm.send((task, rc, outfile, state), dest=0, tag=TAG_DONE)
 
 
@@ -219,7 +218,20 @@ def collect_results():
     print(f"[POST] Wrote {OUTFILE}", flush=True)
 
 
+def parse_args(argv):
+    collect_only = any(arg in {"--collect-only", "--postprocess-only"} for arg in argv[1:])
+    return collect_only
+
+
 def main():
+    collect_only = parse_args(sys.argv)
+
+    if collect_only:
+        collect_results()
+        return
+
+    from mpi4py import MPI
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
