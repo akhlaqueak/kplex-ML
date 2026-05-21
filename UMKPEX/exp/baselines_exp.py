@@ -63,9 +63,9 @@ def generate_tasks():
 
             for alg in ALGOS:
                 if alg == "kPlexT":
-                    task = f"./{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+                    task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
                 else:
-                    task = f"./{alg} {ds} {k}"
+                    task = f"{alg} {DS_LOC}/{ds}.bin {k}"
                 tasks.append(task)
     return tasks
 
@@ -196,9 +196,9 @@ def collect_results():
                 ds, k = line.strip().split()
                 for alg in ALGOS:
                     if alg == "kPlexT":
-                        task = f"./{alg} -g {ds} -k {k} -b"
+                        task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
                     else:
-                        task = f"./{alg} {ds} {k}"
+                        task = f"{alg} {DS_LOC}/{ds}.bin {k}"
                     fname = get_outfile(task)
                     total_t = get_t_total(fname)
                     out.write((str(total_t) if total_t is not None else "x") + " ")
