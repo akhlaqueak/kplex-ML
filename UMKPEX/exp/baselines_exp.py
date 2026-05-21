@@ -17,7 +17,8 @@ OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
-ALGOS="kPEX UMKP Maple DiseMKP kPlexT".split()
+ALGOS="UMKPEX".split()
+# ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,6 +77,8 @@ def generate_tasks():
             for alg in ALGOS:
                 if alg == "kPlexT":
                     task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+                elif alg=="UMKPEX":
+                    task = f"{alg} {DS_LOC}/{ds}.bin {k} -branching Adaptive-Br"
                 else:
                     task = f"{alg} {DS_LOC}/{ds}.bin {k}"
                 tasks.append(task)
@@ -208,6 +211,8 @@ def collect_results():
                 for alg in ALGOS:
                     if alg == "kPlexT":
                         task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+                    elif alg=="UMKPEX":
+                        task = f"{alg} {DS_LOC}/{ds}.bin {k} -branching Adaptive-Br"
                     else:
                         task = f"{alg} {DS_LOC}/{ds}.bin {k}"
                     fname = get_outfile(task)
@@ -240,7 +245,7 @@ def main():
         master(comm, size)
     else:
         worker(comm, rank)
-
+    ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
     if rank == 0:
         collect_results()
 
