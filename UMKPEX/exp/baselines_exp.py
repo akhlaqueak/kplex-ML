@@ -25,13 +25,25 @@ def ensure_log_dir() -> None:
 def get_outfile(cmd: str) -> str:
     args = shlex.split(cmd)
 
-    if len(args) < 2:
+    if not args:
         raise ValueError(f"Invalid command format: {cmd}")
 
-    base = os.path.basename(args[1])
-    outfile = os.path.splitext(base)[0]
+    file_arg_idx = None
+    for i, arg in enumerate(args[1:], start=1):
+        if arg.startswith("-"):
+            continue
+        if arg.endswith(".bin") or "/" in arg:
+            file_arg_idx = i
+            break
 
-    for arg in args[2:]:
+    if file_arg_idx is None:
+        raise ValueError(f"Could not detect dataset file in command: {cmd}")
+
+    solver = os.path.basename(args[0])
+    base = os.path.basename(args[file_arg_idx])
+    outfile = f"{solver}_{os.path.splitext(base)[0]}"
+
+    for arg in args[file_arg_idx + 1 :]:
         if not arg.startswith("-"):
             outfile += f"_{arg}"
 
