@@ -11,7 +11,7 @@ public:
 
   CommandLine(int _argc, char **_argv) : argc(_argc), argv(_argv)
   {
-    alg = GetOptionValue("-algorithm", "UMKP+");
+    alg = GetOptionValue("-algorithm", "kPEX");
     branching = GetOptionValue("-branching", "Default-Br");
     bounding = GetOptionValue("-bounding", "None");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
