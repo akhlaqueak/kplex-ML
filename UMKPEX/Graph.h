@@ -123,12 +123,12 @@ public:
         vector<ui> Q;
         vector<ui> vs;
         // Q.reserve(n);
-        // vs.reserve(n);
+        vs.reserve(n);
         memset(vis, 0, sizeof(char) * n);
         for (ui i = n; i > 0; i--)
         {
             ui u = peel_sequence[i - 1];
-            if (pend[u] - pstart[u] < solution->size())
+            if (pend[u] - pstart[u] <= solution->size())
                 continue;
     
             vs.clear();
