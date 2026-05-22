@@ -100,6 +100,7 @@ public:
         int pre_lb = lb;
         degenerate(peel_sequence);
         std::copy(edge_to, edge_to+m, edges);
+        cout<<"so far: "<<t.get_time_seconds()<<endl;
         if (pend == nullptr)
             pend = new ui[n + 1];
         for (ui i = 0; i < n; i++)
