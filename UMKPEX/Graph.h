@@ -183,7 +183,7 @@ public:
                     vs[cnt++] = vs[j];
             assert(cnt + Q.size() == vs.size());
             vs.resize(cnt);
-            if (cnt == 0 || cnt + 1 <= solution->size())
+            if (cnt == 0)
                 continue;
     
             LinearHeap heap(n, n);
