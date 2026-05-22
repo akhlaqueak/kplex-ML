@@ -122,8 +122,8 @@ public:
     
         vector<ui> Q;
         vector<ui> vs;
-        Q.reserve(n);
-        vs.reserve(n);
+        // Q.reserve(n);
+        // vs.reserve(n);
         memset(vis, 0, sizeof(char) * n);
         for (ui i = n; i > 0; i--)
         {
