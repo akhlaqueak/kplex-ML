@@ -100,7 +100,6 @@ public:
         int pre_lb = lb;
         degenerate(peel_sequence);
         std::copy(edge_to, edge_to+m, edges);
-        cout<<"so far: "<<t.get_time_seconds()<<endl;
         if (pend == nullptr)
             pend = new ui[n + 1];
         for (ui i = 0; i < n; i++)
@@ -123,6 +122,8 @@ public:
     
         vector<ui> Q;
         vector<ui> vs;
+        Q.reserve(n);
+        vs.reserve(n);
         memset(vis, 0, sizeof(char) * n);
         for (ui i = n; i > 0; i--)
         {
@@ -183,8 +184,11 @@ public:
                     vs[cnt++] = vs[j];
             assert(cnt + Q.size() == vs.size());
             vs.resize(cnt);
-            if (cnt == 0)
+            if (cnt == 0 || cnt + 1 <= solution->size()){
+                for (ui j = 0; j < vs.size(); j++)
+                vis[vs[j]] = 0;
                 continue;
+            }
     
             LinearHeap heap(n, n);
             for(ui v: vs) heap.insert(degree[v], v);
