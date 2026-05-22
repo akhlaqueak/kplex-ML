@@ -137,6 +137,8 @@ public:
                 vis[edges[j]] = 1;
                 degree[edges[j]] = 0;
             }
+            if (vs.empty())
+                continue;
             for (ui j = 0; j < vs.size(); j++)
                 for (ui k = pstart[vs[j]]; k < pend[vs[j]]; k++)
                     if (vis[edges[k]])
@@ -181,7 +183,7 @@ public:
                     vs[cnt++] = vs[j];
             assert(cnt + Q.size() == vs.size());
             vs.resize(cnt);
-            if (cnt == 0)
+            if (cnt == 0 || cnt + 1 <= solution->size())
                 continue;
     
             LinearHeap heap(n, n);
