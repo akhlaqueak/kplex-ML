@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v4
+#SBATCH --job-name=v0
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -15,7 +15,7 @@ module load mpi4py
 
 set -euo pipefail
 
-export HEUR="Both-Heur"
+export HEUR="kPEX-Heur EGO-Heur"
 export BR="S-Br"
 # export BR="Pivot-Br"
 export CT="CTCP"
