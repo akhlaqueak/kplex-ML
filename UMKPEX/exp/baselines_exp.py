@@ -84,7 +84,7 @@ def generate_tasks():
             ds, k = line.strip().split()
 
             for alg in ALGOS:
-                task = get_task(alg)
+                task = get_task(alg, ds, k)
                 tasks.append(task)
     return tasks
 
