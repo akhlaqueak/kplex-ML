@@ -19,7 +19,7 @@ LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 # ALGOS="UMKPEX".split()
-ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
+ALGOS="UMKPEX UMKP".split()
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -65,6 +65,14 @@ def get_t_total(filepath):
 
     return None
 
+def get_task(alg, ds, k):
+    if alg == "kPlexT":
+        task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+    elif alg=="UMKPEX":
+        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    else:
+        task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+
 def generate_tasks():
     tasks = []
 
@@ -76,12 +84,7 @@ def generate_tasks():
             ds, k = line.strip().split()
 
             for alg in ALGOS:
-                if alg == "kPlexT":
-                    task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
-                elif alg=="UMKPEX":
-                    task = f"{alg} {DS_LOC}/{ds}.bin {k} -branching Adaptive-Br"
-                else:
-                    task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+                task = get_task(alg)
                 tasks.append(task)
     return tasks
 
@@ -210,12 +213,7 @@ def collect_results():
 
                 ds, k = line.strip().split()
                 for alg in ALGOS:
-                    if alg == "kPlexT":
-                        task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
-                    elif alg=="UMKPEX":
-                        task = f"{alg} {DS_LOC}/{ds}.bin {k} -branching Adaptive-Br"
-                    else:
-                        task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+                    task = get_task(alg, ds, k)
                     fname = get_outfile(task)
                     total_t = get_t_total(fname)
                     out.write((str(total_t) if total_t is not None else "x") + " ")
@@ -244,6 +242,9 @@ def main():
         master(comm, size)
     else:
         worker(comm, rank)
+        
+    ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
+
     if rank == 0:
         collect_results()
 
