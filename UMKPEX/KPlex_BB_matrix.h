@@ -245,7 +245,7 @@ public:
 		}
 		ui n_edges = best_n_edges;
 		ui R_end;
-		initialization(R_end, false);
+		initialization(R_end, true);
 		if (R_end && lb < _UB_)
 			BB_search(0, R_end, 1);
 		if (this->solution.size() > solution.size())
