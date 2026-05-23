@@ -414,6 +414,7 @@ void Graph::search()
 			max_n_prune = ids_n;
 			ui pre_size=kplex.size();
 			kplex_solver->load_graph(ids, ids_n, vp);
+			cout<<"g size:"<<vp.size()<<endl;
 			kplex_solver->kPlex(K, UB, kplex, false);
 			if (kplex.size() > pre_size)
 			{

@@ -219,7 +219,8 @@ public:
                 {
                     bb_solver.load_graph(g);
                     cout<<"Branching: "<<PARA.branching<<endl;
-                    
+                    cout<<"g: "<<g.size()<<endl;
+
                     bb_solver.kPlex(lb, g.size(), solution, id_u);
                     if (solution.size() > lb)
                         lb = solution.size();
