@@ -6,7 +6,7 @@ Timer thresh, branchings;
 CommandLine cmd;
 #include "KPlex_BB_matrix.h"
 #include "CTPrune.h"
-#define K_THRESH 10
+#define K_THRESH 1
 using namespace std;
 #include <numeric>
 #include <fstream>
