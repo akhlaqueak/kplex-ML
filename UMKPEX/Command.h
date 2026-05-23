@@ -15,8 +15,8 @@ public:
     branching = GetOptionValue("-branching", "None");
     bounding = GetOptionValue("-bounding", "AltRB");
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
-    ctcp = GetOptionValue("-ctcp", "CF-CTCP");
-    heuristic = GetOptionValue("-heuristic", "kPEX-Heur");
+    ctcp = GetOptionValue("-ctcp", "CTCP");
+    heuristic = GetOptionValue("-heuristic", "Both-Heur");
 
 
     cout<<"----------------------Parameters-----------------------\n";
