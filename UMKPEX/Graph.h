@@ -122,8 +122,9 @@ public:
     
         vector<ui> Q;
         vector<ui> vs;
-        // Q.reserve(n);
+        Q.reserve(n);
         vs.reserve(n);
+        LinearHeap heap(n, n);
         memset(vis, 0, sizeof(char) * n);
         for (ui i = n; i > 0; i--)
         {
@@ -190,8 +191,7 @@ public:
                 continue;
             }
     
-            LinearHeap heap(n, n);
-            for(ui v: vs) heap.insert(degree[v], v);
+            heap.init(vs, degree);
             bool found = false;
             for (ui ii = 0; ii < vs.size(); ii++)
             {

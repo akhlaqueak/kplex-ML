@@ -69,6 +69,15 @@ public:
         for (ui i = 0; i < n; i++)
             insert(pd[i], i);
     }
+    void init(const vector<ui> &ids, ui pd[])
+    {
+        for (ui i = 0; i < max_range; i++)
+            h[i] = n;
+        sz = 0;
+        min_key = max_range;
+        for (ui id : ids)
+            insert(pd[id], id);
+    }
     ~LinearHeap()
     {
         if (h != nullptr)
