@@ -752,6 +752,8 @@ public:
         vector<bool> vertex_removed(n); // just a marker recording the vertices we have already searched
         for (ll i = 0; i < n; i++)
         {
+            if (time_limit > 0 && t.get_time() >= time_limit)
+                break;
             ll enumerate_num = i + 1;
             ui u = seq[i];
             bool pruned;
@@ -781,6 +783,8 @@ public:
         vector<bool> vertex_removed(n); // just a marker recording the vertices we have already searched
         for (ll i = 0; i < n; i++)
         {
+            if (time_limit > 0 && t.get_time() >= time_limit)
+                break;
             ll enumerate_num = i + 1;
             ui u = seq[i];
             bool pruned;
