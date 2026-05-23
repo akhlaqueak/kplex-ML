@@ -66,12 +66,14 @@ def get_t_total(filepath):
     return None
 
 def get_task(alg, ds, k):
+    task=""
     if alg == "kPlexT":
         task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
     elif alg=="UMKPEX":
         task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
     else:
         task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+    return task
 
 def generate_tasks():
     tasks = []
