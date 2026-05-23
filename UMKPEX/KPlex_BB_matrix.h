@@ -717,7 +717,7 @@ private:
 			return;
 		}
 
-		else if (PARA.branching == "S-Br" or PARA.branching == "R-Br" or PARA.branching == "SR-Br" or (K <= 5 && sparse && PARA.branching == "Adaptive-Br"))
+		else if (PARA.branching == "S-Br" or PARA.branching == "R-Br" or PARA.branching == "SR-Br")
 		{
 
 			// ******************* Adding our branching stuff here...
