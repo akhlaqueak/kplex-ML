@@ -414,13 +414,13 @@ void Graph::search()
 			max_n_prune = ids_n;
 			ui pre_size=kplex.size();
 			kplex_solver->load_graph(ids, ids_n, vp);
-			cout<<"g size:"<<vp.size()<<endl;
 			kplex_solver->kPlex(K, UB, kplex, false);
 			if (kplex.size() > pre_size)
 			{
 				for (ui &v : kplex)
 				v = out_mapping[v];
 			}
+			return;
 		}
 
 		for (ui i = 0; i < n && twoHopG && m && kplex.size() < UB; i++)
@@ -500,6 +500,7 @@ void Graph::search()
 					min_density_search = density;
 				if (ids_n > max_n_search)
 					max_n_search = ids_n;
+						cout<<"g size:"<<vp.size()<<endl;
 				// cout<<"searching: "<<u<<" -> ids_n "<<ids_n<<" density: "<<density<<endl;
 				kplex_solver->load_graph(ids, ids_n, vp);
 				kplex_solver->kPlex(K, UB, kplex, true);
