@@ -252,8 +252,18 @@ def collect_results():
 
     print(f"[POST] Wrote {OUTFILE}", flush=True)
 
+def parse_args(argv):
+    collect_only = any(arg in {"--collect-only", "--postprocess-only"} for arg in argv[1:])
+    return collect_only
+
 
 def main():
+    collect_only = parse_args(sys.argv)
+
+    if collect_only:
+        collect_results()
+        return
+
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
