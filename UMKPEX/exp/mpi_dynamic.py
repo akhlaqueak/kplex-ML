@@ -4,6 +4,7 @@ import os
 import shlex
 import subprocess
 from pathlib import Path
+import sys
 
 TAG_READY = 1
 TAG_TASK = 2
