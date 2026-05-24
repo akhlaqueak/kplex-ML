@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=v0
+#SBATCH --job-name=UMKP
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
