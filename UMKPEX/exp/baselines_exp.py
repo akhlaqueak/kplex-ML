@@ -78,9 +78,9 @@ def get_task(alg, ds, k):
     # return task
     
     if alg=="kPEX":
-        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic kPEX-Heur -ctcp CF-CTCP"
+        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic kPEX-Heur -ctcp CF-CTCP -branching B-Br"
     else:
-        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic Both-Heur"
+        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic Both-Heur -branching B-Br"
     return task
 
 def generate_tasks():
