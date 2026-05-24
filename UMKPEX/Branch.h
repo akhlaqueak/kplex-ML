@@ -186,7 +186,6 @@ public:
             double start_induce = get_system_time_microsecond();
 
             int u = G_input.get_min_degree_v();
-            cout<<"processing now min"<<u<<endl;
             int previous_lb = lb;
 
             // cout << "========== Processing: " << u << "Graph size: " << G_input.size() << endl;
