@@ -71,6 +71,8 @@ def get_task(alg, ds, k):
         task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
     elif alg=="UMKPEX":
         task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    elif alg=="UMKP-":
+        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
     else:
         task = f"{alg} {DS_LOC}/{ds}.bin {k}"
     return task
