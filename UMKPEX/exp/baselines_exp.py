@@ -19,7 +19,7 @@ LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 # ALGOS="UMKPEX".split()
-ALGOS="UMKPEX UMKP".split()
+ALGOS="kPEX kPEX-Imp".split()
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -67,14 +67,20 @@ def get_t_total(filepath):
 
 def get_task(alg, ds, k):
     task=""
-    if alg == "kPlexT":
-        task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
-    elif alg=="UMKPEX":
-        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
-    elif alg=="UMKP-":
-        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    # if alg == "kPlexT":
+    #     task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+    # elif alg=="UMKPEX":
+    #     task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    # elif alg=="UMKP-":
+    #     task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    # else:
+    #     task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+    # return task
+    
+    if alg=="kPEX":
+        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic kPEX-Heur -ctcp CF-CTCP"
     else:
-        task = f"{alg} {DS_LOC}/{ds}.bin {k}"
+        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic Both-Heur"
     return task
 
 def generate_tasks():
@@ -247,7 +253,7 @@ def main():
     else:
         worker(comm, rank)
         
-    ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
+    # ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
 
     if rank == 0:
         collect_results()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# from mpi4py import MPI
+from mpi4py import MPI
 import os
 import shlex
 import subprocess
