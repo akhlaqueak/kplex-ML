@@ -18,8 +18,15 @@ OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
-# ALGOS="UMKPEX".split()
-ALGOS="kPEX kPEX-Imp".split()
+
+ALGOS="UMKP-Imp UMKP kPEX-Imp kPEX".split()
+
+switches={
+    "UMKP-Imp": "-algorithm UMKP+ -bounding None -branching Adaptive-Br",
+    "UMKP": "-algorithm UMKP+ -heuristic EGO-Heur -bounding None -branching Adaptive-Br",
+    "kPEX-Imp": "-heuristic Both-Heur -branching Binary-Br",
+    "kPEX": "-heuristic kPEX-Heur -ctcp CF-CTCP -branching Binary-Br"
+}
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -77,10 +84,7 @@ def get_task(alg, ds, k):
     #     task = f"{alg} {DS_LOC}/{ds}.bin {k}"
     # return task
     
-    if alg=="kPEX":
-        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic kPEX-Heur -ctcp CF-CTCP -branching Binary-Br"
-    else:
-        task=f"{alg} {DS_LOC}/{ds}.bin {k} -heuristic Both-Heur -branching Binary-Br"
+    task=f"{alg} {DS_LOC}/{ds}.bin {k}"+switches[alg]
     return task
 
 def generate_tasks():
