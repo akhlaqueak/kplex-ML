@@ -1674,6 +1674,34 @@ public:
         }
     }
     /**
+     * @brief initialize IE heap using degeneracy-order insertion, matching UMKP tie behavior
+     */
+    void init_heap()
+    {
+        vector<ui> order;
+        order.reserve(n);
+        vector<int> pd(n);
+        vector<char> rm(n, 0);
+        for (int i = 0; i < n; i++)
+            pd[i] = d[i];
+        LinearHeap peel_heap(n, n, pd.data());
+        while (peel_heap.sz)
+        {
+            ui u = peel_heap.get_min_node();
+            peel_heap.delete_node(u);
+            order.push_back(u);
+            rm[u] = 1;
+            for (int j = pstart[u]; j < pstart[u + 1]; j++)
+            {
+                ui v = edge_to[j];
+                if (!rm[v])
+                    peel_heap.decrease(--pd[v], v);
+            }
+        }
+        heap = LinearHeap(n, n);
+        heap.init(order, d);
+    }
+    /**
      * @brief compute the number of triangles for each edge
      */
     void init_triangles()
@@ -2175,6 +2203,33 @@ public:
         {
             delete[] d;
         }
+    }
+    /**
+     * @brief initialize IE heap using degeneracy-order insertion, matching UMKP tie behavior
+     */
+    void init_heap()
+    {
+        vector<ui> order;
+        order.reserve(n);
+        vector<int> pd(n);
+        vector<char> rm(n, 0);
+        for (int i = 0; i < n; i++)
+            pd[i] = d[i];
+        LinearHeap peel_heap(n, n, pd.data());
+        while (peel_heap.sz)
+        {
+            ui u = peel_heap.get_min_node();
+            peel_heap.delete_node(u);
+            order.push_back(u);
+            rm[u] = 1;
+            for (int v : A[u])
+            {
+                if (!rm[v])
+                    peel_heap.decrease(--pd[v], v);
+            }
+        }
+        heap = LinearHeap(n, n);
+        heap.init(order, d);
     }
     /**
      * @brief compute the number of triangles for each edge

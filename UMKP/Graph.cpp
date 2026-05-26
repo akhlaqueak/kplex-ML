@@ -420,7 +420,6 @@ void Graph::search()
 				for (ui &v : kplex)
 				v = out_mapping[v];
 			}
-			return;
 		}
 
 		for (ui i = 0; i < n && twoHopG && m && kplex.size() < UB; i++)
