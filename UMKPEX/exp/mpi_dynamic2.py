@@ -11,9 +11,7 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-# BR="S-Br R-Br Pivot-Br".split()
-# ALGO="UMKP UMKP+ kPEX".split()
-BR="Binary-Br".split()
+BR="S-Br R-Br Pivot-Br Binary-Br".split()
 ALGO="kPEX".split()
 RESULT_WIDTH = 6
 
@@ -54,7 +52,7 @@ def get_cmd(ds, k, br, algo):
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k}"+switches[algo]
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} "+switches[algo]
     return cmd.split()
 
 def generate_tasks():
