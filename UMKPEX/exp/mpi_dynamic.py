@@ -11,8 +11,10 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br".split()
-ALGO="UMKP UMKP+ kPEX".split()
+# BR="S-Br R-Br Pivot-Br".split()
+# ALGO="UMKP UMKP+ kPEX".split()
+BR="Binary-Br".split()
+ALGO="kPEX".split()
 RESULT_WIDTH = 6
 
 TASK_TIMEOUT = 1800
