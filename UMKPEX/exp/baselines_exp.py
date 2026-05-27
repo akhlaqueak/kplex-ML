@@ -257,7 +257,6 @@ def main():
     else:
         worker(comm, rank)
         
-    # ALGOS="UMKPEX kPEX UMKP Maple DiseMKP kPlexT".split()
 
     if rank == 0:
         collect_results()
