@@ -15,13 +15,6 @@ module load mpi4py
 
 set -euo pipefail
 
-export HEUR="EGO-Heur Both-Heur"
-export BR="Adaptive-Br"
-# export BR="Pivot-Br"
-export CT="CTCP"
-export ALGO="UMKP+"
-export BOUND="None"
-
 SECONDS=0
 
 cp -f ../UMKPEX .

@@ -11,11 +11,8 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-HEUR = os.environ.get("HEUR", "EGO-Heur").split()
-BR = os.environ.get("BR", "S-Br").split()
-CT = os.environ.get("CT", "CTCP").split()
-ALGO = os.environ.get("ALGO", "kPEX")
-BOUND = os.environ.get("BOUND", "AltRB")
+BR="S-Br R-Br Pivot-Br".split()
+ALGO="UMKP UMKP+ kPEX".split()
 RESULT_WIDTH = 6
 
 TASK_TIMEOUT = 1800
@@ -25,6 +22,7 @@ OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
+
 
 
 def ensure_log_dir() -> None:
@@ -48,18 +46,14 @@ def get_outfile(cmd: str) -> str:
     return str(LOG_DIR / f"{outfile}.log")
 
 
-def get_cmd(ds, k, br, heur, algo, bound, ct):
-    return [
-        "UMKPEX",
-        f"{DS_LOC}/{ds}.bin",
-        k,
-        "-branching", br,
-        "-heuristic", heur,
-        "-algorithm", algo,
-        "-bounding", bound,
-        "-ctcp", ct,
-    ]
-
+def get_cmd(ds, k, br, algo):
+    switches={
+        "UMKP": f"-algorithm UMKP+ -bounding None -branching {br}",
+        "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
+        "kPEX": f"-branching {br}"
+    }
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k}"+switches[algo]
+    return cmd.split()
 
 def generate_tasks():
     tasks = []
@@ -71,11 +65,10 @@ def generate_tasks():
 
             ds, k = line.strip().split()
 
-            for heur in HEUR:
+            for algo in ALGO:
                 for br in BR:
-                    for ct in CT:
-                        cmd = get_cmd(ds, k, br, heur, ALGO, BOUND, ct)
-                        tasks.append(" ".join(shlex.quote(x) for x in cmd))
+                    cmd = get_cmd(ds, k, br, algo)
+                    tasks.append(" ".join(shlex.quote(x) for x in cmd))
 
     return tasks
 
@@ -236,18 +229,18 @@ def collect_results():
 
                 ds, k = line.strip().split()
 
-                for heur in HEUR:
+                for algo in ALGO:
                     for br in BR:
-                        for ct in CT:
-                            cmd_str = get_cmd(ds, k, br, heur, ALGO, BOUND, ct)
-                            fname = get_outfile(" ".join(shlex.quote(x) for x in cmd_str))
-                            values=None
-                            if os.path.isfile(fname):
-                                values = extract_result_values(fname)
-                            if not values:
-                                values = ["x"] * RESULT_WIDTH
-                                
-                            out.write(" ".join(values) + " ")
+                        cmd = get_cmd(ds, k, br, algo)
+
+                        fname = get_outfile(" ".join(shlex.quote(x) for x in cmd))
+                        values=None
+                        if os.path.isfile(fname):
+                            values = extract_result_values(fname)
+                        if not values:
+                            values = ["x"] * RESULT_WIDTH
+                            
+                        out.write(" ".join(values) + " ")
 
                 out.write("\n")
 
