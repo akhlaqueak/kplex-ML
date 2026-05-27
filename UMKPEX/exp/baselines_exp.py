@@ -19,7 +19,7 @@ LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
-ALGOS="UMKP-Imp UMKP".split()
+ALGOS="DiseMKP kPlexT".split()
 
 switches={
     "UMKP-Imp": "-algorithm UMKP+ -bounding None -branching Adaptive-Br",
@@ -74,18 +74,18 @@ def get_t_total(filepath):
 
 def get_task(alg, ds, k):
     task=""
-    # if alg == "kPlexT":
-    #     task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
-    # elif alg=="UMKPEX":
-    #     task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
-    # elif alg=="UMKP-":
-    #     task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
-    # else:
-    #     task = f"{alg} {DS_LOC}/{ds}.bin {k}"
-    # return task
-    
-    task=f"{alg} {DS_LOC}/{ds}.bin {k}"+switches[alg]
+    if alg == "kPlexT":
+        task = f"{alg} -g {DS_LOC}/{ds}.bin -k {k} -b"
+    elif alg=="UMKPEX":
+        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    elif alg=="UMKP-":
+        task = f"{alg} {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None"
+    else:
+        task = f"{alg} {DS_LOC}/{ds}.bin {k}"
     return task
+    
+    # task=f"{alg} {DS_LOC}/{ds}.bin {k}"+switches[alg]
+    # return task
 
 def generate_tasks():
     tasks = []
