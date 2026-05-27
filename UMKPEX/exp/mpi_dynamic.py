@@ -1,4 +1,48 @@
-#!/usr/bin/env python3
+#!/bin/bash
+#SBATCH --job-name=baselines
+#SBATCH --nodes=3
+#SBATCH --ntasks-per-node=48
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+""":"
+module load OpenMPI
+module load mpi4py
+
+set -euo pipefail
+
+export HEUR="${HEUR:-Both-Heur}"
+export BR="${BR:-Pivot-Br}"
+export CT="${CT:-CTCP}"
+export ALGO="${ALGO:-kPEX}"
+export BOUND="${BOUND:-None}"
+
+collect_only=0
+for arg in "$@"; do
+    case "$arg" in
+        --collect-only|--postprocess-only)
+            collect_only=1
+            ;;
+    esac
+done
+
+if [[ "$collect_only" -eq 1 ]]; then
+    exec python3 -u "$0" "$@"
+fi
+
+SECONDS=0
+echo "Job started at $(date)"
+srun --mpi=pmix --cpu-bind=cores python3 -u "$0" "$@"
+echo "Job finished at $(date)"
+echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"
+exit $?
+":"""
+
+
 from mpi4py import MPI
 import os
 import shlex
