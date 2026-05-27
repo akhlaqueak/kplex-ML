@@ -19,7 +19,7 @@ LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(__file__).resolve().parent
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
-ALGOS="UMKP-Imp UMKP kPEX-Imp".split()
+ALGOS="UMKP-Imp UMKP".split()
 
 switches={
     "UMKP-Imp": "-algorithm UMKP+ -bounding None -branching Adaptive-Br",
