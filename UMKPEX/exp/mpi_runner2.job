@@ -21,7 +21,7 @@ cp -f ../UMKPEX .
 echo "Job started at $(date)"
 
 # ---- LAUNCH ONLY ----
-srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic.py "something"
+srun --mpi=pmix --cpu-bind=cores python3 -u mpi_dynamic2.py "something"
 
 echo "Job finished at $(date)"
 echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"
