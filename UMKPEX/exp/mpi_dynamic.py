@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=baselines
-#SBATCH --nodes=3
+#SBATCH --job-name=kPEX-baselines
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -21,6 +21,20 @@ export CT="${CT:-CTCP}"
 export ALGO="${ALGO:-kPEX}"
 export BOUND="${BOUND:-None}"
 
+resolve_script_path() {
+    if [[ -n "${SLURM_JOB_ID:-}" ]]; then
+        local cmd
+        cmd="$(scontrol show job "${SLURM_JOB_ID}" | awk -F= '/ Command=/{print $2; exit}')"
+        if [[ -n "$cmd" && -f "$cmd" ]]; then
+            realpath "$cmd"
+            return
+        fi
+    fi
+    realpath "$0"
+}
+
+SCRIPT_PATH="$(resolve_script_path)"
+
 collect_only=0
 for arg in "$@"; do
     case "$arg" in
@@ -31,12 +45,12 @@ for arg in "$@"; do
 done
 
 if [[ "$collect_only" -eq 1 ]]; then
-    exec python3 -u "$0" "$@"
+    exec python3 -u "$SCRIPT_PATH" "$@"
 fi
 
 SECONDS=0
 echo "Job started at $(date)"
-srun --mpi=pmix --cpu-bind=cores python3 -u "$0" "$@"
+srun --mpi=pmix --cpu-bind=cores python3 -u "$SCRIPT_PATH" "$@"
 echo "Job finished at $(date)"
 echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"
 exit $?
@@ -55,10 +69,10 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br".split()
+BR="S-Br R-Br Pivot-Br Binary-Br".split()
 ALGO="UMKP UMKP+".split()
 # BR="Binary-Br".split()
-# ALGO="kPEX".split()
+ALGO="kPEX".split()
 RESULT_WIDTH = 6
 
 TASK_TIMEOUT = 1800
