@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=UMKP-Imp
+#SBATCH --job-name=kPlexT-forward
 #SBATCH --nodes=3
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
