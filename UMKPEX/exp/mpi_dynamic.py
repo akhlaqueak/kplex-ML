@@ -20,20 +20,10 @@ export BR="${BR:-Pivot-Br}"
 export CT="${CT:-CTCP}"
 export ALGO="${ALGO:-kPEX}"
 export BOUND="${BOUND:-None}"
-
-resolve_script_path() {
-    if [[ -n "${SLURM_JOB_ID:-}" ]]; then
-        local cmd
-        cmd="$(scontrol show job "${SLURM_JOB_ID}" | awk -F= '/ Command=/{print $2; exit}')"
-        if [[ -n "$cmd" && -f "$cmd" ]]; then
-            realpath "$cmd"
-            return
-        fi
-    fi
-    realpath "$0"
-}
-
-SCRIPT_PATH="$(resolve_script_path)"
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
+SCRIPT_PATH="${SUBMIT_DIR}/$(basename "$0")"
+export MPI_DYNAMIC_BASEDIR="$SUBMIT_DIR"
+cd "$SUBMIT_DIR"
 
 collect_only=0
 for arg in "$@"; do
@@ -59,6 +49,7 @@ exit $?
 
 from mpi4py import MPI
 import os
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -80,8 +71,9 @@ TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
-SCRIPT_DIR = Path(__file__).resolve().parent
+SCRIPT_DIR = Path(os.environ.get("MPI_DYNAMIC_BASEDIR", Path(__file__).resolve().parent)).resolve()
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
+RESUME_LOG = None
 
 
 
@@ -115,8 +107,40 @@ def get_cmd(ds, k, br, algo):
     cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} "+switches[algo]
     return cmd.split()
 
+def canonicalize_cmd(cmd: str) -> str:
+    return " ".join(shlex.quote(x) for x in shlex.split(cmd))
+
+
+def load_completed_tasks(log_path: str | None):
+    if not log_path:
+        return set()
+
+    path = Path(log_path)
+    if not path.is_file():
+        print(f"[RESUME] Log file not found, ignoring: {path}", flush=True)
+        return set()
+
+    completed = set()
+    pattern = re.compile(r"\b(SUCCESS|TIMEOUT)\b\s*::?\s*(.+)$")
+
+    with path.open() as fh:
+        for raw_line in fh:
+            line = raw_line.strip()
+            match = pattern.search(line)
+            if not match:
+                continue
+            state, cmd = match.groups()
+            if "UMKPEX " not in cmd:
+                continue
+            completed.add(canonicalize_cmd(cmd))
+
+    print(f"[RESUME] Loaded {len(completed)} completed tasks from {path}", flush=True)
+    return completed
+
+
 def generate_tasks():
     tasks = []
+    completed = load_completed_tasks(RESUME_LOG)
 
     with open(DS_FILE) as f:
         for line in f:
@@ -128,7 +152,10 @@ def generate_tasks():
             for algo in ALGO:
                 for br in BR:
                     cmd = get_cmd(ds, k, br, algo)
-                    tasks.append(" ".join(shlex.quote(x) for x in cmd))
+                    task = " ".join(shlex.quote(x) for x in cmd)
+                    if task in completed:
+                        continue
+                    tasks.append(task)
 
     return tasks
 
@@ -308,11 +335,26 @@ def collect_results():
 
 def parse_args(argv):
     collect_only = any(arg in {"--collect-only", "--postprocess-only"} for arg in argv[1:])
-    return collect_only
+    resume_log = None
+
+    idx = 1
+    while idx < len(argv):
+        arg = argv[idx]
+        if arg == "--resume-log" and idx + 1 < len(argv):
+            resume_log = argv[idx + 1]
+            idx += 2
+            continue
+        if arg.startswith("--resume-log="):
+            resume_log = arg.split("=", 1)[1]
+        idx += 1
+
+    return collect_only, resume_log
 
 
 def main():
-    collect_only = parse_args(sys.argv)
+    global RESUME_LOG
+    collect_only, resume_log = parse_args(sys.argv)
+    RESUME_LOG = resume_log or os.environ.get("RESUME_LOG")
 
     if collect_only:
         collect_results()

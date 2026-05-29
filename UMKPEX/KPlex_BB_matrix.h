@@ -1920,7 +1920,7 @@ private:
 					continue;
 				double cost = min(support(S_end, u), psz[i]);
 				double dise = psz[i] / cost;
-				if (cost <= beta and dise > maxdise)
+				if (cost <= beta and dise >= maxdise)
 					maxpi = i, maxdise = dise;
 			}
 			if (maxpi == -1)
