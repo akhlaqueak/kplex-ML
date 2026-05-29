@@ -1804,7 +1804,7 @@ private:
 		std::sort(B.begin(), B.end(), comp);
 	}
 
-	ui SR_branching(ui S_end, ui R_end, ui level)
+		ui SR_branching(ui S_end, ui R_end, ui level)
 	{
 		ui cend = R_end;
 		ui beta = lb - S_end;
@@ -1849,7 +1849,7 @@ private:
 		B.reserve(cend - S_end);
 		for (ui i = S_end; i < cend; i++)
 			B.push_back(SR[i]);
-		return move_candidates_to_end(S_end, R_end, B, level);
+			return move_candidates_to_end(S_end, R_end, B, level);
 		// return move_candidates_to_end(S_end, cend, R_end, level);
 	}
 	ui R_branching(ui S_end, ui R_end, ui level)
@@ -1884,15 +1884,61 @@ private:
 			B.resize(B.size() - dec);
 		}
 
-		return move_candidates_to_end(S_end, R_end, B, level);
-	}
+			return move_candidates_to_end(S_end, R_end, B, level);
+		}
 
-	ui S_branching(ui S_end, ui R_end, ui level)
-	{
-		for (ui i = 0; i < S_end; i++)
+		ui SEC_branching(ui S_end, ui R_end, ui level)
 		{
-			ui u = SR[i];
-			psz[i] = 0;
+			ui cend = R_end;
+			ui beta = lb - S_end;
+			for (ui i = 0; i < S_end && beta > 0 && cend > S_end; i++)
+			{
+				ui u = SR[i];
+				ui cost_cap = support(S_end, u);
+				if (cost_cap == 0)
+					continue;
+
+				PI.clear();
+				char *t_matrix = matrix + u * n;
+				for (ui j = S_end; j < cend; j++)
+				{
+					ui v = SR[j];
+					if (!t_matrix[v])
+						PI.push_back(v);
+				}
+				if (PI.empty())
+					continue;
+
+				ui cost = min(cost_cap, (ui)PI.size());
+				if (cost > beta)
+					break;
+
+				for (ui v : PI)
+					if (SR_rid[v] < cend)
+						swap_pos(SR_rid[v], --cend);
+				beta -= cost;
+			}
+
+			if (beta > 0)
+				cend -= min(beta, cend - S_end);
+
+			vector<ui> B;
+			B.reserve(cend - S_end);
+			for (ui i = S_end; i < cend; i++)
+				B.push_back(SR[i]);
+			return move_candidates_to_end(S_end, R_end, B, level, false);
+		}
+
+		ui S_branching(ui S_end, ui R_end, ui level)
+		{
+			ui beta = lb - S_end;
+			if (S_end < 5 || beta < K)
+				return SEC_branching(S_end, R_end, level);
+
+			for (ui i = 0; i < S_end; i++)
+			{
+				ui u = SR[i];
+				psz[i] = 0;
 			if (support(S_end, u) == 0)
 				continue;
 			// skipping it, because this is a boundary vertex, and it can't have any non-neighbor candidate
@@ -1906,25 +1952,30 @@ private:
 					t_LPI[psz[i]++] = v;
 			}
 		}
-		ui beta = lb - S_end;
-		ui cend = R_end;
+			ui cend = R_end;
 
-		while (S_end < cend)
-		{
-			ui maxpi = -1;
-			double maxdise = 0;
-			for (ui i = 0; i < S_end; i++)
+			while (S_end < cend)
 			{
-				ui u = SR[i];
-				if (psz[i] == 0)
-					continue;
-				double cost = min(support(S_end, u), psz[i]);
-				double dise = psz[i] / cost;
-				if (cost <= beta and dise >= maxdise)
-					maxpi = i, maxdise = dise;
-			}
-			if (maxpi == -1)
-				break;
+				ui maxpi = -1;
+				double maxdise = 0;
+				ui maxcost = 0;
+				for (ui i = 0; i < S_end; i++)
+				{
+					ui u = SR[i];
+					if (psz[i] == 0)
+						continue;
+					ui cost = min(support(S_end, u), psz[i]);
+					double dise = (double)psz[i] / (double)cost;
+					if (cost <= beta &&
+						(dise > maxdise || (dise == maxdise && cost > maxcost)))
+					{
+						maxpi = i;
+						maxdise = dise;
+						maxcost = cost;
+					}
+				}
+				if (maxpi == -1)
+					break;
 			else
 			{
 				// remove pi* from C
@@ -1955,21 +2006,22 @@ private:
 		}
 		if (beta > 0)
 			cend -= min(beta, cend - S_end);
-		vector<ui> B;
-		B.reserve(cend - S_end);
-		for (ui i = S_end; i < cend; i++)
-			B.push_back(SR[i]);
-		return move_candidates_to_end(S_end, R_end, B, level);
-		// return move_candidates_to_end(S_end, cend, R_end, level);
-	}
+			vector<ui> B;
+			B.reserve(cend - S_end);
+			for (ui i = S_end; i < cend; i++)
+				B.push_back(SR[i]);
+			return move_candidates_to_end(S_end, R_end, B, level, false);
+			// return move_candidates_to_end(S_end, cend, R_end, level);
+		}
 
-	ui move_candidates_to_end(ui S_end, ui R_end, vector<ui> &B, ui level)
-	{
-		std::sort(B.begin(), B.end(), [&](ui u, ui v)
-				  { return peelOrder[u] < peelOrder[v]; });
-
-		for (ui u : B)
+		ui move_candidates_to_end(ui S_end, ui R_end, vector<ui> &B, ui level, bool sort_by_peel_order = true)
 		{
+			if (sort_by_peel_order)
+				std::sort(B.begin(), B.end(), [&](ui u, ui v)
+						  { return peelOrder[u] < peelOrder[v]; });
+
+			for (ui u : B)
+			{
 			swap_pos(SR_rid[u], --R_end);
 			level_id[u] = level;
 			char *t_matrix = matrix + u * n;
