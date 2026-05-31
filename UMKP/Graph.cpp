@@ -400,6 +400,7 @@ void Graph::search()
 
 		ui max_n_prune = 0, max_n_search = 0, prune_cnt = 0, search_cnt = 0;
 		double min_density_prune = 1, min_density_search = 1, total_density_prune = 0, total_density_search = 0;
+		double extract_2hop_time = 0;
 		ui last_m = 0;
 
 		if(!twoHopG){
@@ -454,7 +455,9 @@ void Graph::search()
 				do
 				{
 					pre_size = kplex.size();
+					Timer t_extract;
 					extract_subgraph_and_prune(u, ids, ids_n, rid, vp, Qe, t_degree, exists, pend, deleted, edgelist_pointer);
+					extract_2hop_time += t_extract.elapsed();
 					if (ids_n)
 					{
 						double density = (double(vp.size() * 2)) / ids_n / (ids_n - 1);
@@ -526,6 +529,7 @@ void Graph::search()
 			++search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune / prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
+		printf("extract_2hop_time: %.4lf s\n", extract_2hop_time / 1000000.0);
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
 
@@ -669,6 +673,7 @@ void Graph::search_dense()
 
 		ui max_n_prune = 0, max_n_search = 0, prune_cnt = 0, search_cnt = 0;
 		double min_density_prune = 1, min_density_search = 1, total_density_prune = 0, total_density_search = 0;
+		double extract_2hop_time = 0;
 		ui last_m = 0;
 
 		for (ui i = 0; i < n && m && best_n_edges < max_n_edges; i++)
@@ -695,7 +700,11 @@ void Graph::search_dense()
 
 			ui ids_n = 0;
 
-			extract_subgraph_and_prune(u, ids, ids_n, rid, vp, Qe, t_degree, exists, pend, deleted, edgelist_pointer);
+			{
+				Timer t_extract;
+				extract_subgraph_and_prune(u, ids, ids_n, rid, vp, Qe, t_degree, exists, pend, deleted, edgelist_pointer);
+				extract_2hop_time += t_extract.elapsed();
+			}
 			if (ids_n)
 			{
 				double density = (double(vp.size() * 2)) / ids_n / (ids_n - 1);
@@ -739,6 +748,7 @@ void Graph::search_dense()
 			++search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune / prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
+		printf("extract_2hop_time: %.4lf s\n", extract_2hop_time / 1000000.0);
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
 

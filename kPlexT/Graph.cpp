@@ -314,6 +314,7 @@ void Graph::kPlex_exact(int mode) {
 
 				ui search_cnt = 0;
 				double min_density = 1, total_density = 0;
+				double extract_2hop_time = 0;
 
 				if(pend == nullptr) pend = new ept[n+1];
 				reorganize_adjacency_lists(n, peel_sequence, rid, pstart, pend, edges);
@@ -325,8 +326,12 @@ void Graph::kPlex_exact(int mode) {
 
 					fflush(stdout);
 
-					if(kplex.size() >= 2*K-1) extract_subgraph_with_prune(u, kplex.size()+1-K, kplex.size()+1-2*K, kplex.size()+3-2*K, peel_sequence_rid, degree, ids, rid, vp, vis, pstart, pend, edges);
-					else extract_subgraph_wo_prune(u, peel_sequence_rid, ids, rid, vp, vis, pstart, pend, edges);
+					{
+						Timer t_extract;
+						if(kplex.size() >= 2*K-1) extract_subgraph_with_prune(u, kplex.size()+1-K, kplex.size()+1-2*K, kplex.size()+3-2*K, peel_sequence_rid, degree, ids, rid, vp, vis, pstart, pend, edges);
+						else extract_subgraph_wo_prune(u, peel_sequence_rid, ids, rid, vp, vis, pstart, pend, edges);
+						extract_2hop_time += t_extract.elapsed();
+					}
 
 					if(ids.empty()||ids.size() <= kplex.size()) continue;
 
@@ -346,6 +351,7 @@ void Graph::kPlex_exact(int mode) {
 
 				if(search_cnt == 0) printf("search_cnt: 0, ave_density: 1, min_density: 1\n");
 				else printf("search_cnt: %u, ave_density: %.5lf, min_density: %.5lf\n", search_cnt, total_density/search_cnt, min_density);
+				printf("extract_2hop_time: %.4lf s\n", extract_2hop_time / 1000000.0);
 			}
 
 			if(n > kplex.size()&&UB > kplex.size()&&kplex.size() < 2*K-2) 
