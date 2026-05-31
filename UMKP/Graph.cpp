@@ -499,7 +499,7 @@ void Graph::search()
 					min_density_search = density;
 				if (ids_n > max_n_search)
 					max_n_search = ids_n;
-						cout<<"g size:"<<vp.size()<<endl;
+
 				// cout<<"searching: "<<u<<" -> ids_n "<<ids_n<<" density: "<<density<<endl;
 				kplex_solver->load_graph(ids, ids_n, vp);
 				kplex_solver->kPlex(K, UB, kplex, true);
