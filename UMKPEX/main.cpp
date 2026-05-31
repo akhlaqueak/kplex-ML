@@ -110,11 +110,11 @@ void FastHeuris()
 void StrongHeuris()
 {
     int iteration_cnt = 1;
-    double time_limit = FastHeuris_time;
+    double time_limit = 0;
     // time_limit = max(time_limit, 0.5 * 1e6);
     if (PARA.heuristic=="Both-Heur")
     {
-        time_limit = max(time_limit, 10 * 1e6);
+        time_limit = max(FastHeuris_time, 10 * 1e6);
     }
     Timer t_extend("StrongHeuris");
     while (1)
