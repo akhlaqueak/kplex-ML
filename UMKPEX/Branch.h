@@ -187,6 +187,8 @@ public:
         array1_N.resize(G_input.n, 0);
         if (PARA.branching == "Adaptive-Br")
             PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
+        vector<pii> edges;
+        edges.reserve(G_input.m);
         while (G_input.size() > lb)
         {
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
@@ -202,7 +204,7 @@ public:
 
             vector<int> vertices_2hops{u};
             G_input.induce_to_2hop_and_reduce(u, vis, vertices_2hops, array1_N, lb);
-            vector<pii> edges;
+            edges.clear();
             int id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
             if (id_u != -1) // this subgraph is not pruned: begin bnb
             {
