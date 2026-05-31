@@ -279,7 +279,7 @@ void Graph::kPlex_exact(int mode) {
 
 		core_shrink_graph(n, m, peel_sequence, core, out_mapping, nullptr, rid, pstart, edges, true);
 
-		if(mode == 0) {
+
 			if(kplex.size()+1 > 2*K) {
 				CTPrune::core_truss_copruning(n, m, kplex.size()+1-K, kplex.size()+1-2*K, peel_sequence, out_mapping, rid, pstart, edges, degree, true);
 			}
@@ -365,7 +365,7 @@ void Graph::kPlex_exact(int mode) {
 			}
 
 			printf("*** Search time: %s\n", Utility::integer_to_string(tt.elapsed()).c_str());
-		}
+
 
 		delete[] out_mapping;
 		delete[] rid;
