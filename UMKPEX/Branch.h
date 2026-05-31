@@ -586,7 +586,8 @@ public:
             inv[vertices[i]] = i;
         for (int u : vertices)
         {
-            for (int i = g.pstart[u]; i < g.pstart[u + 1]; i++)
+            int end = g.pend ? g.pend[u] : g.pstart[u + 1];
+            for (int i = g.pstart[u]; i < end; i++)
             {
                 if (g.edge_removed[i])
                     continue;

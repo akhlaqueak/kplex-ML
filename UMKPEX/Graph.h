@@ -1486,17 +1486,14 @@ public:
     MyBitset vertex;
     ll n, m;
     vector<int> vertex_id;               // for u in this, vertex_id[u] in G_input
-    vector<pii> work_edges;
-    vector<int> work_vertices;
-    vector<int> scratch_vertices;
     unordered_map<ll, int> triangles_nn; // the key of edge (u,v) is u*n+v , make sure u<v
     int *d;                              // degree
     AdjacentMatrix A;
     // shared memory for CTCP
     vector<bool> bool_array_n_n, bool_array_m, bool_array_n;
-    int *pstart, *edge_to, *triangles_m, *reverse_edge_id;
+    int *pstart, *pend, *edge_to, *triangles_m;
     vector<bool> edge_removed;
-    Graph_reduced() : d(nullptr), pstart(nullptr), edge_to(nullptr), triangles_m(nullptr), reverse_edge_id(nullptr)
+    Graph_reduced() : d(nullptr), pstart(nullptr), pend(nullptr), edge_to(nullptr), triangles_m(nullptr)
     {
     }
     /**
@@ -1631,11 +1628,13 @@ public:
         edge_removed.resize(m);
         printf("reduced graph n= %d m= %d lb= %d\n", n, m / 2, lb);
         pstart = new int[n + 1];
+        pend = new int[n];
         edge_to = new int[m];
         d = new int[n];
         for (ui i = 0; i < n; i++)
         {
             pstart[i] = g.pstart[i];
+            pend[i] = g.pstart[i + 1];
             d[i] = g.pstart[i + 1] - g.pstart[i];
             for (ui j = g.pstart[i]; j < g.pstart[i + 1]; j++)
             {
@@ -1670,27 +1669,15 @@ public:
             delete[] pstart;
             pstart = nullptr;
         }
+        if (pend != nullptr)
+        {
+            delete[] pend;
+            pend = nullptr;
+        }
         if (triangles_m != nullptr)
         {
             delete[] triangles_m;
             triangles_m = nullptr;
-        }
-        if (reverse_edge_id != nullptr)
-        {
-            delete[] reverse_edge_id;
-            reverse_edge_id = nullptr;
-        }
-    }
-    void init_reverse_edge_ids()
-    {
-        reverse_edge_id = new int[m];
-        for (int u = 0; u < n; u++)
-        {
-            for (int i = pstart[u]; i < pstart[u + 1]; i++)
-            {
-                int v = edge_to[i];
-                reverse_edge_id[i] = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
-            }
         }
     }
     /**
@@ -1711,7 +1698,7 @@ public:
             peel_heap.delete_node(u);
             order.push_back(u);
             rm[u] = 1;
-            for (int j = pstart[u]; j < pstart[u + 1]; j++)
+            for (int j = pstart[u]; j < pend[u]; j++)
             {
                 ui v = edge_to[j];
                 if (!rm[v])
@@ -1730,15 +1717,15 @@ public:
         MyBitset mask(n);
         for (int u = 0; u < n; u++)
         {
-            for (int i = pstart[u]; i < pstart[u + 1]; i++)
+            for (int i = pstart[u]; i < pend[u]; i++)
                 mask.set(edge_to[i]);
-            for (int i = pstart[u]; i < pstart[u + 1]; i++)
+            for (int i = pstart[u]; i < pend[u]; i++)
             {
                 int v = edge_to[i];
                 if (d[v] > d[u])
                     continue;
                 int cnt = 0;
-                for (int j = pstart[v]; j < pstart[v + 1]; j++)
+                for (int j = pstart[v]; j < pend[v]; j++)
                 {
                     int w = edge_to[j];
                     if (mask[w]) // w is common neighbor of u,v
@@ -1746,26 +1733,45 @@ public:
                 }
                 triangles_m[i] = cnt;
             }
-            for (int i = pstart[u]; i < pstart[u + 1]; i++)
+            for (int i = pstart[u]; i < pend[u]; i++)
                 mask.reset(edge_to[i]);
         }
         for (int u = 0; u < n; u++)
         {
-            for (int i = pstart[u]; i < pstart[u + 1]; i++)
+            for (int i = pstart[u]; i < pend[u]; i++)
             {
                 int v = edge_to[i];
                 if (d[v] <= d[u])
                     continue;
-                triangles_m[i] = triangles_m[reverse_edge_id[i]];
+                triangles_m[i] = triangles_m[find(edge_to + pstart[v], edge_to + pend[v], u) + pstart[v]];
             }
         }
+    }
+    void compact_vertex(int u)
+    {
+        int write = pstart[u];
+        for (int read = pstart[u]; read < pend[u]; read++)
+        {
+            if (edge_removed[read])
+                continue;
+            int v = edge_to[read];
+            if (!vertex[v])
+                continue;
+            if (write != read)
+            {
+                edge_to[write] = edge_to[read];
+                triangles_m[write] = triangles_m[read];
+                edge_removed[write] = false;
+            }
+            write++;
+        }
+        pend[u] = write;
     }
     /**
      * @brief prepare some thing
      */
     void init_before_IE()
     {
-        init_reverse_edge_ids();
         init_triangles();
         init_heap();
         bool_array_n.resize(n);
@@ -1777,13 +1783,18 @@ public:
      */
     void CTCP(int lb, int v = -1)
     {
-        vector<pii> &q_edges = work_edges; // an edge is stored as (edge_id, from)
-        vector<int> &q_vertex = work_vertices;
-        q_edges.clear();
-        q_vertex.clear();
-        q_edges.reserve(m);
-        q_vertex.reserve(n);
-        size_t q_edge_idx = 0, q_vertex_idx = 0;
+        queue<pii> q_edges; // an edge is stored as (edge_id, from)
+        queue<int> q_vertex;
+        vector<int> dirty_vertices;
+        vector<char> dirty_flag(n, 0);
+        auto mark_dirty = [&](int u)
+        {
+            if (!dirty_flag[u])
+            {
+                dirty_flag[u] = 1;
+                dirty_vertices.push_back(u);
+            }
+        };
         vector<bool> &in_queue_e = bool_array_m; //(u,v) is already pushed into queue if in_queue_e[edge_id]=1
         vector<bool> &in_queue_v = bool_array_n; // a vertex u is already pushed into queue if in_queue_v[u]=1
         // CTCP is called because lb updated
@@ -1791,55 +1802,55 @@ public:
         {
             for (int u : vertex)
             {
-                for (int i = pstart[u]; i < pstart[u + 1]; i++)
+                compact_vertex(u);
+                for (int i = pstart[u]; i < pend[u]; i++)
                 {
-                    if (edge_removed[i])
-                        continue;
                     int v = edge_to[i];
-                    if (!vertex[v])
-                        continue;
                     if (triangles_m[i] + paramK * 2 <= lb)
                     {
                         if (u < v)
-                            q_edges.push_back({i, u});
+                            q_edges.push({i, u});
                         in_queue_e[i] = true;
                     }
                 }
                 if (d[u] + paramK <= lb)
                 {
-                    q_vertex.push_back(u);
+                    q_vertex.push(u);
                     in_queue_v[u] = 1;
                 }
             }
         }
         else // CTCP is called because IE removed a vertex
         {
-            q_vertex.push_back(v);
+            q_vertex.push(v);
             in_queue_v[v] = 1;
         }
-        while (q_edge_idx < q_edges.size() || q_vertex_idx < q_vertex.size())
+        while (q_edges.size() || q_vertex.size())
         {
-            while (q_edge_idx < q_edges.size())
+            while (q_edges.size())
             {
-                auto edge = q_edges[q_edge_idx++];
+                auto edge = q_edges.front();
+                q_edges.pop();
                 int edge_id = edge.x, u = edge.y, v = edge_to[edge_id];
                 edge_removed[edge_id] = 1;
-                int another_edge_id = reverse_edge_id[edge_id];
+                int another_edge_id = find(edge_to + pstart[v], edge_to + pend[v], u) + pstart[v];
                 edge_removed[another_edge_id] = 1;
+                mark_dirty(u);
+                mark_dirty(v);
                 if (--d[u] + paramK <= lb && !in_queue_v[u])
                 {
-                    q_vertex.push_back(u);
+                    q_vertex.push(u);
                     in_queue_v[u] = 1;
                 }
                 heap.decrease(d[u], u);
                 if (--d[v] + paramK <= lb && !in_queue_v[v])
                 {
-                    q_vertex.push_back(v);
+                    q_vertex.push(v);
                     in_queue_v[v] = 1;
                 }
                 heap.decrease(d[v], v);
-                int *a = edge_to + pstart[u], *b = edge_to + pstart[u + 1];
-                int *l = edge_to + pstart[v], *r = edge_to + pstart[v + 1];
+                int *a = edge_to + pstart[u], *b = edge_to + pend[u];
+                int *l = edge_to + pstart[v], *r = edge_to + pend[v];
                 // update the info of other edge triangles
                 while (a < b && l < r)
                 {
@@ -1858,7 +1869,7 @@ public:
                     {
                         int w = *a; // w is the common neighbor of u,v
                         int id_uw = a - edge_to;
-                        int id_wu = reverse_edge_id[id_uw];
+                        int id_wu = find(edge_to + pstart[w], edge_to + pend[w], u) + pstart[w];
                         assert(!edge_removed[id_wu]);
                         if (!in_queue_e[id_uw])
                         {
@@ -1868,11 +1879,11 @@ public:
                             if (triangles_m[id_uw] + paramK * 2 <= lb)
                             {
                                 in_queue_e[id_uw] = in_queue_e[id_wu] = 1;
-                                q_edges.push_back({id_uw, u});
+                                q_edges.push({id_uw, u});
                             }
                         }
                         ui id_vw = l - edge_to;
-                        ui id_wv = reverse_edge_id[id_vw];
+                        ui id_wv = find(edge_to + pstart[w], edge_to + pend[w], v) + pstart[w];
                         if (!in_queue_e[id_vw])
                         {
                             assert(!in_queue_e[id_wv]);
@@ -1881,7 +1892,7 @@ public:
                             if (triangles_m[id_vw] + paramK * 2 <= lb)
                             {
                                 in_queue_e[id_vw] = in_queue_e[id_wv] = 1;
-                                q_edges.push_back({id_vw, v});
+                                q_edges.push({id_vw, v});
                             }
                         }
                         a++;
@@ -1893,52 +1904,53 @@ public:
                         l++;
                 }
             }
-            if (q_vertex_idx < q_vertex.size())
+            if (q_vertex.size())
             {
-                ui u = q_vertex[q_vertex_idx++];
-                vector<int> &alive_neighbors = scratch_vertices;
-                alive_neighbors.clear();
-                for (ui i = pstart[u]; i < pstart[u + 1]; i++)
+                ui u = q_vertex.front();
+                q_vertex.pop();
+                compact_vertex(u);
+                for (ui i = pstart[u]; i < pend[u]; i++)
                 {
-                    if (edge_removed[i])
+                    if (in_queue_e[i])
                         continue;
+                    ui v = edge_to[i];
+                    if (in_queue_v[v])
+                        continue;
+                    if (--d[v] + paramK <= lb)
+                    {
+                        in_queue_v[v] = 1;
+                        q_vertex.push(v);
+                    }
+                    heap.decrease(d[v], v);
+                }
+                // update the triangles containing u
+                for (ui i = pstart[u]; i < pend[u]; i++)
+                {
                     if (in_queue_e[i])
                         continue;
                     int v = edge_to[i];
                     if (in_queue_v[v])
                         continue;
-                    alive_neighbors.push_back(v);
-                }
-                for (int v : alive_neighbors)
-                {
-                    if (--d[v] + paramK <= lb)
+                    int *st = edge_to + pstart[v], *ed = edge_to + pend[v];
+                    for (ui j = i + 1; j < pend[u]; j++)
                     {
-                        in_queue_v[v] = 1;
-                        q_vertex.push_back(v);
-                    }
-                    heap.decrease(d[v], v);
-                }
-                // update the triangles containing u
-                for (ui ii = 0; ii < alive_neighbors.size(); ii++)
-                {
-                    int v = alive_neighbors[ii];
-                    int *st = edge_to + pstart[v], *ed = edge_to + pstart[v + 1];
-                    for (ui jj = ii + 1; jj < alive_neighbors.size(); jj++)
-                    {
-                        int w = alive_neighbors[jj]; // v w are neighbors of u
-                        int id_vw_offset = find(st, ed, w);
-                        if (st + id_vw_offset != ed && st[id_vw_offset] == w) // v is connected to w
+                        if (in_queue_e[j])
+                            continue;
+                        int w = edge_to[j]; // v w are neighbors of u
+                        if (in_queue_v[w])
+                            continue;
+                        if (has(st, ed, w)) // v is connected to w
                         {
-                            ui id_vw = id_vw_offset + pstart[v];
+                            ui id_vw = find(st, ed, w) + pstart[v];
                             if (in_queue_e[id_vw])
                                 continue;
-                            ui id_wv = reverse_edge_id[id_vw];
+                            ui id_wv = find(edge_to + pstart[w], edge_to + pend[w], v) + pstart[w];
                             --triangles_m[id_wv];
                             --triangles_m[id_vw];
                             if (triangles_m[id_vw] + 2 * paramK <= lb)
                             {
                                 in_queue_e[id_vw] = in_queue_e[id_wv] = 1;
-                                q_edges.push_back({id_vw, v});
+                                q_edges.push({id_vw, v});
                             }
                         }
                     }
@@ -1947,6 +1959,8 @@ public:
                 heap.delete_node(u);
             }
         }
+        for (int u : dirty_vertices)
+            compact_vertex(u);
     }
     /**
      * given a vertex v, induce the 2-hop neighbor of v
@@ -1955,25 +1969,19 @@ public:
      */
     void induce_to_2hop(int v, MyBitset &vis, vector<int> &vertices)
     {
-        for (int i = pstart[v]; i < pstart[v + 1]; i++)
+        compact_vertex(v);
+        for (int i = pstart[v]; i < pend[v]; i++)
         {
-            if (edge_removed[i])
-                continue;
             int a = edge_to[i];
-            if (!vertex[a])
-                continue;
             if (!vis[a])
             {
                 vis.set(a);
                 vertices.push_back(a);
             }
-            for (int j = pstart[a]; j < pstart[a + 1]; j++)
+            compact_vertex(a);
+            for (int j = pstart[a]; j < pend[a]; j++)
             {
-                if (edge_removed[j])
-                    continue;
                 int b = edge_to[j];
-                if (!vertex[b])
-                    continue;
                 if (!vis[b])
                 {
                     vis.set(b);
@@ -1995,17 +2003,15 @@ public:
     {
         vis.reset(v);
         // get G[N(v)] and compute degree
-        for (int i = pstart[v]; i < pstart[v + 1]; i++)
+        compact_vertex(v);
+        for (int i = pstart[v]; i < pend[v]; i++)
         {
-            if (edge_removed[i])
-                continue;
             int a = edge_to[i];
-            if (!vertex[a])
-                continue;
             vis.set(a);
             vertices.push_back(a);
             // update the deg
-            for (int j = pstart[a]; j < pstart[a + 1]; j++)
+            compact_vertex(a);
+            for (int j = pstart[a]; j < pend[a]; j++)
             {
                 int b = edge_to[j];
                 if (b > a)
@@ -2042,7 +2048,8 @@ public:
             {
                 int a = q.front();
                 q.pop();
-                for (int j = pstart[a]; j < pstart[a + 1]; j++)
+                compact_vertex(a);
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
                     if (!vis[b])
@@ -2086,13 +2093,10 @@ public:
             for (int i = 1; i <= cnt; i++)
             {
                 int a = vertices[i];
-                for (int j = pstart[a]; j < pstart[a + 1]; j++)
+                compact_vertex(a);
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    if (edge_removed[j])
-                        continue;
                     int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
                     neighbor_cnt[b]++;
                 }
             }
@@ -2100,7 +2104,7 @@ public:
             {
                 int a = vertices[i];
                 neighbor_cnt[a] = 0;
-                for (int j = pstart[a]; j < pstart[a + 1]; j++)
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
                     if (neighbor_cnt[b] >= lb + 3 - 2 * paramK && !vis[b])
@@ -2125,7 +2129,8 @@ public:
             // reduce g_i to a (lb+1-k)-core
             for (int a : vertices)
             {
-                for (int j = pstart[a]; j < pstart[a + 1]; j++)
+                compact_vertex(a);
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
                     if (b >= a)
@@ -2150,7 +2155,7 @@ public:
                 int a = q.front();
                 q.pop();
                 deg[a] = 0;
-                for (int j = pstart[a]; j < pstart[a + 1]; j++)
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
                     if (!vis[b])
@@ -2287,13 +2292,8 @@ public:
      */
     void CTCP(int lb, int v = -1)
     {
-        vector<pii> &q_edges = work_edges; // an edge is stored as (u,v) where u<v
-        vector<int> &q_vertex = work_vertices;
-        q_edges.clear();
-        q_vertex.clear();
-        q_edges.reserve(m);
-        q_vertex.reserve(n);
-        size_t q_edge_idx = 0, q_vertex_idx = 0;
+        queue<pii> q_edges; // an edge is stored as (u,v) where u<v
+        queue<int> q_vertex;
         vector<bool> &in_queue_e = bool_array_n_n; //(u,v) is already pushed into queue if in_queue_e[u*n+v]=1
         vector<bool> &in_queue_v = bool_array_n;   // a vertex u is already pushed into queue if in_queue_v[u]=1
         // CTCP is called because lb updated
@@ -2307,27 +2307,28 @@ public:
                         break;
                     if (triangles_nn[v * n + u] + paramK * 2 <= lb)
                     {
-                        q_edges.push_back({v, u});
+                        q_edges.push({v, u});
                         in_queue_e[v * n + u] = true;
                     }
                 }
                 if (d[u] + paramK <= lb)
                 {
-                    q_vertex.push_back(u);
+                    q_vertex.push(u);
                     in_queue_v[u] = 1;
                 }
             }
         }
         else // CTCP is called because IE removed a vertex
         {
-            q_vertex.push_back(v);
+            q_vertex.push(v);
             in_queue_v[v] = 1;
         }
-        while (q_edge_idx < q_edges.size() || q_vertex_idx < q_vertex.size())
+        while (q_edges.size() || q_vertex.size())
         {
-            while (q_edge_idx < q_edges.size())
+            while (q_edges.size())
             {
-                auto edge = q_edges[q_edge_idx++];
+                auto edge = q_edges.front();
+                q_edges.pop();
                 int u = edge.x, v = edge.y; // u<v
                 assert(u < v);
                 assert(A[u][v] && A[v][u]);
@@ -2338,12 +2339,12 @@ public:
                 heap.decrease(--d[v], v);
                 if (d[u] + paramK <= lb && !in_queue_v[u])
                 {
-                    q_vertex.push_back(u);
+                    q_vertex.push(u);
                     in_queue_v[u] = 1;
                 }
                 if (d[v] + paramK <= lb && !in_queue_v[v])
                 {
-                    q_vertex.push_back(v);
+                    q_vertex.push(v);
                     in_queue_v[v] = 1;
                 }
                 // update the number of triangles of other edges
@@ -2361,7 +2362,7 @@ public:
                             pii edge = {u, w};
                             if (w < u)
                                 edge = {w, u};
-                            q_edges.push_back(edge);
+                            q_edges.push(edge);
                             in_queue_e[edge_uw] = 1;
                         }
                     }
@@ -2373,16 +2374,17 @@ public:
                             pii edge = {v, w};
                             if (w < v)
                                 edge = {w, v};
-                            q_edges.push_back(edge);
+                            q_edges.push(edge);
                             in_queue_e[edge_vw] = 1;
                         }
                     }
                 }
             }
 
-            if (q_vertex_idx < q_vertex.size())
+            if (q_vertex.size())
             {
-                int u = q_vertex[q_vertex_idx++];
+                int u = q_vertex.front();
+                q_vertex.pop();
                 // update the degree
                 for (int v : A[u])
                 {
@@ -2394,7 +2396,7 @@ public:
                     heap.decrease(--d[v], v);
                     if (d[v] + paramK <= lb)
                     {
-                        q_vertex.push_back(v);
+                        q_vertex.push(v);
                         in_queue_v[v] = 1;
                     }
                     A[v].reset(u); // remove edge (u,v)
@@ -2423,7 +2425,7 @@ public:
                         if (--triangles_nn[edge_vw] + paramK * 2 <= lb)
                         {
                             pii edge = {w, v};
-                            q_edges.push_back(edge);
+                            q_edges.push(edge);
                             in_queue_e[edge_vw] = 1;
                         }
                     }
@@ -2551,7 +2553,8 @@ public:
             Timer t;
             for (int u : vertices)
             {
-                for (int i = g.pstart[u]; i < g.pstart[u + 1]; i++)
+                int end = g.pend ? g.pend[u] : g.pstart[u + 1];
+                for (int i = g.pstart[u]; i < end; i++)
                 {
                     if (g.edge_removed[i])
                         continue;
