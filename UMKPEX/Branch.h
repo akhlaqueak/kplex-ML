@@ -204,14 +204,28 @@ public:
             double start_induce = get_system_time_microsecond();
             vector<int> vertices_2hops{u};
             G_input.induce_to_2hop_and_reduce(u, vis, vertices_2hops, array1_N, lb);
-            edges.clear();
-            int id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
+            int id_u = -1;
+            Graph_adjacent g;
+            if (vis[u] && paramK <= 10)
+            {
+                vector<int> &inv = array_N;
+                g = Graph_adjacent(vis, vertices_2hops, G_input, inv);
+                id_u = inv[u];
+                for (int x : vertices_2hops)
+                    if (vis[x])
+                        vis.reset(x);
+            }
+            else
+            {
+                edges.clear();
+                id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
+                if (id_u != -1)
+                    g = Graph_adjacent(vertices_2hops, edges);
+            }
             if (id_u != -1) // this subgraph is not pruned: begin bnb
             {
                 subgraph_search_cnt++;
                 vector<int> &inv = array_N;
-                // Graph_adjacent g(vis, vertices_2hops, G_input, inv);
-                Graph_adjacent g(vertices_2hops, edges);
                 IE_induce_time += get_system_time_microsecond() - start_induce;
                 IE_graph_size += g.size();
                 IE_graph_cnt++;
