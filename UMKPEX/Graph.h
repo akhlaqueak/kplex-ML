@@ -2019,6 +2019,7 @@ public:
         vector<char> &state = scratch_state;
         vector<int> touched;
         touched.reserve(n);
+        auto is_in_subgraph = [&](int u) { return state[u] == 2 || state[u] == 1; };
         auto mark_state = [&](int u, char val)
         {
             if (state[u] == 0)
@@ -2040,7 +2041,6 @@ public:
             if (!vertex[a] || peel_rank[a] <= rank_v)
                 continue;
             vertices.push_back(a);
-            vis.set(a);
             mark_state(a, 2);
         }
 
@@ -2117,7 +2117,6 @@ public:
                 if (!state[b])
                 {
                     vertices.push_back(b);
-                    vis.set(b);
                     mark_state(b, 1);
                     deg[b] = 1;
                 }
@@ -2135,17 +2134,14 @@ public:
             int a = vertices[i];
             if (state[a] != 1 || deg[a] < cn_threshold)
             {
-                vis.reset(a);
                 continue;
             }
             vertices[write++] = a;
         }
         vertices.resize(write);
-        vis.set(v);
 
         for (int u : touched)
         {
-            state[u] = 0;
             deg[u] = 0;
         }
 
@@ -2154,6 +2150,8 @@ public:
             for (int u : vertices)
                 if (vis[u])
                     vis.reset(u);
+            for (int u : touched)
+                state[u] = 0;
             assert(!vis[v]);
             return;
         }
@@ -2171,7 +2169,7 @@ public:
                         continue;
                     if (b >= a)
                         break;
-                    if (vis[b])
+                    if (a == v || is_in_subgraph(b))
                     {
                         deg[a]++, deg[b]++;
                     }
@@ -2184,7 +2182,8 @@ public:
                 if (deg[a] + paramK <= lb)
                 {
                     q.push_back(a);
-                    vis.reset(a);
+                    if (a != v)
+                        state[a] = 3;
                 }
             }
             while (q_idx < q.size())
@@ -2198,11 +2197,12 @@ public:
                     int b = edge_to[j];
                     if (!vertex[b])
                         continue;
-                    if (!vis[b])
+                    if (b != v && !is_in_subgraph(b))
                         continue;
                     if (--deg[b] + paramK <= lb)
                     {
-                        vis.reset(b);
+                        if (b != v && is_in_subgraph(b))
+                            state[b] = 3;
                         q.push_back(b);
                     }
                 }
@@ -2210,17 +2210,26 @@ public:
             int cnt = 0;
             for (int a : vertices)
             {
-                if (vis[a])
-                    vertices[cnt++] = a, deg[a] = 0;
+                if (a == v || is_in_subgraph(a))
+                    vertices[cnt++] = a;
+                deg[a] = 0;
             }
             vertices.resize(cnt);
-            if (!vis[v] || cnt <= lb)
+            if (cnt <= lb)
             {
                 for (int a : vertices)
-                    vis.reset(a);
+                    if (vis[a])
+                        vis.reset(a);
+                for (int u : touched)
+                    state[u] = 0;
                 assert(!vis[v]);
+                return;
             }
         }
+        for (int i = 1; i < (int)vertices.size(); i++)
+            vis.set(vertices[i]);
+        for (int u : touched)
+            state[u] = 0;
     }
 };
 
