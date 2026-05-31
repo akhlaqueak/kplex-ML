@@ -32,8 +32,6 @@ int main(int argc, char *argv[]) {
 		positional_mode = true;
 		graph_path = argv[1];
 		k_value = atoi(argv[2]);
-		if(graph_path.size() >= 4 && graph_path.substr(graph_path.size() - 4) == ".bin")
-			binary_input = true;
 	}
 
 	OptionParser op("Allowed options");
@@ -71,6 +69,8 @@ int main(int argc, char *argv[]) {
 		graph_path = graph_option->value();
 		k_value = k_option->value();
 	}
+	if(graph_path.size() >= 4 && graph_path.substr(graph_path.size() - 4) == ".bin")
+		binary_input = true;
 
 	Graph *graph = new Graph(graph_path.c_str(), k_value);
 	if(binary_input) graph->read_graph_binary();
