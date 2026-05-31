@@ -458,16 +458,16 @@ private:
 		return true;
 	}
 
-	void BB_search(ui S_end, ui R_end, ui level)
-	{
-		if (S_end > lb)
-			store_solution(S_end);
-		if (R_end > lb && is_kplex(R_end))
-			store_solution(R_end);
-		if (R_end <= lb + 1 || lb >= _UB_)
-			return;
-		dfs_cnt++;
-#ifndef NDEBUG
+		void BB_search(ui S_end, ui R_end, ui level)
+		{
+			dfs_cnt++;
+			if (S_end > lb)
+				store_solution(S_end);
+			if (R_end > lb && is_kplex(R_end))
+				store_solution(R_end);
+			if (R_end <= lb + 1 || lb >= _UB_)
+				return;
+	#ifndef NDEBUG
 		for (ui i = 0; i < R_end; i++)
 		{
 			ui d1 = 0, d2 = 0;
@@ -1887,54 +1887,9 @@ private:
 			return move_candidates_to_end(S_end, R_end, B, level);
 		}
 
-		ui SEC_branching(ui S_end, ui R_end, ui level)
-		{
-			ui cend = R_end;
-			ui beta = lb - S_end;
-			for (ui i = 0; i < S_end && beta > 0 && cend > S_end; i++)
-			{
-				ui u = SR[i];
-				ui cost_cap = support(S_end, u);
-				if (cost_cap == 0)
-					continue;
-
-				PI.clear();
-				char *t_matrix = matrix + u * n;
-				for (ui j = S_end; j < cend; j++)
-				{
-					ui v = SR[j];
-					if (!t_matrix[v])
-						PI.push_back(v);
-				}
-				if (PI.empty())
-					continue;
-
-				ui cost = min(cost_cap, (ui)PI.size());
-				if (cost > beta)
-					break;
-
-				for (ui v : PI)
-					if (SR_rid[v] < cend)
-						swap_pos(SR_rid[v], --cend);
-				beta -= cost;
-			}
-
-			if (beta > 0)
-				cend -= min(beta, cend - S_end);
-
-			vector<ui> B;
-			B.reserve(cend - S_end);
-			for (ui i = S_end; i < cend; i++)
-				B.push_back(SR[i]);
-			return move_candidates_to_end(S_end, R_end, B, level, false);
-		}
-
 		ui S_branching(ui S_end, ui R_end, ui level)
 		{
 			ui beta = lb - S_end;
-			if (S_end < 5 || beta < K)
-				return SEC_branching(S_end, R_end, level);
-
 			for (ui i = 0; i < S_end; i++)
 			{
 				ui u = SR[i];

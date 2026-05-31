@@ -172,6 +172,14 @@ public:
         if (PARA.algorithm == "UMKP+")
             bb_solver.allocateMemory(G_input.n);
 
+        dfs_cnt = 0;
+        AltRB_cnt = 0;
+        AltRB_iteration_cnt = 0;
+        subgraph_pruned_cnt = 0;
+        subgraph_search_cnt = 0;
+        IE_graph_cnt = 0;
+        IE_graph_size = 0;
+
         double start_IE = get_system_time_microsecond();
         G_input.init_before_IE();
         CTCP_time += get_system_time_microsecond() - start_IE;
@@ -522,11 +530,13 @@ public:
         print_module_time("high-order-reduce", higher_order_reduce_time);
         print_module_time("reduce-kPlexT", reduce_kPlexT_time);
         puts("");
-        printf("average g_i size: %.2lf ", IE_graph_size * 1.0 / IE_graph_cnt);
-        printf("g_i pruned: %lld g_i searched: %lld ", subgraph_pruned_cnt, subgraph_search_cnt);
-        printf("AltRB count=%d", AltRB_cnt);
-        printf("AltRB_iteration count=%d", AltRB_iteration_cnt);
-        printf("avg-AltRB-iteration=%.2lf", AltRB_iteration_cnt * 1.0 / AltRB_cnt);
+        double avg_gi_size = IE_graph_cnt ? (IE_graph_size * 1.0 / IE_graph_cnt) : 0.0;
+        printf("avg_gi_size=%.2lf ", avg_gi_size);
+        printf("gi_pruned=%lld gi_searched=%lld ", subgraph_pruned_cnt, subgraph_search_cnt);
+        printf("AltRB_count=%lld ", AltRB_cnt);
+        printf("AltRB_iteration_count=%lld ", AltRB_iteration_cnt);
+        double avg_altrb_iter = AltRB_cnt ? (AltRB_iteration_cnt * 1.0 / AltRB_cnt) : 0.0;
+        printf("avg_AltRB_iteration=%.2lf", avg_altrb_iter);
         puts("");
         puts("*************bnb result*************");
         printf("ground truth= %d , exact searching use time= %.4lf s\n", lb, run_time / 1e6);

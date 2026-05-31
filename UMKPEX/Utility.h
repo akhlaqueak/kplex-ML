@@ -376,7 +376,10 @@ void print_time(double start)
 
 void print_module_time(string name, double time)
 {
-    printf("%s-time: %.4lf s  ", name.c_str(), time / 1e6);
+    for (char &ch : name)
+        if (ch == ' ' || ch == '-')
+            ch = '_';
+    printf("%s: %.4lf s  ", name.c_str(), time / 1e6);
 }
 
 ui read()
@@ -423,4 +426,3 @@ public:
 };
 
 #endif
-

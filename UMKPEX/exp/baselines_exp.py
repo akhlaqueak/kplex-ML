@@ -1,10 +1,53 @@
-#!/usr/bin/env python3
+#!/bin/bash
+#SBATCH --job-name=kPlexT-forward
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=48
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=short
+#SBATCH --time=12:00:00
+#SBATCH --no-requeue
+#SBATCH --output=%x.out
+#SBATCH --error=%x.err
+""":"
+module load OpenMPI
+module load mpi4py
+
+set -euo pipefail
+
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
+SCRIPT_PATH="${SUBMIT_DIR}/$(basename "$0")"
+export MPI_DYNAMIC_BASEDIR="$SUBMIT_DIR"
+cd "$SUBMIT_DIR"
+
+collect_only=0
+for arg in "$@"; do
+    case "$arg" in
+        --collect-only|--postprocess-only)
+            collect_only=1
+            ;;
+    esac
+done
+
+cp -f ../UMKPEX .
+
+if [[ "$collect_only" -eq 1 ]]; then
+    exec python3 -u "$SCRIPT_PATH" "$@"
+fi
+
+SECONDS=0
+echo "Job started at $(date)"
+srun --mpi=pmix --cpu-bind=cores python3 -u "$SCRIPT_PATH" "$@"
+echo "Job finished at $(date)"
+echo "Job completed in $((SECONDS/3600))h $((SECONDS%3600/60))m"
+exit $?
+":"""
+
 import os
 import shlex
 import subprocess
 import sys
 from pathlib import Path
-from mpi4py import MPI
 
 TAG_READY = 1
 TAG_TASK = 2
@@ -16,7 +59,7 @@ TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
-SCRIPT_DIR = Path(__file__).resolve().parent
+SCRIPT_DIR = Path(os.environ.get("MPI_DYNAMIC_BASEDIR", Path(__file__).resolve().parent)).resolve()
 DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
 
 ALGOS="kPlexT-forward".split()
@@ -247,6 +290,8 @@ def main():
     if collect_only:
         collect_results()
         return
+
+    from mpi4py import MPI
 
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
