@@ -28,11 +28,12 @@ int main(int argc, char *argv[]) {
 	int k_value = -1;
 
 	bool positional_mode = false;
-	if(argc == 3 && argv[1][0] != '-' && argv[2][0] != '-') {
+	if(argc >= 3 && argv[1][0] != '-' && argv[2][0] != '-') {
 		positional_mode = true;
 		graph_path = argv[1];
 		k_value = atoi(argv[2]);
-		binary_input = true;
+		if(graph_path.size() >= 4 && graph_path.substr(graph_path.size() - 4) == ".bin")
+			binary_input = true;
 	}
 
 	OptionParser op("Allowed options");
