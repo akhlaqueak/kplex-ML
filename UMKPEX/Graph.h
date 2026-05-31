@@ -1488,6 +1488,7 @@ public:
     vector<int> vertex_id;               // for u in this, vertex_id[u] in G_input
     vector<pii> work_edges;
     vector<int> work_vertices;
+    vector<int> scratch_vertices;
     unordered_map<ll, int> triangles_nn; // the key of edge (u,v) is u*n+v , make sure u<v
     int *d;                              // degree
     AdjacentMatrix A;
@@ -1895,13 +1896,21 @@ public:
             if (q_vertex_idx < q_vertex.size())
             {
                 ui u = q_vertex[q_vertex_idx++];
+                vector<int> &alive_neighbors = scratch_vertices;
+                alive_neighbors.clear();
                 for (ui i = pstart[u]; i < pstart[u + 1]; i++)
                 {
+                    if (edge_removed[i])
+                        continue;
                     if (in_queue_e[i])
                         continue;
-                    ui v = edge_to[i];
+                    int v = edge_to[i];
                     if (in_queue_v[v])
                         continue;
+                    alive_neighbors.push_back(v);
+                }
+                for (int v : alive_neighbors)
+                {
                     if (--d[v] + paramK <= lb)
                     {
                         in_queue_v[v] = 1;
@@ -1910,21 +1919,13 @@ public:
                     heap.decrease(d[v], v);
                 }
                 // update the triangles containing u
-                for (ui i = pstart[u]; i < pstart[u + 1]; i++)
+                for (ui ii = 0; ii < alive_neighbors.size(); ii++)
                 {
-                    if (in_queue_e[i])
-                        continue;
-                    int v = edge_to[i];
-                    if (in_queue_v[v])
-                        continue;
+                    int v = alive_neighbors[ii];
                     int *st = edge_to + pstart[v], *ed = edge_to + pstart[v + 1];
-                    for (ui j = i + 1; j < pstart[u + 1]; j++)
+                    for (ui jj = ii + 1; jj < alive_neighbors.size(); jj++)
                     {
-                        if (in_queue_e[j])
-                            continue;
-                        int w = edge_to[j]; // v w are neighbors of u
-                        if (in_queue_v[w])
-                            continue;
+                        int w = alive_neighbors[jj]; // v w are neighbors of u
                         int id_vw_offset = find(st, ed, w);
                         if (st + id_vw_offset != ed && st[id_vw_offset] == w) // v is connected to w
                         {
