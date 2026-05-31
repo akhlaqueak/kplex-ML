@@ -201,9 +201,9 @@ public:
             auto &vis = bool_array;
             vis.set(u);
             
+            double start_induce = get_system_time_microsecond();
             vector<int> vertices_2hops{u};
             G_input.induce_to_2hop_and_reduce(u, vis, vertices_2hops, array1_N, lb);
-            double start_induce = get_system_time_microsecond();
             edges.clear();
             int id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
             if (id_u != -1) // this subgraph is not pruned: begin bnb
