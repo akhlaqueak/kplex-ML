@@ -1746,7 +1746,7 @@ public:
     void init_before_IE()
     {
         init_triangles();
-        init_heap();
+        // init_heap();
         bool_array_n.resize(n);
         bool_array_m.resize(m);
     }
