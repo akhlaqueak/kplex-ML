@@ -583,6 +583,7 @@ public:
         if (!V_mask[v]) // the subgraph is already pruned due to core-reduction for N(v) and N^2(v)
             return -1;
         auto &g = G_input;
+        sort(vertices.begin(), vertices.end());
         for (int i = 0; i < (int)vertices.size(); i++)
             inv[vertices[i]] = i;
         for (int u : vertices)
