@@ -1491,9 +1491,9 @@ public:
     AdjacentMatrix A;
     // shared memory for CTCP
     vector<bool> bool_array_n_n, bool_array_m, bool_array_n;
-    int *pstart, *edge_to, *triangles_m;
+    int *pstart, *edge_to, *triangles_m, *reverse_edge_id;
     vector<bool> edge_removed;
-    Graph_reduced() : d(nullptr), pstart(nullptr), edge_to(nullptr), triangles_m(nullptr)
+    Graph_reduced() : d(nullptr), pstart(nullptr), edge_to(nullptr), triangles_m(nullptr), reverse_edge_id(nullptr)
     {
     }
     /**
@@ -1672,6 +1672,23 @@ public:
             delete[] triangles_m;
             triangles_m = nullptr;
         }
+        if (reverse_edge_id != nullptr)
+        {
+            delete[] reverse_edge_id;
+            reverse_edge_id = nullptr;
+        }
+    }
+    void init_reverse_edge_ids()
+    {
+        reverse_edge_id = new int[m];
+        for (int u = 0; u < n; u++)
+        {
+            for (int i = pstart[u]; i < pstart[u + 1]; i++)
+            {
+                int v = edge_to[i];
+                reverse_edge_id[i] = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
+            }
+        }
     }
     /**
      * @brief initialize IE heap using degeneracy-order insertion, matching UMKP tie behavior
@@ -1736,7 +1753,7 @@ public:
                 int v = edge_to[i];
                 if (d[v] <= d[u])
                     continue;
-                triangles_m[i] = triangles_m[find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v]];
+                triangles_m[i] = triangles_m[reverse_edge_id[i]];
             }
         }
     }
@@ -1745,6 +1762,7 @@ public:
      */
     void init_before_IE()
     {
+        init_reverse_edge_ids();
         init_triangles();
         init_heap();
         bool_array_n.resize(n);
@@ -1799,7 +1817,7 @@ public:
                 q_edges.pop();
                 int edge_id = edge.x, u = edge.y, v = edge_to[edge_id];
                 edge_removed[edge_id] = 1;
-                int another_edge_id = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
+                int another_edge_id = reverse_edge_id[edge_id];
                 edge_removed[another_edge_id] = 1;
                 if (--d[u] + paramK <= lb && !in_queue_v[u])
                 {
@@ -1833,7 +1851,7 @@ public:
                     {
                         int w = *a; // w is the common neighbor of u,v
                         int id_uw = a - edge_to;
-                        int id_wu = find(edge_to + pstart[w], edge_to + pstart[w + 1], u) + pstart[w];
+                        int id_wu = reverse_edge_id[id_uw];
                         assert(!edge_removed[id_wu]);
                         if (!in_queue_e[id_uw])
                         {
@@ -1847,7 +1865,7 @@ public:
                             }
                         }
                         ui id_vw = l - edge_to;
-                        ui id_wv = find(edge_to + pstart[w], edge_to + pstart[w + 1], v) + pstart[w];
+                        ui id_wv = reverse_edge_id[id_vw];
                         if (!in_queue_e[id_vw])
                         {
                             assert(!in_queue_e[id_wv]);
@@ -1902,12 +1920,13 @@ public:
                         int w = edge_to[j]; // v w are neighbors of u
                         if (in_queue_v[w])
                             continue;
-                        if (has(st, ed, w)) // v is connected to w
+                        int id_vw_offset = find(st, ed, w);
+                        if (st + id_vw_offset != ed && st[id_vw_offset] == w) // v is connected to w
                         {
-                            ui id_vw = find(st, ed, w) + pstart[v];
+                            ui id_vw = id_vw_offset + pstart[v];
                             if (in_queue_e[id_vw])
                                 continue;
-                            ui id_wv = find(edge_to + pstart[w], edge_to + pstart[w + 1], v) + pstart[w];
+                            ui id_wv = reverse_edge_id[id_vw];
                             --triangles_m[id_wv];
                             --triangles_m[id_vw];
                             if (triangles_m[id_vw] + 2 * paramK <= lb)
