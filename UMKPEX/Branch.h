@@ -246,11 +246,11 @@ public:
                 IE_induce_time += get_system_time_microsecond() - start_induce;
                 subgraph_pruned_cnt++;
             }
-            cout << "========== Time Processing: " << u << "Time: " << get_system_time_microsecond() - start_induce << endl;
-            cout << "========== DFS Count: " << dfs_cnt << endl;
-            dfs_cnt = 0;
-            cout << " AltRB hits: " << altrb_cnt << endl;
-            altrb_cnt = 0;
+            // cout << "========== Time Processing: " << u << "Time: " << get_system_time_microsecond() - start_induce << endl;
+            // cout << "========== DFS Count: " << dfs_cnt << endl;
+            // dfs_cnt = 0;
+            // cout << " AltRB hits: " << altrb_cnt << endl;
+            // altrb_cnt = 0;
             double start_CTCP = get_system_time_microsecond();
             G_input.remove_v(u, lb, lb > previous_lb ? true : false);
             CTCP_time += get_system_time_microsecond() - start_CTCP;
