@@ -1486,6 +1486,8 @@ public:
     MyBitset vertex;
     ll n, m;
     vector<int> vertex_id;               // for u in this, vertex_id[u] in G_input
+    vector<int> peel_rank;
+    vector<char> scratch_state;
     unordered_map<ll, int> triangles_nn; // the key of edge (u,v) is u*n+v , make sure u<v
     int *d;                              // degree
     AdjacentMatrix A;
@@ -1687,6 +1689,7 @@ public:
     {
         vector<ui> order;
         order.reserve(n);
+        peel_rank.resize(n);
         vector<int> pd(n);
         vector<char> rm(n, 0);
         for (int i = 0; i < n; i++)
@@ -1705,6 +1708,8 @@ public:
                     peel_heap.decrease(--pd[v], v);
             }
         }
+        for (int i = 0; i < n; i++)
+            peel_rank[order[i]] = i;
         heap = LinearHeap(n, n);
         heap.init(order, d);
     }
@@ -1776,6 +1781,7 @@ public:
         init_heap();
         bool_array_n.resize(n);
         bool_array_m.resize(m);
+        scratch_state.assign(n, 0);
     }
     /**
      * @brief inspired by Lijun Chang
@@ -2007,130 +2013,142 @@ public:
      */
     void induce_to_2hop_and_reduce(int v, MyBitset &vis, vector<int> &vertices, vector<int> &deg, int lb)
     {
+        vertices.clear();
+        vertices.push_back(v);
         vis.reset(v);
-        // get G[N(v)] and compute degree
+        vector<char> &state = scratch_state;
+        vector<int> touched;
+        touched.reserve(n);
+        auto mark_state = [&](int u, char val)
+        {
+            if (state[u] == 0)
+                touched.push_back(u);
+            state[u] = val;
+        };
+
+        int degree_threshold = lb + 1 - paramK;
+        int triangle_threshold = lb + 1 - 2 * paramK;
+        int cn_threshold = lb + 3 - 2 * paramK;
+        int rank_v = peel_rank[v];
+
+        // Step 1: collect forward neighbors of v in degeneracy order.
         for (int i = pstart[v]; i < pend[v]; i++)
         {
             if (edge_removed[i])
                 continue;
             int a = edge_to[i];
-            if (!vertex[a])
+            if (!vertex[a] || peel_rank[a] <= rank_v)
                 continue;
-            vis.set(a);
             vertices.push_back(a);
-            // update the deg
+            vis.set(a);
+            mark_state(a, 2);
+        }
+
+        // Step 2: prune weak first-hop vertices using forward common-neighbor counts.
+        vector<int> q;
+        q.reserve(vertices.size());
+        size_t q_idx = 0;
+        for (int i = 1; i < (int)vertices.size(); i++)
+        {
+            int a = vertices[i];
+            deg[a] = 0;
             for (int j = pstart[a]; j < pend[a]; j++)
             {
                 if (edge_removed[j])
                     continue;
                 int b = edge_to[j];
-                if (!vertex[b])
+                if (!vertex[b] || peel_rank[b] <= rank_v)
                     continue;
-                if (b > a)
-                    break;
-                if (!vis[b])
+                if (state[b])
+                    ++deg[a];
+            }
+            if (deg[a] < triangle_threshold)
+                q.push_back(a);
+        }
+        while (q_idx < q.size())
+        {
+            int a = q[q_idx++];
+            if (state[a] != 2)
+                continue;
+            state[a] = 3;
+            vis.reset(a);
+            for (int j = pstart[a]; j < pend[a]; j++)
+            {
+                if (edge_removed[j])
                     continue;
-                deg[a]++;
-                deg[b]++;
+                int b = edge_to[j];
+                if (!vertex[b] || peel_rank[b] <= rank_v || state[b] != 2)
+                    continue;
+                if (deg[b]-- == triangle_threshold)
+                    q.push_back(b);
             }
         }
-        // reduce G[N(v)] to (lb+1-2k)-core
+
+        int kept_first_hop = 0;
+        for (int i = 1; i < (int)vertices.size(); i++)
+            if (state[vertices[i]] == 2)
+                ++kept_first_hop;
+        if (kept_first_hop < degree_threshold)
         {
-            vector<int> q;
-            size_t q_idx = 0;
-            for (int i = 1; i < (int)vertices.size(); i++)
+            for (int u : touched)
             {
-                int u = vertices[i];
-                if (deg[u] < lb + 1 - 2 * paramK)
-                {
-                    vis.reset(u);
-                    q.push_back(u);
-                }
-            }
-            if (vertices.size() - 1 + paramK - q.size() <= lb) // |N(v)| + k <= lb
-            {
-                for (int u : vertices) // clear the arrays
-                {
-                    deg[u] = 0;
-                    if (vis[u])
-                        vis.reset(u);
-                }
-                return;
-            }
-            while (q_idx < q.size())
-            {
-                int a = q[q_idx++];
-                for (int j = pstart[a]; j < pend[a]; j++)
-                {
-                    if (edge_removed[j])
-                        continue;
-                    int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
-                    if (!vis[b])
-                        continue;
-                    if (--deg[b] < lb + 1 - 2 * paramK)
-                    {
-                        vis.reset(b);
-                        q.push_back(b);
-                    }
-                }
-            }
-            // store the rest of N(v)
-            int cnt = 0;
-            for (int i = 1; i < (int)vertices.size(); i++)
-            {
-                int u = vertices[i];
+                state[u] = 0;
+                deg[u] = 0;
                 if (vis[u])
-                {
-                    vertices[++cnt] = u;
-                }
-                deg[u] = 0; // clear deg[]
-            }
-            vertices.resize(cnt + 1);
-            if (cnt < lb + 1 - paramK) // current subgraph can be pruned
-            {
-                // clear the vis[]
-                for (int i = 1; i <= cnt; i++)
-                {
-                    int u = vertices[i];
                     vis.reset(u);
-                }
-                assert(!vis[v]);
-                return;
             }
+            return;
         }
-        vis.set(v);
-        int cnt = vertices.size() - 1; // count of |N(v)|
-        // next, we add 2-hops neighbors, for u in N_G^2(v), u should have at least lb+3-2k neighbors in N(v)
+
+        // Step 3: add forward 2-hop vertices and count support from surviving first-hop vertices.
+        int old_size = vertices.size();
+        for (int i = 1; i < old_size; i++)
         {
-            auto &neighbor_cnt = deg;
-            vector<int> touched;
-            touched.reserve(cnt * 2);
-            for (int i = 1; i <= cnt; i++)
+            int a = vertices[i];
+            if (state[a] != 2)
+                continue;
+            for (int j = pstart[a]; j < pend[a]; j++)
             {
-                int a = vertices[i];
-                for (int j = pstart[a]; j < pend[a]; j++)
+                if (edge_removed[j])
+                    continue;
+                int b = edge_to[j];
+                if (!vertex[b] || peel_rank[b] <= rank_v)
+                    continue;
+                if (!state[b])
                 {
-                    if (edge_removed[j])
-                        continue;
-                    int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
-                    if (neighbor_cnt[b]++ == 0)
-                        touched.push_back(b);
-                }
-            }
-            for (int b : touched)
-            {
-                if (neighbor_cnt[b] >= lb + 3 - 2 * paramK && !vis[b])
-                {
-                    vis.set(b);
                     vertices.push_back(b);
+                    vis.set(b);
+                    mark_state(b, 1);
+                    deg[b] = 1;
                 }
-                neighbor_cnt[b] = 0;
+                else if (state[b] != 3)
+                    ++deg[b];
             }
         }
+
+        int write = 1;
+        for (int i = 1; i < old_size; i++)
+            if (state[vertices[i]] == 2)
+                vertices[write++] = vertices[i];
+        for (int i = old_size; i < (int)vertices.size(); i++)
+        {
+            int a = vertices[i];
+            if (state[a] != 1 || deg[a] < cn_threshold)
+            {
+                vis.reset(a);
+                continue;
+            }
+            vertices[write++] = a;
+        }
+        vertices.resize(write);
+        vis.set(v);
+
+        for (int u : touched)
+        {
+            state[u] = 0;
+            deg[u] = 0;
+        }
+
         if (vertices.size() <= lb)
         {
             for (int u : vertices)
