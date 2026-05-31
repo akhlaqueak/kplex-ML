@@ -426,7 +426,7 @@ void Graph::search()
 		{
 			ui u, key;
 			linear_heap->pop_min(u, key);
-			if(key != 0) printf("u = %u, key = %u\n", u, key);
+			// if(key != 0) printf("u = %u, key = %u\n", u, key);
 			if (key < kplex.size() + 1 - K)
 			{
 				if (degree[u] != 0)
