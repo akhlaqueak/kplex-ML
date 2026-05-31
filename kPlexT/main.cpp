@@ -9,7 +9,7 @@ using namespace popl;
 void print_usage() {
 	printf("Example usage: ./kPlexT -g path_to_graph -k 3 -o -b\n");
 	printf("           or: ./kPlexT path_to_graph 3\n");
-	printf("Traversal:    --backward (default: forward)\n");
+	printf("Traversal:    --forward (default: backward)\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
 	bool output = false;
 	bool binary_input = false;
-	bool mode = false;
+	bool mode = true;
 	string alg;
 	string graph_path;
 	int k_value = -1;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	auto graph_option = op.add<Value<string>>("g", "graph", "\'path to input graph file\'");
 	auto alg_option = op.add<Value<string>>("a", "alg", "\'algorithm name\' (degen | exact | verify)", "exact", &alg);
 	auto k_option = op.add<Value<int>>("k", "k", "\'the value of k for k-plex\'");
-	op.add<Switch>("", "backward", "\'traverse peel_sequence backward during exact search\'", &mode);
+	op.add<Switch>("", "forward", "\'traverse peel_sequence forward during exact search\'", &mode);
 	op.add<Switch>("o", "output", "\'write the kplex to ./kplex.txt\'", &output);
 	op.add<Switch>("b", "binary", "\'read the input graph from binary files b_adj.bin and b_degree.bin\'", &binary_input);
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	if(strcmp(alg.c_str(), "degen") == 0) graph->kPlex_degen(); //degeneracy-based k-plex
-	else if(strcmp(alg.c_str(), "exact") == 0) graph->kPlex_exact(mode);
+	else if(strcmp(alg.c_str(), "exact") == 0) graph->kPlex_exact(!mode);
 	else if(strcmp(alg.c_str(), "verify") == 0) graph->verify_kplex();
 	else print_usage();
 
