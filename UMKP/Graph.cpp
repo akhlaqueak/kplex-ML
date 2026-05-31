@@ -529,7 +529,7 @@ void Graph::search()
 			++search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune / prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search / search_cnt);
-		printf("extract_2hop_time: %.4lf s\n", extract_2hop_time / 1000000.0);
+		printf("extract_2hop_time: %.4lf s\n", extract_2hop_time / 1e6);
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
 
