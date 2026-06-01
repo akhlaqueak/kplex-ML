@@ -1687,6 +1687,8 @@ public:
      */
     void init_heap()
     {
+        heap = LinearHeap(n, n, d);
+        return;
         vector<ui> order;
         order.reserve(n);
         peel_rank.resize(n);
