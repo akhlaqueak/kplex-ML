@@ -2017,21 +2017,13 @@ public:
         // get G[N(v)] and compute degree
         for (int i = pstart[v]; i < pend[v]; i++)
         {
-            if (edge_removed[i])
-                continue;
             int a = edge_to[i];
-            if (!vertex[a])
-                continue;
             vis.set(a);
             vertices.push_back(a);
             // update the deg
             for (int j = pstart[a]; j < pend[a]; j++)
             {
-                if (edge_removed[j])
-                    continue;
                 int b = edge_to[j];
-                if (!vertex[b])
-                    continue;
                 if (b > a)
                     break;
                 if (!vis[b])
@@ -2042,15 +2034,14 @@ public:
         }
         // reduce G[N(v)] to (lb+1-2k)-core
         {
-            vector<int> q;
-            size_t q_idx = 0;
+            queue<int> q;
             for (int i = 1; i < (int)vertices.size(); i++)
             {
                 int u = vertices[i];
                 if (deg[u] < lb + 1 - 2 * paramK)
                 {
                     vis.reset(u);
-                    q.push_back(u);
+                    q.push(u);
                 }
             }
             if (vertices.size() - 1 + paramK - q.size() <= lb) // |N(v)| + k <= lb
@@ -2063,22 +2054,20 @@ public:
                 }
                 return;
             }
-            while (q_idx < q.size())
+            while (q.size())
             {
-                int a = q[q_idx++];
+                int a = q.front();
+                q.pop();
+                compact_vertex(a);
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    if (edge_removed[j])
-                        continue;
                     int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
                     if (!vis[b])
                         continue;
                     if (--deg[b] < lb + 1 - 2 * paramK)
                     {
                         vis.reset(b);
-                        q.push_back(b);
+                        q.push(b);
                     }
                 }
             }
@@ -2111,30 +2100,30 @@ public:
         // next, we add 2-hops neighbors, for u in N_G^2(v), u should have at least lb+3-2k neighbors in N(v)
         {
             auto &neighbor_cnt = deg;
-            vector<int> touched;
-            touched.reserve(cnt * 2);
             for (int i = 1; i <= cnt; i++)
             {
                 int a = vertices[i];
+                compact_vertex(a);
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    if (edge_removed[j])
-                        continue;
                     int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
-                    if (neighbor_cnt[b]++ == 0)
-                        touched.push_back(b);
+                    neighbor_cnt[b]++;
                 }
             }
-            for (int b : touched)
+            for (int i = 1; i <= cnt; i++)
             {
-                if (neighbor_cnt[b] >= lb + 3 - 2 * paramK && !vis[b])
+                int a = vertices[i];
+                neighbor_cnt[a] = 0;
+                for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    vis.set(b);
-                    vertices.push_back(b);
+                    int b = edge_to[j];
+                    if (neighbor_cnt[b] >= lb + 3 - 2 * paramK && !vis[b])
+                    {
+                        vis.set(b);
+                        vertices.push_back(b);
+                    }
+                    neighbor_cnt[b] = 0;
                 }
-                neighbor_cnt[b] = 0;
             }
         }
         if (vertices.size() <= lb)
@@ -2150,13 +2139,10 @@ public:
             // reduce g_i to a (lb+1-k)-core
             for (int a : vertices)
             {
+                compact_vertex(a);
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    if (edge_removed[j])
-                        continue;
                     int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
                     if (b >= a)
                         break;
                     if (vis[b])
@@ -2165,33 +2151,29 @@ public:
                     }
                 }
             }
-            vector<int> q;
-            size_t q_idx = 0;
+            queue<int> q;
             for (int a : vertices)
             {
                 if (deg[a] + paramK <= lb)
                 {
-                    q.push_back(a);
+                    q.push(a);
                     vis.reset(a);
                 }
             }
-            while (q_idx < q.size())
+            while (q.size())
             {
-                int a = q[q_idx++];
+                int a = q.front();
+                q.pop();
                 deg[a] = 0;
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
-                    if (edge_removed[j])
-                        continue;
                     int b = edge_to[j];
-                    if (!vertex[b])
-                        continue;
                     if (!vis[b])
                         continue;
                     if (--deg[b] + paramK <= lb)
                     {
                         vis.reset(b);
-                        q.push_back(b);
+                        q.push(b);
                     }
                 }
             }
