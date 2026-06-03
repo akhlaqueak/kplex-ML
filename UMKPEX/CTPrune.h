@@ -10,6 +10,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <vector>
 
 using ui = unsigned int; // vertex type
 using ept = unsigned int; // edge pointer type; unsigned int can be used to process upto two billion undirected edges
@@ -82,49 +83,93 @@ namespace CTPrune {
 	// reorganize the adjacency lists
 	// and sort each adjacency list to be in increasing order
 	void reorganize_oriented_graph(ui n, ui *tri_cnt, ept *pstart, ept *pend, ept *pend2, ui *edges, ept *edges_pointer, ui *buf) {
-		for(ui i = 0;i < n;i ++) pend2[i] = pend[i];
-		for(ui i = 0;i < n;i ++) {
-			for(ept j = pstart[i];j < pend[i];j ++) {
-				ept &k = pend2[edges[j]];
-				edges[k] = i; tri_cnt[k] = tri_cnt[j];
-				++ k;
+		ept m = pstart[n];
+		std::vector<ept> deg(n, 0), new_pstart(n + 1, 0), outdeg(n, 0), out_pos(n, 0), in_pos(n, 0);
+		ept oriented_edges = 0;
+		for(ui u = 0; u < n; ++u) {
+			outdeg[u] = pend[u] - pstart[u];
+			for(ept j = pstart[u]; j < pend[u]; ++j) {
+				++deg[u];
+				++deg[edges[j]];
+				++oriented_edges;
+			}
+		}
+		for(ui i = 0; i < n; ++i) new_pstart[i + 1] = new_pstart[i] + deg[i];
+		assert(new_pstart[n] == m);
+
+		std::vector<ui> temp_edges(m), temp_tri(m), temp_buf_edges, temp_buf_tri;
+		std::vector<ept> temp_eid(m), temp_buf_eid;
+		temp_buf_edges.reserve(m ? (m / n + 2) : 0);
+		temp_buf_tri.reserve(m ? (m / n + 2) : 0);
+		temp_buf_eid.reserve(m ? (m / n + 2) : 0);
+
+		for(ui i = 0; i < n; ++i) {
+			out_pos[i] = new_pstart[i];
+			in_pos[i] = new_pstart[i] + outdeg[i];
+		}
+
+		ept eid = 0;
+		for(ui u = 0; u < n; ++u) {
+			for(ept j = pstart[u]; j < pend[u]; ++j) {
+				ui v = edges[j];
+				ept a = out_pos[u]++;
+				ept b = in_pos[v]++;
+				temp_edges[a] = v;
+				temp_tri[a] = tri_cnt[j];
+				temp_eid[a] = eid;
+				temp_edges[b] = u;
+				temp_tri[b] = tri_cnt[j];
+				temp_eid[b] = eid;
+				++eid;
 			}
 		}
 
-		for(ui i = 0;i < n;i ++) {
-			pend2[i] = pend[i];
-			pend[i] = pstart[i];
-		}
-		for(ui i = 0;i < n;i ++) {
-			for(ept j = pend2[i];j < pstart[i+1];j ++) {
-				ept &k = pend[edges[j]];
-				edges[k] = i; tri_cnt[k] = tri_cnt[j];
-				edges_pointer[k] = j; edges_pointer[j] = k;
-				++ k;
-			}
-		}
-
-		ept *pointer = pend2;
-		for(ui i = 0;i < n;i ++) {
-			if(pend[i] == pstart[i]||pend[i] == pstart[i+1]) continue;
-			ept j = pstart[i], k = pend[i], pos = 0;
-			while(j < pend[i]||k < pstart[i+1]) {
-				if(k >= pstart[i+1]||(j < pend[i]&&edges[j] < edges[k])) {
-					buf[pos] = edges[j];
-					pointer[pos ++] = edges_pointer[j ++];
+		for(ui i = 0; i < n; ++i) {
+			ept left = new_pstart[i];
+			ept mid = new_pstart[i] + outdeg[i];
+			ept right = new_pstart[i + 1];
+			if(left == right) continue;
+			temp_buf_edges.clear();
+			temp_buf_tri.clear();
+			temp_buf_eid.clear();
+			temp_buf_edges.reserve(right - left);
+			temp_buf_tri.reserve(right - left);
+			temp_buf_eid.reserve(right - left);
+			ept a = left, b = mid;
+			while(a < mid || b < right) {
+				if(b >= right || (a < mid && temp_edges[a] < temp_edges[b])) {
+					temp_buf_edges.push_back(temp_edges[a]);
+					temp_buf_tri.push_back(temp_tri[a]);
+					temp_buf_eid.push_back(temp_eid[a]);
+					++a;
 				}
 				else {
-					buf[pos] = edges[k];
-					pointer[pos ++] = edges_pointer[k ++];
+					temp_buf_edges.push_back(temp_edges[b]);
+					temp_buf_tri.push_back(temp_tri[b]);
+					temp_buf_eid.push_back(temp_eid[b]);
+					++b;
 				}
 			}
-			for(ept j = 0;j < pos;j ++) {
-				ept idx = pstart[i]+j, k = pointer[j];
-				edges[idx] = buf[j];
-				tri_cnt[idx] = tri_cnt[k];
-				edges_pointer[idx] = k; edges_pointer[k] = idx;
+			for(ept off = 0; off < right - left; ++off) {
+				edges[left + off] = temp_buf_edges[off];
+				tri_cnt[left + off] = temp_buf_tri[off];
+				edges_pointer[left + off] = temp_buf_eid[off];
 			}
 		}
+
+		std::vector<ept> eid_first(eid, m), eid_second(eid, m);
+		for(ept idx = 0; idx < m; ++idx) {
+			ept cur = edges_pointer[idx];
+			if(eid_first[cur] == m) eid_first[cur] = idx;
+			else eid_second[cur] = idx;
+		}
+		for(ept cur = 0; cur < eid; ++cur) {
+			assert(eid_first[cur] < m && eid_second[cur] < m);
+			edges_pointer[eid_first[cur]] = eid_second[cur];
+			edges_pointer[eid_second[cur]] = eid_first[cur];
+		}
+		for(ui i = 0; i <= n; ++i) pstart[i] = new_pstart[i];
+		for(ui i = 0; i < n; ++i) pend[i] = pstart[i + 1];
 	}
 
 	bool find(ui w, ept b, ept e, char *deleted, ept &idx, ui *edges) {

@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=kPlexT-forward
-#SBATCH --nodes=1
+#SBATCH --job-name=kPEX
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -14,9 +14,10 @@ module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
+cp ../UMKPEX .
 
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
-SCRIPT_PATH="${SUBMIT_DIR}/$(basename "$0")"
+SCRIPT_PATH="${SUBMIT_DIR}/baselines_exp.py"
 export MPI_DYNAMIC_BASEDIR="$SUBMIT_DIR"
 cd "$SUBMIT_DIR"
 
@@ -49,6 +50,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+MPI = None
+
 TAG_READY = 1
 TAG_TASK = 2
 TAG_DONE = 3
@@ -60,9 +63,9 @@ DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(os.environ.get("MPI_DYNAMIC_BASEDIR", Path(__file__).resolve().parent)).resolve()
-DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
+DS_FILE = (SCRIPT_DIR / "ds.txt").resolve()
 
-ALGOS="kPlexT-forward".split()
+ALGOS="kPEX".split()
 
 switches={
     "UMKP-Imp": "-algorithm UMKP+ -bounding None -branching Adaptive-Br",
@@ -108,6 +111,11 @@ def get_t_total(filepath):
         with open(filepath, "r") as f:
             for line in f:
                 if not line.startswith(">>"):
+                    if " kPEX time:" in line:
+                        tail = line.split(" kPEX time:", 1)[1].strip()
+                        if tail.endswith(" s"):
+                            tail = tail[:-2].strip()
+                        return float(tail)
                     continue
                 return float(line.split()[-1])
     except (OSError, ValueError, IndexError):
@@ -285,6 +293,7 @@ def parse_args(argv):
 
 
 def main():
+    global MPI
     collect_only = parse_args(sys.argv)
 
     if collect_only:

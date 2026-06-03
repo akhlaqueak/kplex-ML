@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=UMKP-baselines
-#SBATCH --nodes=5
+#SBATCH --job-name=CTCP
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
-#SBATCH --partition=medium
-#SBATCH --time=24:00:00
+#SBATCH --partition=short
+#SBATCH --time=4:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -14,12 +14,7 @@ module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
-
-export HEUR="${HEUR:-Both-Heur}"
-export BR="${BR:-Pivot-Br}"
-export CT="${CT:-CTCP}"
-export ALGO="${ALGO:-kPEX}"
-export BOUND="${BOUND:-None}"
+cp ../UMKPEX .
 
 resolve_script_path() {
     if [[ -n "${SLURM_JOB_ID:-}" ]]; then
@@ -70,8 +65,10 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br".split()
-ALGO="UMKP UMKP+".split()
+BR="S-Br".split()
+ALGO="UMKPEX".split()
+HEUR="kPEX-Heur"
+CTCP="CTCP CF-CTCP"
 # BR="Binary-Br".split()
 # ALGO="kPEX".split()
 RESULT_WIDTH = 6
@@ -82,7 +79,7 @@ DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
 OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 SCRIPT_DIR = Path(os.environ.get("MPI_DYNAMIC_BASEDIR", Path(__file__).resolve().parent)).resolve()
-DS_FILE = (SCRIPT_DIR / "../ds.txt").resolve()
+DS_FILE = (SCRIPT_DIR / "ds.txt").resolve()
 RESUME_LOG = None
 
 
@@ -108,13 +105,13 @@ def get_outfile(cmd: str) -> str:
     return str(LOG_DIR / f"{outfile}.log")
 
 
-def get_cmd(ds, k, br, algo):
+def get_cmd(ds, k, br, heur, ct):
     switches={
         "UMKP": f"-algorithm UMKP+ -bounding None -branching {br}",
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} "+switches[algo]
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -branching {br} -heuristic {heur} -ctcp {ct}"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:
@@ -159,14 +156,14 @@ def generate_tasks():
 
             ds, k = line.strip().split()
 
-            for algo in ALGO:
+            for heur in HEUR:
                 for br in BR:
-                    cmd = get_cmd(ds, k, br, algo)
-                    task = " ".join(shlex.quote(x) for x in cmd)
-                    if task in completed:
-                        continue
-                    tasks.append(task)
-
+                    for ct in CTCP:
+                        cmd = get_cmd(ds, k, br, heur, ct)
+                        task = " ".join(shlex.quote(x) for x in cmd)
+                        if task in completed:
+                            continue
+                        tasks.append(task)
     return tasks
 
 
@@ -326,18 +323,19 @@ def collect_results():
 
                 ds, k = line.strip().split()
 
-                for algo in ALGO:
+                for heur in HEUR:
                     for br in BR:
-                        cmd = get_cmd(ds, k, br, algo)
+                        for ct in CTCP:
+                            cmd = get_cmd(ds, k, br, heur, ct)
 
-                        fname = get_outfile(" ".join(shlex.quote(x) for x in cmd))
-                        values=None
-                        if os.path.isfile(fname):
-                            values = extract_result_values(fname)
-                        if not values:
-                            values = ["x"] * RESULT_WIDTH
-                            
-                        out.write(" ".join(values) + " ")
+                            fname = get_outfile(" ".join(shlex.quote(x) for x in cmd))
+                            values=None
+                            if os.path.isfile(fname):
+                                values = extract_result_values(fname)
+                            if not values:
+                                values = ["x"] * RESULT_WIDTH
+                                
+                            out.write(" ".join(values) + " ")
 
                 out.write("\n")
 

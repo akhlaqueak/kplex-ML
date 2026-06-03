@@ -3,9 +3,7 @@
 
 #include "LinearHeap.h"
 #include "MyBitset.h"
-vector<pair<ui, ui>> cores;
-bool stats=false;
-ui max_d_g, max_core_g;
+
 /**
  * used for heuristic & preprocess
  */
@@ -88,7 +86,7 @@ public:
     }
     int ego_degen(set<ui> *solution = nullptr)
     {
-        int lb = max(degeneracy_and_reduce(2 * paramK - 2, solution), lb);
+        int lb = degeneracy_and_reduce(2 * paramK - 2, solution);
         if (n <= lb)
         {
             return lb;
@@ -1091,11 +1089,9 @@ public:
         {
             ui *pd = d; // this may destroy d[]; however, d[] is useless for us now
             LinearHeap heap(n, n);
-            max_d_g = 0;
             for (ui i = 0; i < n; i++)
                 if (!rm[i])
                 {
-                    max_d_g=max(pd[i], max_d_g);
                     heap.insert(pd[i], i);
                 }
             if (!heap.sz)
@@ -1109,7 +1105,6 @@ public:
             while (heap.get_min_key() + paramK < heap.sz)
             {
                 ui u = heap.get_min_node();
-                if(pd[u]>max_core) cores.push_back({pd[u], heap.sz});
                 max_core = max(max_core, pd[u]);
                 core[u] = max_core;
                 heap.delete_node(u);
@@ -1125,12 +1120,10 @@ public:
                     }
                 }
             }
-            max_core_g = max_core;
             int rest = heap.sz;
             while (heap.sz)
             {
                 ui u = heap.get_min_node();
-                // if(pd[u]>max_core) cores.push_back({pd[u], heap.sz});
                 heap.delete_node(u);
                 seq[heap.sz] = u;
                 plex.push_back(u);

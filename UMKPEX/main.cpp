@@ -55,7 +55,25 @@ void print_heuris_log()
         exit(0);
     }
 }
+void strong_reduce()
+{
+    // strong reduce: CF-CTCP
+    {
+        Timer start_strong_reduce;
+        Reduction reduce(&g);
+        ui pre_n = g.n;
+        reduce.strong_reduce(lb);
+        printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+        strong_reduce_time += start_strong_reduce.get_time();
 
+        if (lb >= g.n)
+        {
+            g.n = 0;
+            print_heuris_log();
+            exit(0);
+        }
+    }
+}
 /**
  * @brief the heuristic stage without StrongHeuris
  */
@@ -80,6 +98,7 @@ void FastHeuris()
             exit(0);
         }
     }
+    // strong_reduce();
     FastHeuris_lb = lb;
     FastHeuris_time = t.get_time();
 }
@@ -94,7 +113,7 @@ void StrongHeuris()
     // time_limit = max(time_limit, 0.5 * 1e6);
     if (PARA.heuristic == "Both-Heur")
     {
-        time_limit = max(FastHeuris_time, 5e6);
+        time_limit = max(FastHeuris_time, 10e6);
     }
     Timer t_extend("StrongHeuris");
     while (1)
@@ -144,33 +163,17 @@ void EgoHeuris()
     int ego_lb = g.ego_degen(&solution);
 
     StrongHeuris_time = t.get_time();
-    cout << "ego degen lb: " << ego_lb << endl;
+    cout << "ego degen lb: " << ego_lb <<" use time: "<< t.get_time_seconds()<< endl;
     if (ego_lb > lb)
     {
         lb = ego_lb;
         g.weak_reduce(lb);
+        Timer t;
+        printf("Afer weak reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, t.get_time() / 1e6);
     }
-    t.print_time();
+    strong_reduce();
 }
-void strong_reduce()
-{
-    // strong reduce: CF-CTCP
-    {
-        Timer start_strong_reduce;
-        Reduction reduce(&g);
-        ui pre_n = g.n;
-        reduce.strong_reduce(lb);
-        printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-        strong_reduce_time += start_strong_reduce.get_time();
 
-        if (lb >= g.n)
-        {
-            g.n = 0;
-            print_heuris_log();
-            exit(0);
-        }
-    }
-}
 /**
  * @brief stage-I: we conduct heuristic and preprocessing stage
  * i.e., KPHeuris
@@ -182,15 +185,11 @@ void heuris()
     {
         EgoHeuris();
         if (PARA.heuristic == "EGO-Heur")
-        {
-            strong_reduce();
             return;
-        }
     }
-    int old_lb = lb;
-    StrongHeuris(); // generate n subgraphs and compute larger lb
-    if (lb == old_lb) // if lb is changed in StrongHeuris the strong_reduce has already been applied in it. 
+    else
         strong_reduce();
+    StrongHeuris(); // generate n subgraphs and compute larger lb
 }
 
 /**

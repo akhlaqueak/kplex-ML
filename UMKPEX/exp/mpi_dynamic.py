@@ -14,6 +14,7 @@ module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
+cp ../UMKPEX .
 
 export HEUR="${HEUR:-Both-Heur}"
 export BR="${BR:-Pivot-Br}"

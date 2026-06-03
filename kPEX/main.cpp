@@ -1,20 +1,15 @@
-
 #include "Graph.h"
-#include "Command.h"
-#include "KPlex_BB_matrix.h"
+#include "Branch.h"
 
-// #define enable_CTCP
 #ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
 #include "2th-Reduction-CTCP.h"
 #else // use CF-CTCP
 #include "2th-Reduction.h"
 #endif
-#include "Branch.h"
-set<ui> solution;
-
 
 string file_path;
 Graph g;
+set<ui> solution;
 double algorithm_start_time, total_heuris_time;
 double FastHeuris_time;
 double StrongHeuris_time;
@@ -22,6 +17,14 @@ double strong_reduce_time;
 int FastHeuris_lb;
 int input_n;
 
+void print_final_summary(int heur_size, ui max_kplex_size, double ctcp_time_sec, double bnb_time_sec)
+{
+    double total_time_sec = (get_system_time_microsecond() - algorithm_start_time) / 1e6;
+    double heuristic_time_sec = total_heuris_time / 1e6;
+    puts("------------------{whole procedure: kPEX}---------------------");
+    printf(">>Heur_Size: %d MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n\n",
+           heur_size, max_kplex_size, heuristic_time_sec, ctcp_time_sec, bnb_time_sec, total_time_sec);
+}
 
 void print_solution()
 {
@@ -45,8 +48,6 @@ void print_solution()
 void print_heuris_log()
 {
     puts("*************Heuristic result*************");
-    after_maxkp_time = get_system_time_microsecond();
-
     total_heuris_time = get_system_time_microsecond() - algorithm_start_time;
     printf("list triangles time: %.4lf s, strong reduce time: %.4lf s\n", list_triangle_time / 1e6, strong_reduce_time / 1e6);
     printf("total-heuristic-time= %.4lf s, FastHeuris-time= %.4lf s, StrongHeuris-time= %.4lf s\n",
@@ -57,12 +58,9 @@ void print_heuris_log()
 
     if (g.n <= lb)
     {
-            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
-        puts("------------------{whole procedure: kPEX}---------------------");
-        printf("\n>>Heursitic MaxKPlex_Size: %u t_time: %.4lf\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-        // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+        print_final_summary(lb, (ui)solution.size(), FastHeuris_time / 1e6, 0.0);
         exit(0);
     }
 }
@@ -104,7 +102,6 @@ void FastHeuris()
 
         if (lb >= g.n)
         {
-            cout<<"STATS: "<<0<<" "<<0<<" "<<0<<" "<<0<<" "<<0<<" []"<<endl;
             g.n = 0;
             FastHeuris_time = t.get_time();
             print_heuris_log();
@@ -227,7 +224,6 @@ void bnb()
 
 int main(int argc, char *argv[])
 {
-    PARA=CommandLine(argc, argv);
     if (argc < 3)
     {
         printf("2 params are required !!! \n");
@@ -245,22 +241,25 @@ int main(int argc, char *argv[])
     Timer prepro("heuristic and preprocess");
     heuris();
     prepro.print_time();
-    // print_heuris_log();
+    print_heuris_log();
+    int heur_size = lb;
 
-    ui heuris_size = solution.size();   
-
+    // recursive branch and bound
     puts("------------------{start BRB_Rec}---------------------");
-    bnb();
+    Graph_reduced *G = new Graph_reduced_adjacent_list(g);
+    Branch branch(*G, lb);
+    branch.IE_framework();
+    if (solution.size() < branch.solution.size())
+    {
+        solution.clear();
+        for (int vv : branch.solution)
+            solution.insert(vv);
+    }
 
     print_solution();
 
-    puts("------------------{whole procedure: kPEX}---------------------");
-    double bnb_time = (get_system_time_microsecond() - algorithm_start_time-total_heuris_time);
-
-    double after_maxkp_percent = (get_system_time_microsecond() - after_maxkp_time)/bnb_time;
-    // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-    // printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf after_maxkp_percent: %.4lf change_after_heur: %d\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6, after_maxkp_percent, solution.size()-heuris_size);
-    printf("\n>>%s MaxKPlex_Size: %u t_time: %.4lf\n", argv[1], solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    print_final_summary(heur_size, (ui)solution.size(), branch.get_ctcp_time_seconds(), branch.get_run_time_seconds());
+    delete G;
 
     return 0;
 }

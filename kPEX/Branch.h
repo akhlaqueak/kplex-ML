@@ -1,16 +1,16 @@
 #ifndef BRANCH_H
 #define BRANCH_H
 
-double after_maxkp_time;
+#include "Graph.h"
+
+#ifdef enable_CTCP // the existing heuristic method Degen uses CTCP
+#include "2th-Reduction-CTCP.h"
+#else// use CF-CTCP
+#include "2th-Reduction.h"
+#endif
 
 class Branch
 {
-    vector<int> B;
-    int root_u;
-    bool add_first = false;
-    vector<int> peel_seq;
-    vector<pii> vertices_in_C;
-
 private:
     using Set = MyBitset;
     Graph_reduced &G_input;
@@ -22,7 +22,7 @@ private:
     vector<int> deg;      // deg[u] = degree of u in S+C
     vector<int> one_loss_non_neighbor_cnt;
     vector<int> que; // queue
-    Set one_loss_vertices_in_C, ISc;
+    Set one_loss_vertices_in_C;
     AdjacentMatrix non_A, A; // A is the adjacent matrix, A[u] is the neighbors of u, A[u][v] means u,v are adj; non_A = ~A
     Graph_adjacent *ptr_g;
 
@@ -62,6 +62,8 @@ public:
     {
     }
     ~Branch() {}
+    double get_run_time_seconds() const { return run_time / 1e6; }
+    double get_ctcp_time_seconds() const { return CTCP_time / 1e6; }
     /**
      * @brief Branch-aNd-Bound on subgraph g_i
      * i.e., BRB_Rec in paper
@@ -69,6 +71,7 @@ public:
     void bnb(Set &S, Set &C)
     {
         dfs_cnt++;
+
         // reduction rules
         Timer start_fast_reduce;
         bool S_is_plex, g_is_plex;
@@ -84,8 +87,7 @@ public:
         }
 
         // reducing methods from kPlexT
-        if (paramK > 10)
-            reduce_kPlexT(S, C);
+        reduce_kPlexT(S, C);
 
         // AltRB: bounding & stronger reduction (our novel method)
         int ub = get_UB(S, C);
@@ -109,53 +111,10 @@ public:
 
         // select pivot to generate 2 branches
         int pivot = -1;
-
-        if (PARA.branching == "Default-Br")
-        {
-            pivot = select_pivot_vertex_with_min_degree(C);
-            if (pivot == -1)
-                return;
-            generate_sub_branches(S, C, pivot);
-        }
-        else if (PARA.branching == "Pivot-Br")
-        {
-            if (C.empty())
-                return;
-            if (B.empty() or S.test(B.back()) or (not C.test(B.back())))
-                branching_set_pivot(S, C);
-
-            pivot = B.back();
-            B.pop_back();
-            generate_sub_branches_add_first(S, C, pivot);
-        }
-        else if (PARA.branching == "S-Br")
-        {
-            // partition based branching (S-Based Branching)
-            auto br_C = branching_set_part(S, C);
-
-            for (int u : br_C)
-            {
-                auto newS = S, newC = C;
-                newS.set(u);
-                v_just_add = u;
-                bnb(newS, newC);
-
-                C.set(u);
-            }
-        }
-        else if (PARA.branching == "R-Br")
-        {
-            // Color branching (R-Based Branching)
-            auto br_C = branching_set_color(S, C);
-            for (int u : br_C)
-            {
-                auto newS = S, newC = C;
-                newS.set(u);
-                v_just_add = u;
-                bnb(newS, newC);
-                C.set(u);
-            }
-        }
+        pivot = select_pivot_vertex_with_min_degree(C);
+        if (pivot == -1)
+            return;
+        generate_sub_branches(S, C, pivot);
     }
 
     /**
@@ -164,17 +123,11 @@ public:
      */
     void IE_framework()
     {
-        // BBMatrix stuff
-        KPLEX_BB_MATRIX bb_solver(paramK);
-        if (PARA.alg == "UMKP+")
-            bb_solver.allocateMemory(G_input.n);
-
         double start_IE = get_system_time_microsecond();
         G_input.init_before_IE();
         CTCP_time += get_system_time_microsecond() - start_IE;
         array_N.resize(G_input.n);
         array1_N.resize(G_input.n, 0);
-
         while (G_input.size() > lb)
         {
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
@@ -211,23 +164,13 @@ public:
                     higher_order_reduce_time += tt.get_time();
                 }
 
-                if (PARA.alg == "UMKP+")
-                {
-                    bb_solver.load_graph(g);
-                    bb_solver.kPlex(lb, g.size(), solution, id_u);
-                    if (solution.size() > lb)
-                        lb = solution.size();
-                }
-                else
-                {
-                    Set S(g.size()), C(g.size());
-                    S.set(id_u);
-                    C.flip();
-                    C.reset(id_u);
-                    init_info(id_u, g);
-                    v_just_add = id_u;
-                    bnb(S, C); // BRB_Rec in paper
-                }
+                Set S(g.size()), C(g.size());
+                S.set(id_u);
+                C.flip();
+                C.reset(id_u);
+                init_info(id_u, g);
+                v_just_add = id_u;
+                bnb(S, C); // BRB_Rec in paper
             }
             else
             {
@@ -294,6 +237,7 @@ public:
         }
         part_PI_time += part_timer.get_time();
 
+
         // now copy_C = Pi_0
         auto &Pi_0 = copy_C;
 #ifndef SeqRB
@@ -324,7 +268,7 @@ public:
                 }
             }
         }
-        // #endif
+// #endif
         // while (copy_S.size())
         // {
         //     int sel = -1, size = 0, allow = 0;
@@ -356,7 +300,7 @@ public:
         // ret = ub + Pi_0.size();
         // if (ret <= lb)
         //     return ret;
-        // #ifndef SeqRB
+// #ifndef SeqRB
         // RR1
         // lookahead: for u in C, if UB(S+u, C-u) <= lb, then remove u
         {
@@ -442,7 +386,8 @@ public:
         int ub = bound_and_reduce(S, C); // AltRB
         if (ub <= lb)
             return ub;
-        return only_part_UB(S, C); // just bounding without AltRB
+        ub = only_part_UB(S, C); // just bounding without AltRB
+        return ub;
     }
 
     /**
@@ -450,8 +395,6 @@ public:
      */
     int select_pivot_vertex_with_min_degree(Set &C)
     {
-        // for (int u: C)
-        //     deg[u] = S.size()-loss_cnt[u]+A[u].intersect(C);
         int sel = -1;
         for (int u : C)
         {
@@ -461,41 +404,6 @@ public:
                 sel = u;
         }
         return sel;
-    }
-
-    /**
-     * @return the vertex with minimum degree
-     */
-    void branching_set_pivot(Set &S, Set &C)
-    {
-        for (int u : C)
-            deg[u] = S.size() - loss_cnt[u] + A[u].intersect(C);
-        B.clear();
-        int sel = -1;
-
-        for (int u : C)
-        {
-            if (non_A[root_u][u] and (loss_cnt[u] + 1 == paramK or
-                                      loss_cnt[root_u] + 1 == paramK or
-                                      deg[u] + paramK <= lb + 1))
-            {
-                B.push_back(u);
-                return;
-            }
-            if (sel == -1 || deg[u] < deg[sel] or (deg[u] == deg[sel] and loss_cnt[u] > loss_cnt[sel]))
-                sel = u;
-        }
-
-        auto bset = C;
-        bset &= non_A[sel];
-        bset.reset(sel);
-        for (int u : bset)
-            B.push_back(u);
-
-        auto comp = [&](int a, int b)
-        { return deg[a] > deg[b]; };
-        sort(B.begin(), B.end(), comp);
-        B.push_back(sel);
     }
 
     /**
@@ -536,7 +444,6 @@ public:
     void init_info(int u, Graph_adjacent &g)
     {
         v_just_add = u;
-        root_u = u;
         loss_cnt.clear();
         loss_cnt.resize(g.size());
         deg.clear();
@@ -547,11 +454,8 @@ public:
         array_n.clear();
         array_n.resize(g.size());
         one_loss_vertices_in_C = Set(g.size());
-        ISc = Set(g.size());
         one_loss_non_neighbor_cnt.resize(g.size());
         que.resize(g.size());
-        peel_seq.resize(g.size());
-        compute_peel_sequence(g.size());
     }
     /**
      * @return the index of v in the subgraph
@@ -661,7 +565,6 @@ public:
             assert(solution.size() == lb);
             printf("Find a larger plex : %d\n", sz);
             fflush(stdout);
-            after_maxkp_time = get_system_time_microsecond();
         }
     }
     /**
@@ -700,8 +603,7 @@ public:
      */
     void fast_reduction(Set &S, Set &C, bool &g_is_plex, bool &S_is_plex)
     {
-        // if (true) // only if S changed, we can update loss_cnt[]
-        if (v_just_add != -1 or add_first) // only if S changed, we can update loss_cnt[]
+        if (v_just_add != -1) // only if S changed, we can update loss_cnt[]
         {
             compute_loss_cnt(S, C, S_is_plex);
             if (!S_is_plex)
@@ -860,7 +762,8 @@ public:
      */
     void reduce_kPlexT(Set &S, Set &C)
     {
-
+        if (paramK <= 10)
+            return;
         if (S.size() <= 1)
             return;
         Timer t;
@@ -877,7 +780,7 @@ public:
         for (int u : S2)
             sup_S2 += paramK - loss_cnt[u];
         auto &non_neighbor_in_S2 = array_n;
-        vertices_in_C.clear();
+        vector<pii> vertices_in_C;
         vertices_in_C.reserve(C.size());
         for (int v : C)
         {
@@ -923,7 +826,6 @@ public:
      */
     void generate_sub_branches(Set &S, Set &C, int pivot)
     {
-        add_first = false;
         {
             auto new_S = S, new_C = C;
             // branch 1: remove pivot
@@ -931,60 +833,12 @@ public:
             v_just_add = -1;
             bnb(new_S, new_C);
         }
-        B.clear();
         {
             // branch 2: include pivot
             S.set(pivot);
             C.reset(pivot);
             v_just_add = pivot;
             bnb(S, C);
-        }
-    }
-
-    /**
-     * @brief generate two sub-branches: one includes pivot and the other excludes pivot
-     */
-    void generate_sub_branches_add_first(Set &S, Set &C, int pivot)
-    {
-        add_first = true;
-        // branch 2: include pivot
-        auto new_S = S, new_C = C;
-        new_S.set(pivot);
-        new_C.reset(pivot);
-        v_just_add = pivot;
-        bnb(new_S, new_C);
-
-        B.clear();
-
-        // branch 1: remove pivot
-        C.reset(pivot);
-        v_just_add = -1;
-        bnb(S, C);
-    }
-
-    void compute_peel_sequence(ui sz)
-    {
-        Set P(sz);
-        P.flip();
-        ui seq = 0;
-        auto &deg = array_n; // we reuse the array to decrease time cost
-        for (int u : P)
-            deg[u] = A[u].size();
-        while (!P.empty())
-        {
-            int min_u = -1;
-            for (int u : P)
-            {
-                if (min_u == -1 or deg[u] < deg[min_u])
-                    min_u = u;
-            }
-            for (int v : P)
-            {
-                if (A[min_u][v])
-                    deg[v]--;
-            }
-            peel_seq[min_u] = seq++;
-            P.reset(min_u);
         }
     }
     /**
@@ -1141,108 +995,6 @@ public:
             }
         }
     }
-    ui support(ui u)
-    {
-        return paramK - loss_cnt[u];
-    }
-
-    vector<ui> branching_set_color(Set &S, Set &C)
-    {
-        auto br_C = C;
-        ui beta = lb - S.size();
-        while (beta > 0 and !br_C.empty())
-        {
-            ui ub = tryColor(br_C);
-            if (ub <= beta)
-            {
-                for (ui u : ISc)
-                {
-                    br_C.reset(u);
-                }
-                beta -= ub;
-            }
-            else
-                break;
-        }
-        for (ui u : br_C)
-            if (beta-- > 0)
-                br_C.reset(u);
-            else
-                break;
-        vector<ui> br;
-        br.reserve(br_C.size());
-        for (auto u : br_C)
-        {
-            C.reset(u);
-            br.push_back(u);
-        }
-
-        sort(br.begin(), br.end(), [&](ui a, ui b)
-             { return peel_seq[a] > peel_seq[b]; });
-
-        return br;
-    }
-    /**
-     * @brief partition-based branching set
-     */
-    vector<ui> branching_set_part(Set &S, Set &C)
-    {
-        // auto &loss = deg;
-        auto br_C = C;
-        auto copy_S = S;
-        ui beta = lb - S.size();
-
-        for (int u : S)
-            loss_cnt[u] = non_A[u].intersect(S);
-
-        while (true)
-        {
-            ui Pi_u = -1, cost_u;
-            double dise_u;
-            for (int u : copy_S)
-            {
-                if (loss_cnt[u] == paramK)
-                    continue; // boundary vertex does not have nn_cnt=0
-                ui nn_cnt = br_C.intersect(non_A[u]);
-                if (nn_cnt == 0)
-                    continue;
-                double cost = min(support(u), nn_cnt);
-                double dise = nn_cnt / cost;
-                if (Pi_u == -1 || (dise > dise_u and cost <= beta))
-                    dise_u = dise, Pi_u = u, cost_u = cost;
-            }
-            if (Pi_u == -1 or cost_u > beta)
-                break;
-            for (int u : br_C)
-                if (non_A[Pi_u][u])
-                    br_C.reset(u);
-            copy_S.reset(Pi_u);
-            beta -= cost_u;
-
-            if (beta == 0)
-                break;
-        }
-
-        for (auto u : br_C)
-        {
-            if (beta-- > 0)
-                br_C.reset(u);
-            else
-                break;
-        }
-
-        vector<ui> br;
-        br.reserve(br_C.size());
-        for (auto u : br_C)
-        {
-            C.reset(u);
-            br.push_back(u);
-        }
-
-        sort(br.begin(), br.end(), [&](ui a, ui b)
-             { return peel_seq[a] > peel_seq[b]; });
-        return br;
-    }
     /**
      * @brief partition ub without reduction rules
      */
@@ -1329,75 +1081,6 @@ public:
             }
         }
         return ret;
-    }
-
-    void createIS(Set &C, Set &ISc)
-    {
-        ISc.clear();
-        for (auto u : C)
-        {
-            if (ISc.intersect(A[u]) == 0)
-                ISc.set(u);
-        }
-    }
-
-    ui TISUB(Set IS)
-    {
-        ui tisub = 0;
-        ui sz = IS.size();
-        for (ui i = 0; i < sz; i++)
-        {
-            ui v = -1;
-            for (ui u : IS)
-            // find v with max support
-            {
-                if (v == -1 or support(u) > support(v))
-                    v = u;
-            }
-            if (support(v) == 0)
-                cout << v << endl;
-            if (v != -1 && support(v) >= tisub + 1)
-            {
-                tisub++;
-                IS.reset(v);
-            }
-            else
-                break;
-        }
-        return tisub;
-    }
-    ui tryColor(Set C)
-    {
-        createIS(C, ISc);
-        ui ub = TISUB(ISc);
-        // return ub;
-        ui vlc = 0;
-        for (ui u : ISc)
-        {
-            if (support(u) > ub)
-                vlc++;
-            C.reset(u);
-        }
-        for (ui u : C)
-        {
-            ui nn = ISc.intersect(A[u]);
-            if (nn + vlc + 1 <= ub)
-            {
-                vlc += nn + 1;
-                ISc.set(u);
-                C.reset(u);
-            }
-        }
-
-        for (ui u : C)
-        {
-            if (support(u) > ub)
-                continue;
-            ui nn = ISc.intersect(A[u]);
-            if (nn + support(u) <= ub)
-                ISc.set(u);
-        }
-        return ub;
     }
 };
 

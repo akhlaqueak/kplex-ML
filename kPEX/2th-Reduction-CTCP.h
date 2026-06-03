@@ -2,7 +2,7 @@
 #define REDUCTION_H
 
 #include "Graph.h"
-#define EGO
+
 /**
  * @brief second order reduction
  */

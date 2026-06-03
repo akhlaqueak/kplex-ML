@@ -1,6 +1,5 @@
 #ifndef BRANCH_H
 #define BRANCH_H
-
 double after_maxkp_time;
 
 class Branch
@@ -43,6 +42,9 @@ private:
     int IE_graph_cnt;
     ll IE_graph_size;
     double CTCP_time;
+    double CTCP_init_time;
+    double CTCP_remove_v_time;
+    double CTCP_lb_update_time;
     ll subgraph_pruned_cnt, subgraph_search_cnt;
     map<int, int> counter;
     double reduce_kPlexT_time;
@@ -55,6 +57,7 @@ public:
                                             run_time(0), fast_reduce_time(0), core_reduce_time(0),
                                             part_PI_time(0), IE_induce_time(0),
                                             matrix_init_time(0), IE_graph_cnt(0), IE_graph_size(0), CTCP_time(0),
+                                            CTCP_init_time(0), CTCP_remove_v_time(0), CTCP_lb_update_time(0),
                                             higher_order_reduce_time(0),
                                             subgraph_pruned_cnt(0),
                                             subgraph_search_cnt(0), reduce_kPlexT_time(0),
@@ -179,10 +182,14 @@ public:
         subgraph_search_cnt = 0;
         IE_graph_cnt = 0;
         IE_graph_size = 0;
+        CTCP_time = 0;
+        CTCP_init_time = 0;
+        CTCP_remove_v_time = 0;
+        CTCP_lb_update_time = 0;
 
         double start_IE = get_system_time_microsecond();
         G_input.init_before_IE();
-        CTCP_time += get_system_time_microsecond() - start_IE;
+        CTCP_init_time += get_system_time_microsecond() - start_IE;
         array_N.resize(G_input.n);
         array1_N.resize(G_input.n, 0);
         if (PARA.branching == "Adaptive-Br")
@@ -243,6 +250,8 @@ public:
                 {
                     bb_solver.load_graph(g);
                     bb_solver.kPlex(lb, g.size(), solution, id_u);
+                    AltRB_cnt = bb_solver.get_AltRB_count();
+                    AltRB_iteration_cnt = bb_solver.get_AltRB_iteration_count();
                     if (solution.size() > lb)
                         lb = solution.size();
                 }
@@ -267,10 +276,9 @@ public:
             // dfs_cnt = 0;
             // cout << " AltRB hits: " << altrb_cnt << endl;
             // altrb_cnt = 0;
-            double start_CTCP = get_system_time_microsecond();
-            G_input.remove_v(u, lb, lb > previous_lb ? true : false);
-            CTCP_time += get_system_time_microsecond() - start_CTCP;
+            G_input.remove_v(u, lb, lb > previous_lb ? true : false, &CTCP_remove_v_time, &CTCP_lb_update_time);
         }
+        CTCP_time = CTCP_init_time + CTCP_remove_v_time + CTCP_lb_update_time;
         run_time = get_system_time_microsecond() - start_IE;
         print_progress_bar(1.0, true);
 
@@ -543,6 +551,9 @@ public:
         puts("");
         print_module_time("matrix init", matrix_init_time);
         print_module_time("CTCP", CTCP_time);
+        print_module_time("CTCP init", CTCP_init_time);
+        print_module_time("CTCP remove_v", CTCP_remove_v_time);
+        print_module_time("CTCP lb_update", CTCP_lb_update_time);
         print_module_time("high-order-reduce", higher_order_reduce_time);
         print_module_time("reduce-kPlexT", reduce_kPlexT_time);
         puts("");
@@ -610,8 +621,46 @@ public:
                 int v = g.edge_to[i];
                 if (!V_mask[v])
                     continue;
+                int rev_begin = g.pstart[v];
+                int rev_end = g.pend ? g.pend[v] : g.pstart[v + 1];
+                int rev_idx = find(g.edge_to + rev_begin, g.edge_to + rev_end, u) + rev_begin;
+                if (rev_idx >= rev_end || g.edge_to[rev_idx] != (ui)u || g.edge_removed[rev_idx])
+                    continue;
                 edges.push_back({inv[u], inv[v]});
             }
+        }
+        if (edges.size() & 1)
+        {
+            fprintf(stderr,
+                    "[CTCP_for_g_i] odd edge count root=%d vertices=%zu edges=%zu lb=%d\n",
+                    v, vertices.size(), edges.size(), lb);
+            for (const pii &e : edges)
+            {
+                if ((int)e.x == (int)e.y)
+                {
+                    fprintf(stderr,
+                            "[CTCP_for_g_i] self loop root=%d local_v=%d orig_v=%d\n",
+                            v, (int)e.x, vertices[e.x]);
+                    break;
+                }
+                bool found_reverse = false;
+                for (const pii &rev : edges)
+                {
+                    if (rev.x == e.y && rev.y == e.x)
+                    {
+                        found_reverse = true;
+                        break;
+                    }
+                }
+                if (!found_reverse)
+                {
+                    fprintf(stderr,
+                            "[CTCP_for_g_i] asymmetric edge root=%d local=(%d,%d) orig=(%d,%d)\n",
+                            v, (int)e.x, (int)e.y, vertices[e.x], vertices[e.y]);
+                    break;
+                }
+            }
+            fflush(stderr);
         }
         Graph g_i(vertices, edges);
         if (paramK > 10)

@@ -64,11 +64,15 @@ private:
     vector<int> one_loss_non_neighbor_cnt;
 	Set one_loss_vertices_in_C;
 	Graph_adjacent *ptr_g;
+	ll AltRB_cnt;
+	ll AltRB_iteration_cnt;
 
 public:
 	ui best_n_edges;
 	vector<vector<ui>> all_kplexes;
 	ui nmkp = 0;
+	ll get_AltRB_count() const { return AltRB_cnt; }
+	ll get_AltRB_iteration_count() const { return AltRB_iteration_cnt; }
 	KPLEX_BB_MATRIX(ui K, bool _ds = false)
 	{
 		all_kplex_search = _ds;
@@ -94,6 +98,8 @@ public:
 		level_id = nullptr;
 		max_level = 0;
 		best_n_edges = 0;
+		AltRB_cnt = 0;
+		AltRB_iteration_cnt = 0;
 	}
 
 	~KPLEX_BB_MATRIX()
@@ -2495,6 +2501,7 @@ private:
 
 	int bound_and_reduce(Set &S, Set &C)
 	{
+		AltRB_iteration_cnt++;
 		Timer part_timer;
 		int initial_C_size = C.size();
 		auto copy_S = S;
@@ -2852,6 +2859,7 @@ private:
 
 	int altRB(ui &S_end, ui &R_end, ui level)
 	{
+		AltRB_cnt++;
 		Set S(n), C(n);
 		for (ui i = 0; i < S_end; i++)
 			S.set(SR[i]);
