@@ -200,7 +200,10 @@ void bnb()
     Graph_reduced *G;
     G = new Graph_reduced_adjacent_list(g);
     Branch branch(*G, lb);
-    branch.IE_framework();                        // generate n subgraphs
+    if (PARA.framework == "oriented")
+        branch.IE_framework_oriented();
+    else
+        branch.IE_framework();
     if (solution.size() < branch.solution.size()) // record the max plex
     {
         solution.clear();

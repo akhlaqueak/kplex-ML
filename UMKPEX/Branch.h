@@ -285,6 +285,305 @@ public:
         print_result();
     }
 
+    void reorganize_oriented_IE_graph()
+    {
+        vector<int> row;
+        for (int u : G_input.vertex)
+        {
+            int end = G_input.pend ? G_input.pend[u] : G_input.pstart[u + 1];
+            row.clear();
+            row.reserve(end - G_input.pstart[u]);
+            for (int i = G_input.pstart[u]; i < end; i++)
+            {
+                if (G_input.edge_removed[i])
+                    continue;
+                int v = G_input.edge_to[i];
+                if (!G_input.vertex[v])
+                    continue;
+                row.push_back(v);
+            }
+            int write = G_input.pstart[u];
+            for (int v : row)
+                if (v > u)
+                    G_input.edge_to[write++] = v;
+            G_input.pend[u] = write;
+            for (int v : row)
+                if (v < u)
+                    G_input.edge_to[write++] = v;
+        }
+    }
+
+    bool extract_subgraph_with_prune_oriented(int u, int degree_threshold, int triangle_threshold,
+                                              int cn_threshold,
+                                              vector<int> &ids, vector<int> &rid, vector<pii> &vp,
+                                              vector<int> &degree, vector<char> &exists)
+    {
+        ids.clear();
+        vp.clear();
+        ids.push_back(u);
+        exists[u] = 1;
+        for (int i = G_input.pstart[u]; i < G_input.pend[u]; i++)
+        {
+            int v = G_input.edge_to[i];
+            ids.push_back(v);
+            exists[v] = 2;
+        }
+
+        vector<int> queue;
+        queue.reserve(ids.size());
+        for (int i = 1; i < (int)ids.size(); i++)
+        {
+            int v = ids[i];
+            degree[v] = 0;
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
+            {
+                if (exists[G_input.edge_to[j]])
+                    degree[v]++;
+            }
+            if (degree[v] < triangle_threshold)
+                queue.push_back(v);
+        }
+        for (int i = 0; i < (int)queue.size(); i++)
+        {
+            int v = queue[i];
+            exists[v] = 3;
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
+            {
+                int w = G_input.edge_to[j];
+                if (exists[w] == 2)
+                {
+                    if (degree[w] == triangle_threshold)
+                        queue.push_back(w);
+                    degree[w]--;
+                }
+            }
+        }
+        if ((int)ids.size() - (int)queue.size() - 1 < degree_threshold)
+        {
+            for (int v : ids)
+                exists[v] = 0;
+            ids.clear();
+            return false;
+        }
+
+        int old_size = ids.size();
+        for (int i = 1; i < old_size; i++)
+        {
+            if (exists[ids[i]] != 2)
+                continue;
+            int v = ids[i];
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
+            {
+                int w = G_input.edge_to[j];
+                if (!exists[w])
+                {
+                    ids.push_back(w);
+                    exists[w] = 1;
+                    degree[w] = 1;
+                }
+                else
+                    degree[w]++;
+            }
+        }
+
+        int new_size = 1;
+        for (int i = 1; i < old_size; i++)
+        {
+            if (exists[ids[i]] == 3)
+                exists[ids[i]] = 0;
+            else
+                ids[new_size++] = ids[i];
+        }
+        for (int i = old_size; i < (int)ids.size(); i++)
+        {
+            if (degree[ids[i]] < cn_threshold)
+                exists[ids[i]] = 0;
+            else
+                ids[new_size++] = ids[i];
+        }
+        ids.resize(new_size);
+
+        for (int i = 0; i < (int)ids.size(); i++)
+            rid[ids[i]] = i;
+        for (int i = 0; i < (int)ids.size(); i++)
+        {
+            int v = ids[i];
+            for (int j = G_input.pstart[v]; j < G_input.pend[v]; j++)
+            {
+                int w = G_input.edge_to[j];
+                if (!exists[w])
+                    continue;
+                int a = rid[v], b = rid[w];
+                if (a < b)
+                    vp.push_back({a, b});
+                else
+                    vp.push_back({b, a});
+            }
+        }
+        for (int v : ids)
+            exists[v] = 0;
+        return !ids.empty();
+    }
+
+    bool extract_subgraph_wo_prune_oriented(int u,
+                                            vector<int> &ids, vector<int> &rid, vector<pii> &vp,
+                                            vector<char> &exists)
+    {
+        ids.clear();
+        vp.clear();
+        ids.push_back(u);
+        exists[u] = 1;
+        rid[u] = 0;
+        for (int i = G_input.pstart[u]; i < G_input.pend[u]; i++)
+        {
+            int v = G_input.edge_to[i];
+            ids.push_back(v);
+            exists[v] = 1;
+            rid[v] = ids.size() - 1;
+        }
+        int old_size = ids.size();
+        for (int i = 1; i < old_size; i++)
+        {
+            int v = ids[i];
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
+            {
+                int w = G_input.edge_to[j];
+                if (exists[w])
+                    continue;
+                ids.push_back(w);
+                exists[w] = 1;
+                rid[w] = ids.size() - 1;
+            }
+        }
+        for (int v : ids)
+        {
+            for (int j = G_input.pstart[v]; j < G_input.pend[v]; j++)
+            {
+                int w = G_input.edge_to[j];
+                if (!exists[w])
+                    continue;
+                int a = rid[v], b = rid[w];
+                if (a < b)
+                    vp.push_back({a, b});
+                else
+                    vp.push_back({b, a});
+            }
+        }
+        for (int v : ids)
+            exists[v] = 0;
+        return !ids.empty();
+    }
+
+    void IE_framework_oriented()
+    {
+        if (G_input.is_matrix())
+        {
+            IE_framework();
+            return;
+        }
+
+        KPLEX_BB_MATRIX bb_solver(paramK);
+        if (PARA.algorithm == "UMKP+")
+            bb_solver.allocateMemory(G_input.n);
+
+        dfs_cnt = 0;
+        AltRB_cnt = 0;
+        AltRB_iteration_cnt = 0;
+        subgraph_pruned_cnt = 0;
+        subgraph_search_cnt = 0;
+        IE_graph_cnt = 0;
+        IE_graph_size = 0;
+        CTCP_time = 0;
+        CTCP_init_time = 0;
+        CTCP_remove_v_time = 0;
+        CTCP_lb_update_time = 0;
+
+        double start_IE = get_system_time_microsecond();
+        array_N.resize(G_input.n);
+        array1_N.resize(G_input.n, 0);
+        G_input.scratch_state.assign(G_input.n, 0);
+        if (PARA.branching == "Adaptive-Br")
+            PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
+
+        reorganize_oriented_IE_graph();
+
+        vector<pii> edges;
+        edges.reserve(G_input.m);
+        vector<int> vertices_2hops;
+        vertices_2hops.reserve(G_input.n);
+
+        int processed = 0;
+        for (int u = G_input.n - 1; u >= 0; u--)
+        {
+            if (!G_input.vertex[u])
+                continue;
+            processed++;
+            double percentage = G_input.size() ? processed * 1.0 / G_input.size() : 1.0;
+            print_progress_bar(percentage);
+
+            int forward_deg = G_input.pend[u] - G_input.pstart[u];
+            if (forward_deg + paramK <= lb || u + 1 <= lb)
+                continue;
+
+            double start_induce = get_system_time_microsecond();
+            bool extracted = false;
+            if (lb >= 2 * paramK - 1)
+                extracted = extract_subgraph_with_prune_oriented(u, lb + 1 - paramK,
+                                                                 lb + 1 - 2 * paramK,
+                                                                 lb + 3 - 2 * paramK,
+                                                                 vertices_2hops, array_N, edges, array1_N,
+                                                                 G_input.scratch_state);
+            else
+                extracted = extract_subgraph_wo_prune_oriented(u, vertices_2hops, array_N, edges,
+                                                               G_input.scratch_state);
+
+            if (!extracted || vertices_2hops.empty() || (int)vertices_2hops.size() <= lb)
+            {
+                IE_induce_time += get_system_time_microsecond() - start_induce;
+                subgraph_pruned_cnt++;
+                continue;
+            }
+
+            Graph_adjacent g(vertices_2hops, edges);
+            int id_u = 0;
+            subgraph_search_cnt++;
+            IE_induce_time += get_system_time_microsecond() - start_induce;
+            IE_graph_size += g.size();
+            IE_graph_cnt++;
+            matrix_init_time += g.init_time;
+            ptr_g = &g;
+
+            {
+                Timer tt;
+                g.edge_reduction(id_u, lb);
+                higher_order_reduce_time += tt.get_time();
+            }
+            if (PARA.algorithm == "UMKP+")
+            {
+                bb_solver.load_graph(g);
+                bb_solver.kPlex(lb, g.size(), solution, id_u);
+                AltRB_cnt = bb_solver.get_AltRB_count();
+                AltRB_iteration_cnt = bb_solver.get_AltRB_iteration_count();
+                if (solution.size() > lb)
+                    lb = solution.size();
+            }
+            else
+            {
+                Set S(g.size()), C(g.size());
+                S.set(id_u);
+                C.flip();
+                C.reset(id_u);
+                init_info(id_u, g);
+                v_just_add = id_u;
+                bnb(S, C);
+            }
+        }
+
+        run_time = get_system_time_microsecond() - start_IE;
+        print_progress_bar(1.0, true);
+        print_result();
+    }
+
     /**
      * @brief AltRB in paper, including ComputeUB and Partition
      * we partition C to |S| sets: Pi_0, Pi_1, ..., Pi_|S|; Pi_0 is C_R and the rest are C_L

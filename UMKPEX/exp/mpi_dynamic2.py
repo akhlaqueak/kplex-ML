@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=CTCP
+#SBATCH --job-name=Heur
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
-#SBATCH --partition=short
-#SBATCH --time=4:00:00
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -67,8 +67,8 @@ TAG_STOP = 4
 
 BR="S-Br".split()
 ALGO="UMKPEX".split()
-HEUR="kPEX-Heur"
-CTCP="CTCP CF-CTCP"
+HEUR="EGO-Heur Both-Heur".split()
+CTCP="CTCP".split()
 # BR="Binary-Br".split()
 # ALGO="kPEX".split()
 RESULT_WIDTH = 6
@@ -221,6 +221,9 @@ def run_task(cmd: str):
         "--signal=TERM",
         f"--kill-after={TIMEOUT_GRACE}",
         str(TASK_TIMEOUT),
+        "stdbuf",
+        "-oL",
+        "-eL",
         exe,
         *args[1:],
     ]

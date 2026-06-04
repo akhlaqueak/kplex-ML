@@ -1830,48 +1830,7 @@ public:
             peel_exists = nullptr;
         }
     }
-    /**
-     * @brief initialize IE heap using degeneracy-order insertion, matching UMKP tie behavior
-     */
-    void init_heap()
-    {
-        // heap = LinearHeap(n, n, d);
-        // return;
-        vector<ui> order;
-        order.reserve(n);
-        peel_rank.resize(n);
-        vector<ui> pd(n);
-        vector<char> rm(n, 0);
-        vector<ui> ids(n);
-        for (int i = 0; i < n; i++)
-        {
-            pd[i] = d[i];
-            ids[i] = i;
-        }
-        ListLinearHeap peel_heap(n, n - 1);
-        peel_heap.init(n, n - 1, ids.data(), pd.data());
-        while (true)
-        {
-            ui u, key;
-            if (!peel_heap.pop_min(u, key))
-                break;
-            order.push_back(u);
-            rm[u] = 1;
-            for (int j = pstart[u]; j < pend[u]; j++)
-            {
-                ui v = edge_to[j];
-                if (!rm[v])
-                {
-                    --pd[v];
-                    peel_heap.decrement(v, 1);
-                }
-            }
-        }
-        for (int i = 0; i < n; i++)
-            peel_rank[order[i]] = i;
-        heap = LinearHeap(n, n);
-        heap.init(order, d);
-    }
+
     /**
      * @brief compute the number of triangles for each edge
      */
@@ -2732,42 +2691,7 @@ public:
             delete[] d;
         }
     }
-    /**
-     * @brief initialize IE heap using degeneracy-order insertion, matching UMKP tie behavior
-     */
-    void init_heap()
-    {
-        vector<ui> order;
-        order.reserve(n);
-        vector<ui> pd(n);
-        vector<char> rm(n, 0);
-        vector<ui> ids(n);
-        for (int i = 0; i < n; i++)
-        {
-            pd[i] = d[i];
-            ids[i] = i;
-        }
-        ListLinearHeap peel_heap(n, n - 1);
-        peel_heap.init(n, n - 1, ids.data(), pd.data());
-        while (true)
-        {
-            ui u, key;
-            if (!peel_heap.pop_min(u, key))
-                break;
-            order.push_back(u);
-            rm[u] = 1;
-            for (int v : A[u])
-            {
-                if (!rm[v])
-                {
-                    --pd[v];
-                    peel_heap.decrement(v, 1);
-                }
-            }
-        }
-        heap = LinearHeap(n, n);
-        heap.init(order, d);
-    }
+    
     /**
      * @brief compute the number of triangles for each edge
      */

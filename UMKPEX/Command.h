@@ -3,7 +3,7 @@ class CommandLine
 {
 public:
 
-	string branching, bounding, algorithm, ctcp, heuristic;
+	string branching, bounding, algorithm, ctcp, heuristic, framework;
 	bool UBR2;
 	// bool BR1, BR2, RR1, RR2, RR3;
 
@@ -17,6 +17,7 @@ public:
     UBR2 = GetOptionValue("-UBR2", "true") == "true";
     ctcp = GetOptionValue("-ctcp", "CTCP");
     heuristic = GetOptionValue("-heuristic", "Both-Heur");
+    framework = GetOptionValue("-framework", "default");
 
 
     cout<<"----------------------Parameters-----------------------\n";
@@ -64,6 +65,14 @@ public:
       cout<<"Using 'CF-CTCP'"<<endl;
       ctcp = "CF-CTCP";
     }
+
+    vector<string> frameworks={"default", "oriented"};
+    if(find(frameworks.begin(), frameworks.end(), framework)==frameworks.end()) {
+      cout<<"Valid frameworks: "; for(auto& b: frameworks) cout<<b<<" ";
+      cout<<endl;
+      cout<<"Using 'default'"<<endl;
+      framework = "default";
+    }
     cout<<"Dataset: "<<argv[1]<<endl;
     cout<<"Algorithm: "<<algorithm<<endl;
     cout<<"K: "<<argv[2]<<endl;
@@ -72,6 +81,7 @@ public:
     cout<<"UBR2: "<<UBR2<<endl;
     cout<<"CTCP Method: "<<ctcp<<endl;
     cout<<"Heuristic: "<<heuristic<<endl;
+    cout<<"Framework: "<<framework<<endl;
     cout<<"----------------------**********-----------------------\n";
   }
 
@@ -147,5 +157,3 @@ public:
 };
 
 CommandLine PARA;
-
-

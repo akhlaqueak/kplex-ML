@@ -215,6 +215,9 @@ def run_task(cmd: str):
         "--signal=TERM",
         f"--kill-after={TIMEOUT_GRACE}",
         str(TASK_TIMEOUT),
+        "stdbuf",
+        "-oL",
+        "-eL",
         exe,
         *args[1:],
     ]
