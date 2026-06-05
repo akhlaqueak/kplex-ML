@@ -626,7 +626,7 @@ private:
 		}
 
 		ui beta = lb - S_end;
-		if (PARA.bounding != "None")
+		if (PARA.branching != "Binary-Br" && PARA.bounding != "None")
 		{
 
 			if (PARA.bounding == "S-Bound" and bound(S_end, R_end) >= R_end)
@@ -1946,7 +1946,11 @@ private:
 		}
 
 		printf("!!! WA in choose_branch_vertex\n");
-		return n;
+		if (u != n)
+			return u;
+		if (D_n)
+			return D[0];
+		return SR[S_end];
 	}
 
 	void branch(ui S_end, ui R_end)

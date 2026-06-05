@@ -30,8 +30,6 @@ for arg in "$@"; do
     esac
 done
 
-cp -f ../UMKPEX .
-
 if [[ "$collect_only" -eq 1 ]]; then
     exec python3 -u "$SCRIPT_PATH" "$@"
 fi
@@ -45,6 +43,7 @@ exit $?
 ":"""
 
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -73,6 +72,25 @@ switches={
     "kPEX-Imp": "-heuristic Both-Heur -branching Binary-Br",
     "kPEX": "-heuristic kPEX-Heur -ctcp CF-CTCP -branching Binary-Br"
 }
+
+
+def parse_ntasks_per_node() -> int | None:
+    raw = os.environ.get("SLURM_NTASKS_PER_NODE")
+    if not raw:
+        return None
+    match = re.match(r"(\d+)", raw)
+    return int(match.group(1)) if match else None
+
+
+def get_local_rank() -> int:
+    for key in ("SLURM_LOCALID", "OMPI_COMM_WORLD_LOCAL_RANK", "MPI_LOCALRANKID"):
+        raw = os.environ.get(key)
+        if raw is not None:
+            try:
+                return int(raw)
+            except ValueError:
+                pass
+    return 0
 
 def ensure_log_dir() -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -201,6 +219,9 @@ def run_task(cmd: str, rank: int):
     if rc == 0:
         print(f"[rank {rank}] SUCCESS :: {cmd}", flush=True)
         return rc, outfile, "SUCCESS"
+    elif rc == -7:
+        print(f"[rank {rank}] SIGBUS :: {cmd}", flush=True)
+        return rc, outfile, "SIGBUS"
     elif rc == 124:
         with open(outfile, "a") as f:
             f.write(f"\nTIMEOUT {cmd}\n")
@@ -218,13 +239,46 @@ def run_task(cmd: str, rank: int):
     return rc, outfile, "FAILED"
 
 
+def assign_available_workers(ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit):
+    made_progress = True
+    while made_progress:
+        made_progress = False
+        for src in list(ready_workers.keys()):
+            if next_idx >= len(phase_tasks):
+                break
+            meta = ready_workers[src]
+            eligible = True
+            if phase_name == "retry" and retry_half_local_limit is not None:
+                eligible = meta["local_rank"] < retry_half_local_limit
+            if not eligible:
+                continue
+            task = phase_tasks[next_idx]
+            print(f"[MASTER] Assigning {phase_name} task {next_idx} to rank {src}", flush=True)
+            comm.send(task, dest=src, tag=TAG_TASK)
+            del ready_workers[src]
+            next_idx += 1
+            inflight += 1
+            made_progress = True
+    return next_idx, inflight
+
+
 def master(comm, size):
-    tasks = generate_tasks()
+    initial_tasks = generate_tasks()
+    retry_tasks = []
+    retry_seen = set()
+    phase_name = "initial"
+    phase_tasks = initial_tasks
     next_idx = 0
     stopped = 0
     nworkers = size - 1
+    inflight = 0
+    ready_workers = {}
+    retry_half_local_limit = None
+    ntasks_per_node = parse_ntasks_per_node()
+    if ntasks_per_node:
+        retry_half_local_limit = max(1, ntasks_per_node // 2)
 
-    print(f"[MASTER] Loaded {len(tasks)} tasks", flush=True)
+    print(f"[MASTER] Loaded {len(initial_tasks)} tasks", flush=True)
 
     status = MPI.Status()
 
@@ -234,27 +288,62 @@ def master(comm, size):
         tag = status.Get_tag()
 
         if tag == TAG_READY:
-            if next_idx < len(tasks):
-                task = tasks[next_idx]
-                print(f"[MASTER] Assigning task {next_idx} to rank {src}", flush=True)
-                comm.send(task, dest=src, tag=TAG_TASK)
-                next_idx += 1
-            else:
-                comm.send(None, dest=src, tag=TAG_STOP)
+            ready_workers[src] = msg or {"local_rank": 0, "node": "unknown"}
+            next_idx, inflight = assign_available_workers(
+                ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
+            )
+            phase_complete = next_idx >= len(phase_tasks) and inflight == 0
+            if phase_complete and phase_name == "initial":
+                phase_name = "retry"
+                phase_tasks = retry_tasks
+                next_idx = 0
+                print(f"[MASTER] Now retrying the -7 tasks ({len(retry_tasks)} total)", flush=True)
+                next_idx, inflight = assign_available_workers(
+                    ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
+                )
+                phase_complete = next_idx >= len(phase_tasks) and inflight == 0
+            if phase_complete:
+                if src in ready_workers:
+                    comm.send(None, dest=src, tag=TAG_STOP)
+                    del ready_workers[src]
+                    stopped += 1
 
         elif tag == TAG_DONE:
             task, rc, outfile, state = msg
+            inflight -= 1
             print(f"[MASTER] [rank {src}] {state}: {task}", flush=True)
-
-        elif tag == TAG_STOP:
-            stopped += 1
+            if phase_name == "initial" and rc == -7:
+                canon = " ".join(shlex.quote(x) for x in shlex.split(task))
+                if canon not in retry_seen:
+                    retry_seen.add(canon)
+                    retry_tasks.append(task)
+            next_idx, inflight = assign_available_workers(
+                ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
+            )
+            phase_complete = next_idx >= len(phase_tasks) and inflight == 0
+            if phase_complete and phase_name == "initial":
+                phase_name = "retry"
+                phase_tasks = retry_tasks
+                next_idx = 0
+                print(f"[MASTER] Now retrying the -7 tasks ({len(retry_tasks)} total)", flush=True)
+                next_idx, inflight = assign_available_workers(
+                    ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
+                )
+                phase_complete = next_idx >= len(phase_tasks) and inflight == 0
+            if phase_complete:
+                for worker_src in list(ready_workers.keys()):
+                    comm.send(None, dest=worker_src, tag=TAG_STOP)
+                    del ready_workers[worker_src]
+                    stopped += 1
 
     print("[MASTER] All workers stopped", flush=True)
 
 
 def worker(comm, rank):
+    local_rank = get_local_rank()
+    node = os.environ.get("SLURMD_NODENAME") or os.environ.get("HOSTNAME") or "unknown"
     while True:
-        comm.send(None, dest=0, tag=TAG_READY)
+        comm.send({"local_rank": local_rank, "node": node}, dest=0, tag=TAG_READY)
 
         status = MPI.Status()
         task = comm.recv(source=0, tag=MPI.ANY_TAG, status=status)
