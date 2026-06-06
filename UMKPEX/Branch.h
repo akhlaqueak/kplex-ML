@@ -122,6 +122,13 @@ public:
                 return;
             generate_sub_branches(S, C, pivot);
         }
+        else if (PARA.branching == "BinaryM-Br")
+        {
+            pivot = select_pivot_vertex_binary_matrix_style(S, C);
+            if (pivot == -1)
+                return;
+            generate_sub_branches_add_first(S, C, pivot);
+        }
         else if (PARA.branching == "Pivot-Br")
         {
             if (C.empty())
@@ -185,7 +192,6 @@ public:
         CTCP_init_time = 0;
         CTCP_remove_v_time = 0;
         CTCP_lb_update_time = 0;
-
         double start_IE = get_system_time_microsecond();
         G_input.init_before_IE();
         CTCP_init_time += get_system_time_microsecond() - start_IE;
@@ -284,11 +290,37 @@ public:
         print_result();
     }
 
-    int oriented_lower_bound(int u, int target) const
+    void reorganize_oriented_IE_graph()
     {
-        int begin = G_input.pstart[u];
-        int end = G_input.pstart[u + 1];
-        return lower_bound(G_input.edge_to + begin, G_input.edge_to + end, target) - G_input.edge_to;
+        for (int u = 0; u < G_input.n; u++)
+        {
+            int &end = G_input.pend[u] = G_input.pstart[u];
+            for (int j = G_input.pstart[u]; j < G_input.pstart[u + 1]; j++)
+            {
+                int v = G_input.edge_to[j];
+                if (v > u)
+                    G_input.edge_to[end++] = v;
+            }
+        }
+        for (int u = G_input.n - 1; u >= 0; u--)
+        {
+            for (int j = G_input.pstart[u]; j < G_input.pend[u] && G_input.edge_to[j] > u; j++)
+            {
+                int v = G_input.edge_to[j];
+                G_input.edge_to[G_input.pend[v]++] = u;
+                assert(G_input.pend[v] <= G_input.pstart[v + 1]);
+            }
+        }
+#ifndef NDEBUG
+        for (int u = 0; u < G_input.n; u++)
+            assert(G_input.pend[u] == G_input.pstart[u + 1]);
+#endif
+        for (int u = 0; u < G_input.n; u++)
+        {
+            int &end = G_input.pend[u] = G_input.pstart[u];
+            while (end < G_input.pstart[u + 1] && G_input.edge_to[end] > u)
+                ++end;
+        }
     }
 
     bool extract_subgraph_with_prune_oriented(int u, int degree_threshold, int triangle_threshold,
@@ -300,8 +332,7 @@ public:
         vp.clear();
         ids.push_back(u);
         exists[u] = 1;
-        int root_begin = oriented_lower_bound(u, u + 1);
-        for (int i = root_begin; i < G_input.pstart[u + 1]; i++)
+        for (int i = G_input.pstart[u]; i < G_input.pend[u]; i++)
         {
             int v = G_input.edge_to[i];
             ids.push_back(v);
@@ -314,8 +345,7 @@ public:
         {
             int v = ids[i];
             degree[v] = 0;
-            int begin = oriented_lower_bound(v, u + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
             {
                 if (exists[G_input.edge_to[j]])
                     degree[v]++;
@@ -327,8 +357,7 @@ public:
         {
             int v = queue[i];
             exists[v] = 3;
-            int begin = oriented_lower_bound(v, u + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
             {
                 int w = G_input.edge_to[j];
                 if (exists[w] == 2)
@@ -353,8 +382,7 @@ public:
             if (exists[ids[i]] != 2)
                 continue;
             int v = ids[i];
-            int begin = oriented_lower_bound(v, u + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
             {
                 int w = G_input.edge_to[j];
                 if (!exists[w])
@@ -390,8 +418,7 @@ public:
         for (int i = 0; i < (int)ids.size(); i++)
         {
             int v = ids[i];
-            int begin = oriented_lower_bound(v, v + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pend[v]; j++)
             {
                 int w = G_input.edge_to[j];
                 if (!exists[w])
@@ -417,8 +444,7 @@ public:
         ids.push_back(u);
         exists[u] = 1;
         rid[u] = 0;
-        int root_begin = oriented_lower_bound(u, u + 1);
-        for (int i = root_begin; i < G_input.pstart[u + 1]; i++)
+        for (int i = G_input.pstart[u]; i < G_input.pend[u]; i++)
         {
             int v = G_input.edge_to[i];
             ids.push_back(v);
@@ -429,8 +455,7 @@ public:
         for (int i = 1; i < old_size; i++)
         {
             int v = ids[i];
-            int begin = oriented_lower_bound(v, u + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pstart[v + 1] && G_input.edge_to[j] > u; j++)
             {
                 int w = G_input.edge_to[j];
                 if (exists[w])
@@ -442,8 +467,7 @@ public:
         }
         for (int v : ids)
         {
-            int begin = oriented_lower_bound(v, v + 1);
-            for (int j = begin; j < G_input.pstart[v + 1]; j++)
+            for (int j = G_input.pstart[v]; j < G_input.pend[v]; j++)
             {
                 int w = G_input.edge_to[j];
                 if (!exists[w])
@@ -490,21 +514,22 @@ public:
         G_input.scratch_state.assign(G_input.n, 0);
         if (PARA.branching == "Adaptive-Br")
             PARA.branching = paramK <= 5 ? "S-Br" : "Pivot-Br";
+        reorganize_oriented_IE_graph();
+        vector<pii> &edges = vertices_in_C;
+        edges.reserve(G_input.m);
         vector<int> vertices_2hops;
         vertices_2hops.reserve(G_input.n);
-        int active_n = G_input.size();
 
         int processed = 0;
         for (int u = G_input.n - 1; u >= 0; u--)
         {
-            int forward_roots = active_n - u;
-            if (!G_input.vertex[u] || forward_roots <= lb)
+            if (u + 1 <= lb)
                 continue;
             processed++;
-            double percentage = G_input.size() ? processed * 1.0 / G_input.size() : 1.0;
+            double percentage = G_input.n ? processed * 1.0 / G_input.n : 1.0;
             print_progress_bar(percentage);
 
-            int forward_deg = G_input.pstart[u + 1] - oriented_lower_bound(u, u + 1);
+            int forward_deg = G_input.pend[u] - G_input.pstart[u];
 
             if (forward_deg + paramK <= lb)
                 continue;
@@ -528,13 +553,8 @@ public:
                 continue;
             }
 
-            auto &vis = bool_array;
-            for (int x : vertices_2hops)
-                vis.set(x);
-            Graph_adjacent g(vis, vertices_2hops, G_input, array_N);
-            for (int x : vertices_2hops)
-                vis.reset(x);
-            int id_u = array_N[u];
+            Graph_adjacent g(vertices_2hops, edges);
+            int id_u = 0;
             subgraph_search_cnt++;
             IE_induce_time += get_system_time_microsecond() - start_induce;
             IE_graph_size += g.size();
@@ -784,6 +804,76 @@ public:
                 sel = u;
         }
         return sel;
+    }
+
+    int select_pivot_vertex_binary_matrix_style(Set &S, Set &C)
+    {
+        auto V = S;
+        V |= C;
+        int R_end = V.size();
+        int S_end = S.size();
+
+        vector<int> D;
+        D.reserve(V.size());
+        for (int u : V)
+            if (R_end - deg[u] > paramK)
+                D.push_back(u);
+
+        if (D.empty())
+            return C.empty() ? -1 : *C.begin();
+
+        int u = -1;
+        int min_degree_in_S = INT_MAX;
+        int min_degree = INT_MAX;
+        for (int v : D)
+        {
+            int degree_in_S_v = S_end - loss_cnt[v];
+            if (u == -1 || degree_in_S_v < min_degree_in_S ||
+                (degree_in_S_v == min_degree_in_S && deg[v] < min_degree))
+            {
+                u = v;
+                min_degree_in_S = degree_in_S_v;
+                min_degree = deg[v];
+            }
+        }
+
+        if (u == -1)
+            return C.empty() ? -1 : *C.begin();
+
+        if (S.test(u))
+        {
+            int b = -1;
+            int max_degree = -1;
+            for (int v : C)
+                if (non_A[u][v] && deg[v] > max_degree)
+                {
+                    max_degree = deg[v];
+                    b = v;
+                }
+            return b;
+        }
+
+        if (loss_cnt[u] > 0 || R_end - deg[u] > paramK + 1)
+            return u;
+
+        int w = -1;
+        int max_degree = -1;
+        for (int v : C)
+            if (deg[v] > max_degree)
+            {
+                max_degree = deg[v];
+                w = v;
+            }
+        if (w == -1)
+            return u;
+        if (R_end - deg[w] == 2)
+            return w;
+
+        for (int v : C)
+            if (non_A[w][v] && R_end - deg[v] == paramK + 1)
+                return v;
+
+        return u;
     }
 
     /**

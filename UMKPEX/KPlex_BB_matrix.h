@@ -43,6 +43,7 @@ private:
 	std::queue<ui> Qv;
 	ui *level_id;
 	ui max_level;
+	vector<ui> lazy_beg_idx, lazy_end_idx;
 
 	std::vector<std::pair<ui, ui>> vp;
 	std::vector<ui> non_adj;
@@ -185,6 +186,8 @@ public:
 
 		peelOrder.resize(n);
 		psz.resize(n);
+		lazy_beg_idx.resize(n + 2, 0);
+		lazy_end_idx.resize(n + 2, 0);
 		PI.reserve(n);
 		PIMax.reserve(n);
 		ISc.reserve(n);
@@ -252,6 +255,11 @@ public:
 		ui n_edges = best_n_edges;
 		ui R_end;
 		initialization(R_end, true);
+		if (!lazy_beg_idx.empty())
+		{
+			lazy_beg_idx[1] = 0;
+			lazy_end_idx[1] = 0;
+		}
 		if (R_end && lb < _UB_)
 			BB_search(0, R_end, 1);
 		if (this->solution.size() > solution.size())
@@ -326,16 +334,20 @@ private:
 		ui *core = nonneighbors;
 		ui *vis = SR;
 		memset(vis, 0, sizeof(ui) * n);
+		ui *tmp_degree = degree_in_S;
+		for (ui i = 0; i < n; i++)
+		{
+			tmp_degree[i] = degree[i];
+			peel_sequence[i] = i;
+		}
+		ListLinearHeap degen_heap(n, n);
+		degen_heap.init(n, n, peel_sequence, tmp_degree);
 		ui max_core = 0, idx = n;
 		for (ui i = 0; i < n; i++)
 		{
-			ui u, min_degree = n;
-			for (ui j = 0; j < n; j++)
-				if (!vis[j] && degree[j] < min_degree)
-				{
-					u = j;
-					min_degree = degree[j];
-				}
+			ui u, min_degree;
+			bool ok = degen_heap.pop_min(u, min_degree);
+			assert(ok);
 			if (min_degree > max_core)
 				max_core = min_degree;
 			core[u] = max_core;
@@ -346,9 +358,10 @@ private:
 			if (idx == n && min_degree + K >= n - i)
 				idx = i;
 
-			for (ui j = 0; j < n; j++)
-				if (!vis[j] && matrix[u * n + j])
-					--degree[j];
+			char *t_matrix = matrix + u * n;
+			for (ui v = 0; v < n; v++)
+				if (!vis[v] && t_matrix[v])
+					degen_heap.decrement(v, 1), --tmp_degree[v];
 		}
 		if (!all_kplex_search && (n - idx > lb))
 		{
@@ -953,15 +966,16 @@ private:
 		}
 		else
 		{ // pivot based branching
-			if (B.empty() || SR_rid[B.back()] >= R_end || SR_rid[B.back()] < S_end)
-				branch(S_end, R_end);
-			if (B.empty())
+			ui &begIdx = lazy_beg_idx[level];
+			ui &endIdx = lazy_end_idx[level];
+			if (begIdx >= endIdx || SR_rid[B[endIdx - 1]] >= R_end || SR_rid[B[endIdx - 1]] < S_end)
+				branch_maple(S_end, R_end, begIdx, endIdx);
+			if (begIdx >= endIdx)
 			{
 				restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 				return;
 			}
-			ui u = B.back();
-			B.pop_back();
+			ui u = B[--endIdx];
 
 			// First branch moves u to S
 			ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
@@ -974,7 +988,11 @@ private:
 			}
 #endif
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
+			{
+				lazy_beg_idx[level + 1] = begIdx;
+				lazy_end_idx[level + 1] = endIdx;
 				BB_search(S_end, R_end, level + 1);
+			}
 
 			// the second branch exclude u from G
 			// This version of 2nd branch restores u through remove_u function
@@ -986,7 +1004,6 @@ private:
 					Qv.pop();
 					level_id[v] = n;
 				}
-				B.clear();
 #ifdef _SECOND_ORDER_PRUNING_
 				while (!Qe.empty())
 					Qe.pop();
@@ -996,7 +1013,11 @@ private:
 				if (succeed && lb > pre_lb)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
 				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
+				{
+					lazy_beg_idx[level + 1] = endIdx;
+					lazy_end_idx[level + 1] = endIdx;
 					BB_search(S_end, R_end, level + 1);
+				}
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 		}
@@ -1217,20 +1238,37 @@ private:
 		while (!Qv.empty())
 			Qv.pop();
 		// reduction rules based on the fact that each vertex can have at most k-1 nonneighbors
-		for (ui i = 0; i < nonneighbors_n; i++)
+		ui split_nonneighbor = 0;
+		while (split_nonneighbor < nonneighbors_n && SR_rid[nonneighbors[split_nonneighbor]] < S_end)
+			++split_nonneighbor;
+		if (S_end - degree_in_S[u] == K)
 		{
-			ui v = nonneighbors[i];
-			if (SR_rid[v] >= S_end)
+			for (ui i = split_nonneighbor; i < nonneighbors_n; i++)
 			{
-				if (level_id[v] == level)
-					continue;
-				if ((S_end - degree_in_S[v] >= K) || (S_end - degree_in_S[u] == K))
+				ui v = nonneighbors[i];
+				if (level_id[v] > level)
 				{
 					level_id[v] = level;
 					Qv.push(v);
 				}
 			}
-			else if (S_end - degree_in_S[v] == K)
+		}
+		else
+		{
+			for (ui i = split_nonneighbor; i < nonneighbors_n; i++)
+			{
+				ui v = nonneighbors[i];
+				if (level_id[v] > level && S_end - degree_in_S[v] >= K)
+				{
+					level_id[v] = level;
+					Qv.push(v);
+				}
+			}
+		}
+		for (ui i = 0; i < split_nonneighbor; i++)
+		{
+			ui v = nonneighbors[i];
+			if (S_end - degree_in_S[v] == K)
 			{
 				char *tt_matrix = matrix + v * n;
 				for (ui j = S_end; j < R_end; j++)
@@ -1953,7 +1991,7 @@ private:
 		return SR[S_end];
 	}
 
-	void branch(ui S_end, ui R_end)
+	void branch_legacy(ui S_end, ui R_end)
 	{
 		B.clear();
 		ui minnei = 0x3f3f3f3f;
@@ -1985,6 +2023,60 @@ private:
 		auto comp = [&](int a, int b)
 		{ return degree[a] > degree[b]; };
 		std::sort(B.begin(), B.end(), comp);
+	}
+
+	void branch_maple(ui S_end, ui R_end, ui &begIdx, ui &endIdx)
+	{
+		endIdx = begIdx;
+		ui minnei = 0x3f3f3f3f;
+		ui pivot = n;
+		char *t_matrix = matrix + 0 * n;
+		for (ui i = S_end; i < R_end; i++)
+		{
+			ui v = SR[i];
+			if (!t_matrix[v] &&
+				(degree[v] + K <= lb + 1 ||
+				 support(S_end, v) == 1 ||
+				 support(S_end, root_v) == 1))
+			{
+				if (B.size() == endIdx)
+					B.push_back(v);
+				else
+					B[endIdx] = v;
+				++endIdx;
+				return;
+			}
+			if (degree[v] < minnei)
+			{
+				minnei = degree[v];
+				pivot = v;
+			}
+		}
+
+		if (pivot == n)
+			return;
+
+		t_matrix = matrix + pivot * n;
+		for (ui i = S_end; i < R_end; i++)
+			if (!t_matrix[SR[i]])
+			{
+				if (B.size() == endIdx)
+					B.push_back(SR[i]);
+				else
+					B[endIdx] = SR[i];
+				++endIdx;
+			}
+
+		auto comp = [&](int a, int b)
+		{ return degree[a] > degree[b]; };
+		std::sort(B.begin() + begIdx, B.begin() + endIdx, comp);
+	}
+
+	void branch(ui S_end, ui R_end)
+	{
+		ui &begIdx = lazy_beg_idx[1];
+		ui &endIdx = lazy_end_idx[1];
+		branch_maple(S_end, R_end, begIdx, endIdx);
 	}
 
 		ui SR_branching(ui S_end, ui R_end, ui level)

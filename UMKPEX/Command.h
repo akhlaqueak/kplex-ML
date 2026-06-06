@@ -28,7 +28,7 @@ public:
       cout<<endl;
       algorithm = "kPEX";
     }
-    vector<string> branchings={"Adaptive-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br", "Binary-Br"};
+    vector<string> branchings={"Adaptive-Br", "Pivot-Br", "S-Br", "R-Br", "SR-Br", "Binary-Br", "BinaryM-Br"};
     if(find(branchings.begin(), branchings.end(), branching)==branchings.end()) {
       cout<<"Valid branching methods: "; for(auto& b: branchings) cout<<b<<" ";
       cout<<endl;
