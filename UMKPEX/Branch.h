@@ -31,6 +31,7 @@ private:
     vector<int> array_N; // N is the input graph size
     vector<int> array1_N;
 
+
     // information of log
     double part_PI_time; // time of Partition
     double run_time;     // sum of bnb time
@@ -338,9 +339,8 @@ public:
             ids.push_back(v);
             exists[v] = 2;
         }
-
-        vector<int> queue;
-        queue.reserve(ids.size());
+        auto &queue=que;
+        queue.clear();
         for (int i = 1; i < (int)ids.size(); i++)
         {
             int v = ids[i];
@@ -423,11 +423,7 @@ public:
                 int w = G_input.edge_to[j];
                 if (!exists[w])
                     continue;
-                int a = rid[v], b = rid[w];
-                if (a < b)
-                    vp.push_back({a, b});
-                else if (b < a)
-                    vp.push_back({b, a});
+                vp.push_back({rid[v], rid[w]});
             }
         }
         for (int v : ids)
@@ -472,11 +468,7 @@ public:
                 int w = G_input.edge_to[j];
                 if (!exists[w])
                     continue;
-                int a = rid[v], b = rid[w];
-                if (a < b)
-                    vp.push_back({a, b});
-                else if (b < a)
-                    vp.push_back({b, a});
+                vp.push_back({rid[v], rid[w]});
             }
         }
         for (int v : ids)

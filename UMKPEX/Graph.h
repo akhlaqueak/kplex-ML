@@ -17,6 +17,7 @@ public:
     // edge_to[ pstart[a] ... pstart[a+1] ] is the neighbor of a
     ui *edge_to;               // size = m
     ui *pstart;                // size = n+1
+
     vector<ui> map_refresh_id; // we need to re-map the reduced graph to {0,1,...,n-1}, thus requiring to record the map
     vector<ui> ego_peel_sequence_cache;
     vector<ui> ego_rid_cache;
@@ -1733,6 +1734,7 @@ class Graph_reduced_adjacent_list : public Graph_reduced
 {
 public:
     vector<int> local_queue_mark_v, local_queue_mark_e;
+    vector<int> induce_queue;
     int local_queue_epoch = 0;
     ui *peel_edgelist_pointer = nullptr;
     ui *peel_tri_cnt = nullptr;
@@ -1902,6 +1904,8 @@ public:
         scratch_state.assign(n, 0);
         local_queue_mark_v.assign(n, 0);
         local_queue_mark_e.assign(m, 0);
+        induce_queue.clear();
+        induce_queue.reserve(n);
         local_queue_epoch = 0;
         build_peeling_state();
     }
@@ -2461,18 +2465,24 @@ public:
     void induce_to_2hop_and_reduce(int v, MyBitset &vis, vector<int> &vertices, vector<int> &deg, int lb)
     {
         vis.reset(v);
+        compact_vertex(v);
         // get G[N(v)] and compute degree
         for (int i = pstart[v]; i < pend[v]; i++)
         {
             int a = edge_to[i];
+            if (!vertex[a])
+                continue;
             vis.set(a);
             vertices.push_back(a);
             // update the deg
+            compact_vertex(a);
             for (int j = pstart[a]; j < pend[a]; j++)
             {
                 int b = edge_to[j];
                 if (b > a)
                     break;
+                if (!vertex[b])
+                    continue;
                 if (!vis[b])
                     continue;
                 deg[a]++;
@@ -2481,14 +2491,16 @@ public:
         }
         // reduce G[N(v)] to (lb+1-2k)-core
         {
-            queue<int> q;
+            auto &q = induce_queue;
+            q.clear();
+            size_t q_head = 0;
             for (int i = 1; i < (int)vertices.size(); i++)
             {
                 int u = vertices[i];
                 if (deg[u] < lb + 1 - 2 * paramK)
                 {
                     vis.reset(u);
-                    q.push(u);
+                    q.push_back(u);
                 }
             }
             if (vertices.size() - 1 + paramK - q.size() <= lb) // |N(v)| + k <= lb
@@ -2501,10 +2513,9 @@ public:
                 }
                 return;
             }
-            while (q.size())
+            while (q_head < q.size())
             {
-                int a = q.front();
-                q.pop();
+                int a = q[q_head++];
                 compact_vertex(a);
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
@@ -2514,7 +2525,7 @@ public:
                     if (--deg[b] < lb + 1 - 2 * paramK)
                     {
                         vis.reset(b);
-                        q.push(b);
+                        q.push_back(b);
                     }
                 }
             }
@@ -2554,6 +2565,8 @@ public:
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
+                    if (!vertex[b])
+                        continue;
                     neighbor_cnt[b]++;
                 }
             }
@@ -2564,6 +2577,8 @@ public:
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
+                    if (!vertex[b])
+                        continue;
                     if (neighbor_cnt[b] >= lb + 3 - 2 * paramK && !vis[b])
                     {
                         vis.set(b);
@@ -2592,35 +2607,40 @@ public:
                     int b = edge_to[j];
                     if (b >= a)
                         break;
+                    if (!vertex[b])
+                        continue;
                     if (vis[b])
                     {
                         deg[a]++, deg[b]++;
                     }
                 }
             }
-            queue<int> q;
+            auto &q = induce_queue;
+            q.clear();
+            size_t q_head = 0;
             for (int a : vertices)
             {
                 if (deg[a] + paramK <= lb)
                 {
-                    q.push(a);
+                    q.push_back(a);
                     vis.reset(a);
                 }
             }
-            while (q.size())
+            while (q_head < q.size())
             {
-                int a = q.front();
-                q.pop();
+                int a = q[q_head++];
                 deg[a] = 0;
                 for (int j = pstart[a]; j < pend[a]; j++)
                 {
                     int b = edge_to[j];
+                    if (!vertex[b])
+                        continue;
                     if (!vis[b])
                         continue;
                     if (--deg[b] + paramK <= lb)
                     {
                         vis.reset(b);
-                        q.push(b);
+                        q.push_back(b);
                     }
                 }
             }
