@@ -237,21 +237,25 @@ public:
             }
             if (id_u != -1) // this subgraph is not pruned: begin bnb
             {
-                subgraph_search_cnt++;
                 vector<int> &inv = array_N;
                 IE_induce_time += get_system_time_microsecond() - start_induce;
+                {
+                    Timer tt;
+                    if (!g.pre_prune_for_bnb(id_u, lb))
+                    {
+                        higher_order_reduce_time += tt.get_time();
+                        subgraph_pruned_cnt++;
+                        continue;
+                    }
+                    higher_order_reduce_time += tt.get_time();
+                }
+                subgraph_search_cnt++;
                 IE_graph_size += g.size();
                 IE_graph_cnt++;
                 matrix_init_time += g.init_time;
                 ptr_g = &g;
 
                 // int id_u = inv[u]; // the index of u in the new-induced graph g
-                {
-                    // higher order reduction
-                    Timer tt;
-                    g.edge_reduction(id_u, lb);
-                    higher_order_reduce_time += tt.get_time();
-                }
                 if (PARA.algorithm == "UMKP+")
                 {
                     bb_solver.load_graph(g);
@@ -293,34 +297,29 @@ public:
 
     void reorganize_oriented_IE_graph()
     {
-        for (int u = 0; u < G_input.n; u++)
+        vector<int> row;
+        for (int u : G_input.vertex)
         {
-            int &end = G_input.pend[u] = G_input.pstart[u];
-            for (int j = G_input.pstart[u]; j < G_input.pstart[u + 1]; j++)
+            int end = G_input.pend ? G_input.pend[u] : G_input.pstart[u + 1];
+            row.clear();
+            row.reserve(end - G_input.pstart[u]);
+            for (int i = G_input.pstart[u]; i < end; i++)
             {
-                int v = G_input.edge_to[j];
+                if (G_input.edge_removed[i])
+                    continue;
+                int v = G_input.edge_to[i];
+                if (!G_input.vertex[v])
+                    continue;
+                row.push_back(v);
+            }
+            int write = G_input.pstart[u];
+            for (int v : row)
                 if (v > u)
-                    G_input.edge_to[end++] = v;
-            }
-        }
-        for (int u = G_input.n - 1; u >= 0; u--)
-        {
-            for (int j = G_input.pstart[u]; j < G_input.pend[u] && G_input.edge_to[j] > u; j++)
-            {
-                int v = G_input.edge_to[j];
-                G_input.edge_to[G_input.pend[v]++] = u;
-                assert(G_input.pend[v] <= G_input.pstart[v + 1]);
-            }
-        }
-#ifndef NDEBUG
-        for (int u = 0; u < G_input.n; u++)
-            assert(G_input.pend[u] == G_input.pstart[u + 1]);
-#endif
-        for (int u = 0; u < G_input.n; u++)
-        {
-            int &end = G_input.pend[u] = G_input.pstart[u];
-            while (end < G_input.pstart[u + 1] && G_input.edge_to[end] > u)
-                ++end;
+                    G_input.edge_to[write++] = v;
+            G_input.pend[u] = write;
+            for (int i = (int)row.size() - 1; i >= 0; i--)
+                if (row[i] < u)
+                    G_input.edge_to[write++] = row[i];
         }
     }
 
@@ -339,7 +338,7 @@ public:
             ids.push_back(v);
             exists[v] = 2;
         }
-        auto &queue=que;
+        auto &queue = que;
         queue.clear();
         for (int i = 1; i < (int)ids.size(); i++)
         {
@@ -423,7 +422,11 @@ public:
                 int w = G_input.edge_to[j];
                 if (!exists[w])
                     continue;
-                vp.push_back({rid[v], rid[w]});
+                int a = rid[v], b = rid[w];
+                if (a < b)
+                    vp.push_back({a, b});
+                else if (b < a)
+                    vp.push_back({b, a});
             }
         }
         for (int v : ids)
@@ -468,7 +471,11 @@ public:
                 int w = G_input.edge_to[j];
                 if (!exists[w])
                     continue;
-                vp.push_back({rid[v], rid[w]});
+                int a = rid[v], b = rid[w];
+                if (a < b)
+                    vp.push_back({a, b});
+                else if (b < a)
+                    vp.push_back({b, a});
             }
         }
         for (int v : ids)
@@ -515,15 +522,15 @@ public:
         int processed = 0;
         for (int u = G_input.n - 1; u >= 0; u--)
         {
-            if (u + 1 <= lb)
+            if (!G_input.vertex[u])
                 continue;
             processed++;
-            double percentage = G_input.n ? processed * 1.0 / G_input.n : 1.0;
+            double percentage = G_input.size() ? processed * 1.0 / G_input.size() : 1.0;
             print_progress_bar(percentage);
 
             int forward_deg = G_input.pend[u] - G_input.pstart[u];
 
-            if (forward_deg + paramK <= lb)
+            if (forward_deg + paramK <= lb || G_input.n - (u + 1) < lb)
                 continue;
             double start_induce = get_system_time_microsecond();
             bool extracted = false;
@@ -532,12 +539,11 @@ public:
                 extracted = extract_subgraph_with_prune_oriented(u, lb + 1 - paramK,
                                                                  lb + 1 - 2 * paramK,
                                                                  lb + 3 - 2 * paramK,
-                                                                 vertices_2hops, array_N, vertices_in_C, array1_N,
+                                                                 vertices_2hops, array_N, edges, array1_N,
                                                                  G_input.scratch_state);
             else
-                extracted = extract_subgraph_wo_prune_oriented(u, vertices_2hops, array_N, vertices_in_C,
+                extracted = extract_subgraph_wo_prune_oriented(u, vertices_2hops, array_N, edges,
                                                                G_input.scratch_state);
-
             if (!extracted || vertices_2hops.empty() || (int)vertices_2hops.size() <= lb)
             {
                 IE_induce_time += get_system_time_microsecond() - start_induce;
@@ -547,13 +553,22 @@ public:
 
             Graph_adjacent g(vertices_2hops, edges);
             int id_u = 0;
-            subgraph_search_cnt++;
             IE_induce_time += get_system_time_microsecond() - start_induce;
+            {
+                Timer tt;
+                if (!g.pre_prune_for_bnb(id_u, lb))
+                {
+                    higher_order_reduce_time += tt.get_time();
+                    subgraph_pruned_cnt++;
+                    continue;
+                }
+                higher_order_reduce_time += tt.get_time();
+            }
+            subgraph_search_cnt++;
             IE_graph_size += g.size();
             IE_graph_cnt++;
             matrix_init_time += g.init_time;
             ptr_g = &g;
-
             if (PARA.algorithm == "UMKP+")
             {
                 bb_solver.load_graph(g);

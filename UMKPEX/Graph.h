@@ -3118,6 +3118,62 @@ public:
         } while (reduced);
     }
     /**
+     * @brief Maple-style pre-BnB pruning on the extracted subgraph.
+     * Runs safe edge/degree reductions, then compacts away vertices that
+     * can no longer participate in a k-plex larger than lb.
+     *
+     * @return false if the root is removed or the compacted graph is already pruned.
+     */
+    bool pre_prune_for_bnb(int &v_in_S, int lb)
+    {
+        edge_reduction(v_in_S, lb);
+
+        if (adj_matrix.degree(v_in_S) + paramK <= lb)
+            return false;
+
+        vector<int> keep;
+        keep.reserve(n);
+        vector<int> rid(n, -1);
+        for (int u = 0; u < n; u++)
+        {
+            if (adj_matrix.degree(u) + paramK > lb)
+            {
+                rid[u] = keep.size();
+                keep.push_back(u);
+            }
+        }
+
+        if (rid[v_in_S] == -1 || (int)keep.size() <= lb)
+            return false;
+
+        if ((int)keep.size() == n)
+            return true;
+
+        AdjacentMatrix new_adj(keep.size());
+        vector<int> new_vertex_id;
+        new_vertex_id.reserve(keep.size());
+        for (int old_u : keep)
+            new_vertex_id.push_back(vertex_id[old_u]);
+
+        for (int old_u : keep)
+        {
+            int new_u = rid[old_u];
+            for (int old_v : adj_matrix[old_u])
+            {
+                int new_v = rid[old_v];
+                if (new_v == -1 || new_v >= new_u)
+                    continue;
+                new_adj.add_edge(new_u, new_v);
+            }
+        }
+
+        v_in_S = rid[v_in_S];
+        n = keep.size();
+        vertex_id.swap(new_vertex_id);
+        adj_matrix = new_adj;
+        return true;
+    }
+    /**
      * @brief given vertex set V_mask, induce subgraph
      *
      * @param V_mask V_mask[u]=1 <==> u in the subgraph

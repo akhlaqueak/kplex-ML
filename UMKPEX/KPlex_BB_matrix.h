@@ -1095,58 +1095,86 @@ private:
 		return K - (S_end - degree_in_S[u]);
 	}
 
-	bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level)
-	{
-		while (true)
-		{
+	// bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level)
+	// {
+	// 	while (true)
+	// 	{
+	// 		ui *candidates = S2;
+	// 		ui candidates_n = 0;
+	// 		ui skip;
+	// 		if (all_kplex_search)
+	// 			skip = 1;
+	// 		else
+	// 			skip = 2;
+	// 		for (ui i = S_end; i < R_end; i++)
+	// 		{
+	// 			ui u = SR[i];
+	// 			if (R_end - degree[u] > K)
+	// 				continue;
+
+	// 			if (degree[u] >= R_end - skip)
+	// 			{
+	// 				candidates[candidates_n++] = u;
+	// 				continue;
+	// 			}
+
+	// 			char *t_matrix = matrix + u * n;
+	// 			bool OK = true;
+	// 			for (ui j = 0; j < R_end; j++)
+	// 				if (j != i && !t_matrix[SR[j]] && R_end - degree[SR[j]] > K)
+	// 				{
+	// 					OK = false;
+	// 					break;
+	// 				}
+	// 			if (OK)
+	// 				candidates[candidates_n++] = u;
+	// 		}
+
+	// 		if (!candidates_n)
+	// 			break;
+
+	// 		while (candidates_n)
+	// 		{
+	// 			ui u = candidates[--candidates_n];
+	// 			assert(SR_rid[u] >= S_end);
+	// 			if (SR_rid[u] >= R_end)
+	// 				return false;
+
+	// 			if (!move_u_to_S_with_prune(u, S_end, R_end, level))
+	// 				return false;
+	// 		}
+	// 	}
+	// 	return true;
+	// }
+	bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level) {
+		while(true) {
 			ui *candidates = S2;
 			ui candidates_n = 0;
-			ui skip;
-			if (all_kplex_search)
-				skip = 1;
-			else
-				skip = 2;
-			for (ui i = S_end; i < R_end; i++)
-			{
+			for(ui i = S_end;i < R_end;i ++) {
 				ui u = SR[i];
-				if (R_end - degree[u] > K)
-					continue;
+				if(R_end - degree[u] > K) continue;
 
-				if (degree[u] >= R_end - skip)
-				{
-					candidates[candidates_n++] = u;
-					continue;
-				}
-
-				char *t_matrix = matrix + u * n;
+				char *t_matrix = matrix + u*n;
 				bool OK = true;
-				for (ui j = 0; j < R_end; j++)
-					if (j != i && !t_matrix[SR[j]] && R_end - degree[SR[j]] > K)
-					{
-						OK = false;
-						break;
-					}
-				if (OK)
-					candidates[candidates_n++] = u;
+				for(ui j = 0;j < R_end;j ++) if(j != i&&!t_matrix[SR[j]]&&R_end - degree[SR[j]] > K) {
+					OK = false;
+					break;
+				}
+				if(OK) candidates[candidates_n ++] = u;
 			}
 
-			if (!candidates_n)
-				break;
+			if(!candidates_n) break;
 
-			while (candidates_n)
-			{
+			while(candidates_n) {
 				ui u = candidates[--candidates_n];
 				assert(SR_rid[u] >= S_end);
-				if (SR_rid[u] >= R_end)
-					return false;
+				if(SR_rid[u] >= R_end) return false;
 
-				if (!move_u_to_S_with_prune(u, S_end, R_end, level))
-					return false;
+				if(!move_u_to_S_with_prune(u, S_end, R_end, level)) return false;
 			}
 		}
 		return true;
 	}
-
 	void check_degrees(ui S_end, ui R_end)
 	{
 		for (ui i = 0; i < R_end; i++)

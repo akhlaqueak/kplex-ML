@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=oriented-framework
+#SBATCH --job-name=UMKP-Binary
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -56,11 +56,11 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="Binary-Br".split()
+BR="S-Br R-Br Pivot-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
-# BR="Binary-Br".split()
+BR="Binary-Br".split()
 # ALGO="kPEX".split()
 RESULT_WIDTH = 6
 
@@ -121,7 +121,7 @@ def get_cmd(ds, k, br, heur, ct):
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -framework oriented -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct}"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct} -bounding None"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:
