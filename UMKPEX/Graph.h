@@ -1643,6 +1643,10 @@ public:
         int ret = heap.get_min_node();
         return ret;
     }
+    int get_min_degree_key()
+    {
+        return heap.get_min_key();
+    }
     /**
      * @brief after searching subgraph g_i, we exclude v_i and update the number of triangles of edges related to v_i
      * @param v the vertex we need to remove, i.e., v_i
@@ -1651,15 +1655,24 @@ public:
     void remove_v(int v, int lb, bool lb_changed, double *local_time = nullptr, double *global_time = nullptr)
     {
         double start_local = get_system_time_microsecond();
-        CTCP(lb, v);
-        if (local_time != nullptr)
-            *local_time += get_system_time_microsecond() - start_local;
-        if (lb_changed)
+        if (edge_to != nullptr)
         {
-            double start_global = get_system_time_microsecond();
-            CTCP(lb);
-            if (global_time != nullptr)
-                *global_time += get_system_time_microsecond() - start_global;
+            CTCP_remove_vertex_local(lb, v, lb_changed);
+            if (local_time != nullptr)
+                *local_time += get_system_time_microsecond() - start_local;
+        }
+        else
+        {
+            CTCP(lb, v);
+            if (local_time != nullptr)
+                *local_time += get_system_time_microsecond() - start_local;
+            if (lb_changed)
+            {
+                double start_global = get_system_time_microsecond();
+                CTCP(lb);
+                if (global_time != nullptr)
+                    *global_time += get_system_time_microsecond() - start_global;
+            }
         }
     }
     /**
@@ -1692,6 +1705,12 @@ public:
      */
     virtual void induce_to_2hop_and_reduce(int v, MyBitset &vis, vector<int> &vertices, vector<int> &deg, int lb)
     {
+    }
+    virtual bool extract_subgraph_and_prune_maple(int v, vector<int> &ids, vector<int> &rid,
+                                                  vector<pii> &edges, vector<int> &deg,
+                                                  vector<char> &exists, int lb)
+    {
+        return false;
     }
     /**
      * @brief obtain the ground-truth: the maximum k-plex
@@ -1736,11 +1755,15 @@ public:
     vector<int> local_queue_mark_v, local_queue_mark_e;
     vector<int> induce_queue;
     int local_queue_epoch = 0;
+    ui *peel_edge_list = nullptr;
     ui *peel_edgelist_pointer = nullptr;
     ui *peel_tri_cnt = nullptr;
+    ui *peel_active_edgelist = nullptr;
+    ui *peel_Qe = nullptr;
     char *peel_deleted = nullptr;
     ui *peel_Qv = nullptr;
     char *peel_exists = nullptr;
+    ui peel_active_edgelist_n = 0;
     bool peeling_state_valid = false;
     Graph_reduced_adjacent_list() : Graph_reduced() {}
     /**
@@ -1748,12 +1771,13 @@ public:
      * @param g reduced graph
      * @param must the vertex set that must include because each vertex in it will occur in a maximum k-plex
      */
-    Graph_reduced_adjacent_list(Graph &g) : Graph_reduced()
+    Graph_reduced_adjacent_list(Graph &g, bool verbose = true) : Graph_reduced()
     {
         n = g.n;
         m = g.m;
         edge_removed.resize(m);
-        printf("reduced graph n= %d m= %d lb= %d\n", n, m / 2, lb);
+        if (verbose)
+            printf("reduced graph n= %d m= %d lb= %d\n", n, m / 2, lb);
         pstart = new int[n + 1];
         pend = new int[n];
         edge_to = new int[m];
@@ -1811,10 +1835,25 @@ public:
             delete[] peel_edgelist_pointer;
             peel_edgelist_pointer = nullptr;
         }
+        if (peel_edge_list != nullptr)
+        {
+            delete[] peel_edge_list;
+            peel_edge_list = nullptr;
+        }
         if (peel_tri_cnt != nullptr)
         {
             delete[] peel_tri_cnt;
             peel_tri_cnt = nullptr;
+        }
+        if (peel_active_edgelist != nullptr)
+        {
+            delete[] peel_active_edgelist;
+            peel_active_edgelist = nullptr;
+        }
+        if (peel_Qe != nullptr)
+        {
+            delete[] peel_Qe;
+            peel_Qe = nullptr;
         }
         if (peel_deleted != nullptr)
         {
@@ -1911,30 +1950,75 @@ public:
     }
     void build_peeling_state()
     {
+        for (int u = 0; u < n; u++)
+            if (vertex[u])
+                compact_vertex(u);
+
+        ui active_m = 0;
+        for (int u = 0; u < n; u++)
+            if (vertex[u])
+                for (int j = pstart[u]; j < pend[u]; j++)
+                    if (vertex[edge_to[j]] && u < edge_to[j])
+                        ++active_m;
+
+        if (peel_edge_list != nullptr)
+        {
+            delete[] peel_edge_list;
+            peel_edge_list = nullptr;
+        }
         if (peel_edgelist_pointer == nullptr)
             peel_edgelist_pointer = new ui[m];
-        if (peel_tri_cnt == nullptr)
-            peel_tri_cnt = new ui[m >> 1];
-        if (peel_deleted == nullptr)
-            peel_deleted = new char[m >> 1];
+        if (peel_tri_cnt != nullptr)
+        {
+            delete[] peel_tri_cnt;
+            peel_tri_cnt = nullptr;
+        }
+        if (peel_active_edgelist != nullptr)
+        {
+            delete[] peel_active_edgelist;
+            peel_active_edgelist = nullptr;
+        }
+        if (peel_Qe != nullptr)
+        {
+            delete[] peel_Qe;
+            peel_Qe = nullptr;
+        }
+        if (peel_deleted != nullptr)
+        {
+            delete[] peel_deleted;
+            peel_deleted = nullptr;
+        }
+
+        peel_edge_list = active_m ? new ui[active_m << 1] : nullptr;
+        peel_tri_cnt = active_m ? new ui[active_m] : nullptr;
+        peel_active_edgelist = active_m ? new ui[active_m] : nullptr;
+        peel_Qe = active_m ? new ui[active_m] : nullptr;
+        peel_deleted = active_m ? new char[active_m] : nullptr;
         if (peel_Qv == nullptr)
             peel_Qv = new ui[n];
         if (peel_exists == nullptr)
             peel_exists = new char[n];
 
-        memset(peel_deleted, 0, sizeof(char) * (m >> 1));
+        if (active_m)
+        {
+            memset(peel_deleted, 0, sizeof(char) * active_m);
+            for (ui i = 0; i < active_m; i++)
+                peel_active_edgelist[i] = i;
+        }
         memset(peel_exists, 0, sizeof(char) * n);
+        peel_active_edgelist_n = active_m;
         ui edge_id = 0;
         for (int u = 0; u < n; u++)
         {
             if (!vertex[u])
                 continue;
-            compact_vertex(u);
             for (int j = pstart[u]; j < pend[u]; j++)
             {
                 int v = edge_to[j];
                 if (!vertex[v] || u > v)
                     continue;
+                peel_edge_list[edge_id << 1] = u;
+                peel_edge_list[(edge_id << 1) + 1] = v;
                 peel_edgelist_pointer[j] = edge_id;
                 int reverse_id = find(edge_to + pstart[v], edge_to + pend[v], u) + pstart[v];
                 peel_edgelist_pointer[reverse_id] = edge_id;
@@ -1942,8 +2026,6 @@ public:
                 edge_id++;
             }
         }
-        for (; edge_id < (ui)(m >> 1); edge_id++)
-            peel_tri_cnt[edge_id] = 0;
         peeling_state_valid = true;
     }
     void sync_ctcp_state_from_peeling()
@@ -1973,17 +2055,17 @@ public:
             return -1;
         return idx;
     }
-    inline bool find_peeling_edge(ui u, ui w, int &b, int e, int &idx)
+    inline bool find_peeling_edge(ui u, ui w, int &b, int e, ui &idx)
     {
         if (b >= e)
             return false;
         while (b + 1 < e)
         {
-            idx = b + (e - b) / 2;
-            if (edge_to[idx] > w)
-                e = idx;
+            int mid = b + (e - b) / 2;
+            if (edge_to[mid] > w)
+                e = mid;
             else
-                b = idx;
+                b = mid;
         }
         if (edge_to[b] == w)
         {
@@ -1993,38 +2075,38 @@ public:
         }
         return false;
     }
-    inline bool edge_in_local_queue(int edge_id) const
-    {
-        return local_queue_mark_e[edge_id] == local_queue_epoch;
-    }
-    inline void mark_local_queue_edge(int edge_id, int reverse_id, int from, queue<pii> &q_edges)
-    {
-        if (edge_in_local_queue(edge_id))
-            return;
-        local_queue_mark_e[edge_id] = local_queue_epoch;
-        local_queue_mark_e[reverse_id] = local_queue_epoch;
-        q_edges.push({edge_id, from});
-    }
-    inline void relax_triangle_edge(int edge_id, int reverse_id, int from, int lb, queue<pii> &q_edges)
-    {
-        if (edge_id == -1 || reverse_id == -1 || edge_in_local_queue(edge_id))
-            return;
-        --triangles_m[edge_id];
-        --triangles_m[reverse_id];
-        if (triangles_m[edge_id] + 2 * paramK <= lb)
-            mark_local_queue_edge(edge_id, reverse_id, from, q_edges);
-    }
-    void peeling_ctcp_run(int lb, ui Qv_idx, ui Qv_n, vector<pii> &q_edges)
+
+    ui peeling_maple(ui critical_vertex, ui &Qv_n, bool initialize_Qe, int lb)
     {
         if (!peeling_state_valid)
             build_peeling_state();
-        while (Qv_idx < Qv_n || !q_edges.empty())
+
+        ui d_threshold = lb + 1 - paramK;
+        ui t_threshold = lb + 1 - 2 * paramK;
+        ui Qe_n = 0;
+#ifndef NO_TRUSS_PRUNE
+        if (initialize_Qe)
         {
-            if (q_edges.empty())
+            ui active_new_n = 0;
+            for (ui j = 0; j < peel_active_edgelist_n; j++)
+                if (!peel_deleted[peel_active_edgelist[j]])
+                {
+                    if (peel_tri_cnt[peel_active_edgelist[j]] < t_threshold)
+                        peel_Qe[Qe_n++] = peel_active_edgelist[j];
+                    else
+                        peel_active_edgelist[active_new_n++] = peel_active_edgelist[j];
+                }
+            peel_active_edgelist_n = active_new_n;
+        }
+#endif
+
+        ui deleted_edges_n = 0;
+        ui Qv_idx = 0;
+        while (Qv_idx < Qv_n || Qe_n)
+        {
+            if (Qe_n == 0)
             {
                 ui u = peel_Qv[Qv_idx++];
-                if (!vertex[u])
-                    continue;
                 int u_n = pstart[u];
                 for (int k = pstart[u]; k < pend[u]; k++)
                     if (!peel_deleted[peel_edgelist_pointer[k]])
@@ -2037,114 +2119,115 @@ public:
 
                 for (int k = pstart[u]; k < pend[u]; k++)
                     peel_deleted[peel_edgelist_pointer[k]] = 1;
+                deleted_edges_n += pend[u] - pstart[u];
                 d[u] = 0;
                 vertex.reset(u);
                 heap.delete_node(u);
 
                 for (int k = pstart[u]; k < pend[u]; k++)
                 {
-                    ui nei = edge_to[k];
-                    if (!vertex[nei] || d[nei] <= 0)
-                        continue;
-                    int nei_n = pstart[nei];
-                    for (int x = pstart[nei]; x < pend[nei]; x++)
+                    ui v = edge_to[k];
+                    int v_n = pstart[v];
+                    for (int x = pstart[v]; x < pend[v]; x++)
                         if (!peel_deleted[peel_edgelist_pointer[x]])
                         {
-                            edge_to[nei_n] = edge_to[x];
-                            peel_edgelist_pointer[nei_n++] = peel_edgelist_pointer[x];
-                            if (edge_to[x] > nei && peel_exists[edge_to[x]])
+                            edge_to[v_n] = edge_to[x];
+                            peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[x];
+                            if (edge_to[x] > v && peel_exists[edge_to[x]])
                             {
                                 ui eid = peel_edgelist_pointer[x];
-                                if ((peel_tri_cnt[eid]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)x, nei});
+                                if ((peel_tri_cnt[eid]--) == t_threshold)
+                                    peel_Qe[Qe_n++] = eid;
                             }
                         }
-                    pend[nei] = nei_n;
+                    pend[v] = v_n;
 
-                    if ((d[nei]--) == (ui)(lb + 1 - paramK))
-                        peel_Qv[Qv_n++] = nei;
-                    if (d[nei] >= 0)
-                        heap.decrease((ui)d[nei], nei);
+                    if ((d[v]--) == d_threshold)
+                    {
+                        peel_Qv[Qv_n++] = v;
+                        if (v == critical_vertex)
+                        {
+                            for (int kk = pstart[u]; kk < pend[u]; kk++)
+                                peel_exists[edge_to[kk]] = 0;
+                            return 0;
+                        }
+                    }
+                    heap.decrease((ui)d[v], v);
                 }
 
                 for (int k = pstart[u]; k < pend[u]; k++)
                     peel_exists[edge_to[k]] = 0;
             }
-            size_t qe_n = q_edges.size();
-            for (size_t j = 0; j < qe_n; j++)
+#ifdef NO_TRUSS_PRUNE
+            Qe_n = 0;
+#endif
+            for (ui j = 0; j < Qe_n; j++)
             {
-                ui idx_pos = q_edges[j].x;
-                ui v_from = q_edges[j].y;
-                ui eid = peel_edgelist_pointer[idx_pos];
-                if (peel_deleted[eid])
-                    continue;
-                ui u = v_from, w = edge_to[idx_pos];
-                if (!vertex[u] || !vertex[w] || d[u] <= 0 || d[w] <= 0)
-                    continue;
-                ui tri_n = peel_tri_cnt[eid];
-                peel_deleted[eid] = 1;
-                if ((d[u]--) == (ui)(lb + 1 - paramK))
+                ui idx = peel_Qe[j];
+                ui u = peel_edge_list[idx << 1], v = peel_edge_list[(idx << 1) + 1];
+                ui tri_n = peel_tri_cnt[idx];
+                peel_deleted[idx] = 1;
+                if ((d[u]--) == d_threshold)
                 {
                     peel_Qv[Qv_n++] = u;
-                    if (vertex[u])
-                        ;
+                    if (u == critical_vertex)
+                        return 0;
                 }
-                if ((d[w]--) == (ui)(lb + 1 - paramK))
+                if ((d[v]--) == d_threshold)
                 {
-                    peel_Qv[Qv_n++] = w;
-                    if (vertex[w])
-                        ;
+                    peel_Qv[Qv_n++] = v;
+                    if (v == critical_vertex)
+                        return 0;
                 }
-                if (d[u] >= 0)
-                    heap.decrease((ui)d[u], u);
-                if (d[w] >= 0)
-                    heap.decrease((ui)d[w], w);
+                heap.decrease((ui)d[u], u);
+                heap.decrease((ui)d[v], v);
+                deleted_edges_n++;
 
-                if (d[u] < d[w])
-                    swap(u, w);
+                if (d[u] < d[v])
+                    swap(u, v);
 
-                if (d[u] > d[w] * 2)
+                if (d[u] > d[v] * 2)
                 {
-                    int v_n = pstart[w], start = pstart[u], idx = -1;
-                    for (int k = pstart[w]; k < pend[w]; k++)
+                    int v_n = pstart[v], start = pstart[u];
+                    for (int k = pstart[v]; k < pend[v]; k++)
                         if (!peel_deleted[peel_edgelist_pointer[k]])
                         {
                             edge_to[v_n] = edge_to[k];
                             peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[k];
-                            if (tri_n && find_peeling_edge(u, edge_to[k], start, pend[u], idx))
+                            ui found_idx;
+                            if (tri_n && find_peeling_edge(u, edge_to[k], start, pend[u], found_idx))
                             {
                                 --tri_n;
-                                if ((peel_tri_cnt[idx]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)k, w});
-                                ui rev_eid = peel_edgelist_pointer[k];
-                                if ((peel_tri_cnt[rev_eid]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)k, w});
+                                if ((peel_tri_cnt[found_idx]--) == t_threshold)
+                                    peel_Qe[Qe_n++] = found_idx;
+                                if ((peel_tri_cnt[peel_edgelist_pointer[k]]--) == t_threshold)
+                                    peel_Qe[Qe_n++] = peel_edgelist_pointer[k];
                             }
                         }
-                    pend[w] = v_n;
+                    pend[v] = v_n;
                 }
                 else
                 {
-                    int ii = pstart[u], jj = pstart[w];
-                    int u_n = pstart[u], w_n = pstart[w];
+                    int ii = pstart[u], jj = pstart[v];
+                    int u_n = pstart[u], v_n = pstart[v];
                     while (true)
                     {
                         while (ii < pend[u] && peel_deleted[peel_edgelist_pointer[ii]])
                             ++ii;
-                        while (jj < pend[w] && peel_deleted[peel_edgelist_pointer[jj]])
+                        while (jj < pend[v] && peel_deleted[peel_edgelist_pointer[jj]])
                             ++jj;
-                        if (ii >= pend[u] || jj >= pend[w])
+                        if (ii >= pend[u] || jj >= pend[v])
                             break;
                         if (edge_to[ii] == edge_to[jj])
                         {
                             edge_to[u_n] = edge_to[ii];
                             peel_edgelist_pointer[u_n++] = peel_edgelist_pointer[ii];
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
-                            if ((peel_tri_cnt[peel_edgelist_pointer[ii]]--) == (ui)(lb + 1 - 2 * paramK))
-                                q_edges.push_back({(ui)ii, u});
-                            if ((peel_tri_cnt[peel_edgelist_pointer[jj]]--) == (ui)(lb + 1 - 2 * paramK))
-                                q_edges.push_back({(ui)jj, w});
+                            edge_to[v_n] = edge_to[jj];
+                            peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[jj];
+                            if ((peel_tri_cnt[peel_edgelist_pointer[ii]]--) == t_threshold)
+                                peel_Qe[Qe_n++] = peel_edgelist_pointer[ii];
+                            if ((peel_tri_cnt[peel_edgelist_pointer[jj]]--) == t_threshold)
+                                peel_Qe[Qe_n++] = peel_edgelist_pointer[jj];
                             ++ii;
                             ++jj;
                         }
@@ -2156,8 +2239,8 @@ public:
                         }
                         else
                         {
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
+                            edge_to[v_n] = edge_to[jj];
+                            peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[jj];
                             ++jj;
                         }
                     }
@@ -2170,69 +2253,40 @@ public:
                         }
                         ++ii;
                     }
-                    while (jj < pend[w])
+                    while (jj < pend[v])
                     {
                         if (!peel_deleted[peel_edgelist_pointer[jj]])
                         {
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
+                            edge_to[v_n] = edge_to[jj];
+                            peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[jj];
                         }
                         ++jj;
                     }
                     pend[u] = u_n;
-                    pend[w] = w_n;
+                    pend[v] = v_n;
                 }
             }
-            q_edges.clear();
+            Qe_n = 0;
         }
+        return deleted_edges_n;
     }
-    // Backup peeling-style implementation. It is intentionally kept available for
-    // later debugging/experiments, but the active remove_v() path currently uses
-    // the original CTCP-based implementation above for correctness.
     void CTCP_remove_vertex_local(int lb, int v, bool lb_changed = false)
     {
         if (!vertex[v])
             return;
-        vector<pii> q_edges;
-        q_edges.reserve(1024);
         peel_Qv[0] = v;
-        if (lb_changed)
-        {
-            ui edge_threshold = lb + 1 - 2 * paramK;
-            for (int u : vertex)
-            {
-                for (int i = pstart[u]; i < pend[u]; i++)
-                {
-                    ui eid = peel_edgelist_pointer[i];
-                    int w = edge_to[i];
-                    if (u < w && !peel_deleted[eid] && peel_tri_cnt[eid] < edge_threshold)
-                        q_edges.push_back({(ui)i, (ui)u});
-                }
-            }
-        }
-        peeling_ctcp_run(lb, 0, 1, q_edges);
+        ui Qv_n = 1;
+        peeling_maple((ui)v, Qv_n, lb_changed, lb);
     }
     void CTCP_lb_update_peeling(int lb)
     {
         if (!peeling_state_valid)
             build_peeling_state();
-        vector<pii> q_edges;
-        q_edges.reserve(1024);
         ui Qv_n = 0;
-        ui edge_threshold = lb + 1 - 2 * paramK;
         for (int u : vertex)
-        {
             if (d[u] + paramK <= lb)
                 peel_Qv[Qv_n++] = u;
-            for (int i = pstart[u]; i < pend[u]; i++)
-            {
-                ui eid = peel_edgelist_pointer[i];
-                int v = edge_to[i];
-                if (u < v && !peel_deleted[eid] && peel_tri_cnt[eid] < edge_threshold)
-                    q_edges.push_back({(ui)i, (ui)u});
-            }
-        }
-        peeling_ctcp_run(lb, 0, Qv_n, q_edges);
+        peeling_maple((ui)n, Qv_n, true, lb);
     }
     /**
      * @brief inspired by Lijun Chang
@@ -2659,6 +2713,135 @@ public:
             }
         }
     }
+    bool extract_subgraph_and_prune_maple(int v, vector<int> &ids, vector<int> &rid,
+                                          vector<pii> &vp, vector<int> &deg,
+                                          vector<char> &exists, int lb)
+    {
+        vp.clear();
+        ids.clear();
+        ids.push_back(v);
+        exists[v] = 1;
+
+        compact_vertex(v);
+        for (int i = pstart[v]; i < pend[v]; i++)
+        {
+            int u = edge_to[i];
+            if (!vertex[u])
+                continue;
+            ids.push_back(u);
+            exists[u] = 2;
+        }
+
+        auto &Q = induce_queue;
+        Q.clear();
+        for (int i = 1; i < (int)ids.size(); i++)
+        {
+            int u = ids[i];
+            compact_vertex(u);
+            deg[u] = 0;
+            for (int j = pstart[u]; j < pend[u]; j++)
+            {
+                int w = edge_to[j];
+                if (exists[w] == 2)
+                    ++deg[u];
+            }
+            if (deg[u] + 2 * paramK <= lb)
+                Q.push_back(u);
+        }
+
+        for (size_t i = 0; i < Q.size(); i++)
+        {
+            int u = Q[i];
+            exists[u] = 10;
+            for (int j = pstart[u]; j < pend[u]; j++)
+            {
+                int w = edge_to[j];
+                if (exists[w] == 2 && (deg[w]--) + 2 * paramK == lb + 1)
+                    Q.push_back(w);
+            }
+        }
+
+        if ((int)ids.size() - 1 - (int)Q.size() + paramK <= lb)
+        {
+            for (int u : ids)
+                exists[u] = 0;
+            ids.clear();
+            return false;
+        }
+
+        int nr_size = ids.size();
+        for (int i = 1; i < nr_size; i++)
+        {
+            int u = ids[i];
+            if (exists[u] != 2)
+                continue;
+            for (int j = pstart[u]; j < pend[u]; j++)
+            {
+                int w = edge_to[j];
+                if (!vertex[w])
+                    continue;
+                if (!exists[w])
+                {
+                    ids.push_back(w);
+                    exists[w] = 3;
+                    deg[w] = 1;
+                }
+                else if (exists[w] == 3)
+                    ++deg[w];
+            }
+        }
+
+        int new_size = 1;
+        for (int i = 1; i < nr_size; i++)
+        {
+            int u = ids[i];
+            if (exists[u] == 10)
+                exists[u] = 0;
+            else
+                ids[new_size++] = u;
+        }
+
+        int old_nr_size = nr_size;
+        nr_size = new_size;
+        for (int i = old_nr_size; i < (int)ids.size(); i++)
+        {
+            int u = ids[i];
+            if (deg[u] + 2 * paramK <= lb + 2)
+                exists[u] = 0;
+            else
+                ids[new_size++] = u;
+        }
+        ids.resize(new_size);
+
+        for (int i = 0; i < (int)ids.size(); i++)
+            rid[ids[i]] = i;
+
+        for (int i = 0; i < nr_size; i++)
+        {
+            int u = ids[i];
+            for (int j = pstart[u]; j < pend[u]; j++)
+            {
+                int w = edge_to[j];
+                if (exists[w] && w > u)
+                    vp.push_back({rid[u], rid[w]});
+            }
+        }
+        for (int i = nr_size; i < (int)ids.size(); i++)
+        {
+            int u = ids[i];
+            compact_vertex(u);
+            for (int j = pstart[u]; j < pend[u]; j++)
+            {
+                int w = edge_to[j];
+                if (w > u && exists[w])
+                    vp.push_back({rid[u], rid[w]});
+            }
+        }
+
+        for (int u : ids)
+            exists[u] = 0;
+        return !ids.empty();
+    }
 };
 
 /**
@@ -2831,7 +3014,6 @@ public:
                     }
                 }
             }
-
             if (q_vertex.size())
             {
                 int u = q_vertex.front();
@@ -3229,6 +3411,13 @@ public:
     int size()
     {
         return n;
+    }
+    int edge_size()
+    {
+        long long sum = 0;
+        for (int u = 0; u < n; u++)
+            sum += adj_matrix[u].size();
+        return (int)(sum >> 1);
     }
 };
 

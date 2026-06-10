@@ -24,7 +24,15 @@ Graph::Graph(const char *_dir, const int _K) {
 	s_tri_cnt = s_edge_list = NULL;
 	s_active_edgelist = NULL;
 	s_deleted = NULL;
-	
+#ifdef PRUNE_DIAG
+	prune_diag_extract_calls = 0;
+	prune_diag_subgraph_calls = 0;
+	prune_diag_extract_vertices = 0;
+	prune_diag_after_subgraph_vertices = 0;
+	prune_diag_subgraph_input_vertices = 0;
+	prune_diag_extract_time = 0;
+	prune_diag_subgraph_time = 0;
+#endif
 }
 
 Graph::~Graph() {
@@ -283,6 +291,8 @@ void Graph::search() {
 		for(int i = 0;i < n&&m&&kplex.size() < UB;i ++) {
 			ui u, key;
 			linear_heap->pop_min(u, key);
+			printf("root: local=%u orig=%u deg=%u\n", u, out_mapping[u], key);
+			fflush(stdout);
 			// if(key != 0) printf("u = %u, key = %u\n", u, key);
 			if(key < kplex.size()+1-K) {
 				if(degree[u] != 0) { // degree[u] == 0 means u is deleted. it could be the case that degree[u] == 0, but key[u] > 0, as key[u] is not fully updated in linear_heap
@@ -306,14 +316,34 @@ void Graph::search() {
 				ui pre_size;
 				do{
 					pre_size=kplex.size();
-					extract_subgraph_and_prune(u, ids, ids_n, rid, vp, Qe, t_degree, exists, pend, deleted, edgelist_pointer);
+					{
+						Timer prune_t;
+						extract_subgraph_and_prune(u, ids, ids_n, rid, vp, Qe, t_degree, exists, pend, deleted, edgelist_pointer);
+#ifdef PRUNE_DIAG
+						++prune_diag_extract_calls;
+						prune_diag_extract_vertices += ids_n;
+						prune_diag_extract_time += prune_t.elapsed();
+#endif
+					}
 					if(ids_n) {
 						double density = (double(vp.size()*2))/ids_n/(ids_n-1);
 						total_density_prune += density; ++ prune_cnt;
 						if(density < min_density_prune) min_density_prune = density;
 						if(ids_n > max_n_prune) max_n_prune = ids_n;
 					}
-					if(ids_n > kplex.size()&&vp.size()*2 < m) subgraph_prune(ids, ids_n, vp, rid, Qv, Qe, exists);
+					if(ids_n > kplex.size()&&vp.size()*2 < m) {
+#ifdef PRUNE_DIAG
+						ui before_sub = ids_n;
+						Timer sub_t;
+#endif
+						subgraph_prune(ids, ids_n, vp, rid, Qv, Qe, exists);
+#ifdef PRUNE_DIAG
+						++prune_diag_subgraph_calls;
+						prune_diag_subgraph_input_vertices += before_sub;
+						prune_diag_after_subgraph_vertices += ids_n;
+						prune_diag_subgraph_time += sub_t.elapsed();
+#endif
+					}
 					if (kplex.size() > pre_size) for(ui& u:kplex) u = ids[u];
 					// Qv_n=0;
 					// if(kplex.size() != pre_size && kplex.size()> 2*K-2) m -= 2*peeling(n, linear_heap, Qv, Qv_n, kplex.size()+1-K, Qe, true, kplex.size()+1-2*K, tri_cnt, active_edgelist, active_edgelist_n, edge_list, edgelist_pointer, deleted, degree, pstart, pend, edges, exists);
@@ -331,15 +361,18 @@ void Graph::search() {
 			last_m=vp.size()*2;
 			ui pre_size = kplex.size();
 			// printf("solving %u ", u);
-			if(ids_n > kplex.size()) {
-				double density = (double(vp.size()*2))/ids_n/(ids_n-1);
-				total_density_search += density; ++ search_cnt;
-				if(density < min_density_search) min_density_search = density;
-				if(ids_n > max_n_search) max_n_search = ids_n;
-				kplex_solver->load(ids_n, vp);
-				if(mflag){
-					kplex_solver->runWHOLE(K, kplex);
-					break;
+				if(ids_n > kplex.size()) {
+					double density = (double(vp.size()*2))/ids_n/(ids_n-1);
+					total_density_search += density; ++ search_cnt;
+					if(density < min_density_search) min_density_search = density;
+					if(ids_n > max_n_search) max_n_search = ids_n;
+					printf("solver_input: framework=maple root_orig=%u root_local=%u n=%u m=%lu lb=%lu\n",
+						out_mapping[u], rid[u], ids_n, vp.size(), kplex.size());
+					fflush(stdout);
+					kplex_solver->load(ids_n, vp);
+					if(mflag){
+						kplex_solver->runWHOLE(K, kplex);
+						break;
 				}
 				else kplex_solver->run(K, kplex);
 			}
@@ -356,6 +389,22 @@ void Graph::search() {
 		if(search_cnt == 0) ++ search_cnt;
 		printf("prune_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", prune_cnt, max_n_prune, min_density_prune, total_density_prune/prune_cnt);
 		printf("search_cnt: %u, max_n: %u, min_density: %.4lf, avg_density: %.4lf\n", search_cnt, max_n_search, min_density_search, total_density_search/search_cnt);
+#ifdef PRUNE_DIAG
+		if(prune_diag_extract_calls) {
+			printf("prune_diag(maple): extract_calls=%lld avg_after_extract=%.2lf t_extract=%.4lf ",
+				   prune_diag_extract_calls,
+				   prune_diag_extract_vertices*1.0/prune_diag_extract_calls,
+				   prune_diag_extract_time/1000000.0);
+			if(prune_diag_subgraph_calls) {
+				printf("sub_calls=%lld avg_before_sub=%.2lf avg_after_sub=%.2lf t_sub=%.4lf\n",
+					   prune_diag_subgraph_calls,
+					   prune_diag_subgraph_input_vertices*1.0/prune_diag_subgraph_calls,
+					   prune_diag_after_subgraph_vertices*1.0/prune_diag_subgraph_calls,
+					   prune_diag_subgraph_time/1000000.0);
+			}
+			else puts("sub_calls=0 avg_before_sub=0.00 avg_after_sub=0.00 t_sub=0.0000");
+		}
+#endif
 		// printf("*** Search time: %s \n", Utility::integer_to_string(tt.elapsed()).c_str());
 		// printf(">>%s t_Search: %f", dir.substr(dir.find_last_of("/")).c_str(), tt.elapsed()/1000000.0);
 
@@ -806,7 +855,7 @@ ui Graph::degen(ui n, ui *peel_sequence, ui *core, ept *pstart, ui *edges, ui *d
 		if(new_size - idx > kplex.size()) {
 			kplex.clear();
 			for(ui i = idx;i < new_size;i ++) kplex.pb(peel_sequence[queue_n + i]);
-			if(!output) printf("Find a k-plex of size: %u\n", new_size - idx);
+			printf("Find a k-plex of size: %u\n", new_size - idx);
 		}
 	}
 	return UB;

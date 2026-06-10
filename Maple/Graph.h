@@ -33,6 +33,15 @@ private:
 	ui *s_edge_list;
 	ui *s_active_edgelist;
 	char *s_deleted;
+#ifdef PRUNE_DIAG
+	long long prune_diag_extract_calls;
+	long long prune_diag_subgraph_calls;
+	long long prune_diag_extract_vertices;
+	long long prune_diag_after_subgraph_vertices;
+	long long prune_diag_subgraph_input_vertices;
+	double prune_diag_extract_time;
+	double prune_diag_subgraph_time;
+#endif
 
 public:
 	Graph(const char *_dir, const int _K) ;
