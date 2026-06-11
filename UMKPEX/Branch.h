@@ -9,7 +9,6 @@ class Branch
     bool add_first = false;
     vector<int> peel_seq;
     vector<pii> vertices_in_C;
-    vector<pii> scratch_edges;
 
 private:
     using Set = MyBitset;
@@ -32,7 +31,6 @@ private:
     vector<int> array_N; // N is the input graph size
     vector<int> array1_N;
 
-
     // information of log
     double part_PI_time; // time of Partition
     double run_time;     // sum of bnb time
@@ -51,25 +49,6 @@ private:
     map<int, int> counter;
     double reduce_kPlexT_time;
     ll AltRB_cnt, AltRB_iteration_cnt;
-#ifdef PRUNE_DIAG
-    ll prune_diag_first_layer_roots;
-    ll prune_diag_first_layer_pass;
-    ll prune_diag_first_layer_vertices;
-    ll prune_diag_first_layer_edges;
-    ll prune_diag_first_layer_pruned;
-    ll prune_diag_roots;
-    ll prune_diag_extract_vertices;
-    ll prune_diag_extract_edges;
-    ll prune_diag_after_degen_vertices;
-    ll prune_diag_after_degen_edges;
-    ll prune_diag_after_cotri_vertices;
-    ll prune_diag_after_cotri_edges;
-    ll prune_diag_pruned_after_extract;
-    ll prune_diag_pruned_after_degen;
-    ll prune_diag_pruned_after_cotri;
-    double prune_diag_degen_time;
-    double prune_diag_cotri_time;
-#endif
 
 public:
     set<int> solution;
@@ -82,18 +61,6 @@ public:
                                             subgraph_pruned_cnt(0),
                                             subgraph_search_cnt(0), reduce_kPlexT_time(0),
                                             AltRB_cnt(0), AltRB_iteration_cnt(0)
-#ifdef PRUNE_DIAG
-                                            ,
-                                            prune_diag_first_layer_roots(0), prune_diag_first_layer_pass(0),
-                                            prune_diag_first_layer_vertices(0), prune_diag_first_layer_edges(0),
-                                            prune_diag_first_layer_pruned(0), prune_diag_roots(0),
-                                            prune_diag_extract_vertices(0), prune_diag_extract_edges(0),
-                                            prune_diag_after_degen_vertices(0), prune_diag_after_degen_edges(0),
-                                            prune_diag_after_cotri_vertices(0), prune_diag_after_cotri_edges(0),
-                                            prune_diag_pruned_after_extract(0), prune_diag_pruned_after_degen(0),
-                                            prune_diag_pruned_after_cotri(0), prune_diag_degen_time(0),
-                                            prune_diag_cotri_time(0)
-#endif
     {
     }
     ~Branch() {}
@@ -219,25 +186,6 @@ public:
         AltRB_iteration_cnt = 0;
         subgraph_pruned_cnt = 0;
         subgraph_search_cnt = 0;
-#ifdef PRUNE_DIAG
-        prune_diag_first_layer_roots = 0;
-        prune_diag_first_layer_pass = 0;
-        prune_diag_first_layer_vertices = 0;
-        prune_diag_first_layer_edges = 0;
-        prune_diag_first_layer_pruned = 0;
-        prune_diag_roots = 0;
-        prune_diag_extract_vertices = 0;
-        prune_diag_extract_edges = 0;
-        prune_diag_after_degen_vertices = 0;
-        prune_diag_after_degen_edges = 0;
-        prune_diag_after_cotri_vertices = 0;
-        prune_diag_after_cotri_edges = 0;
-        prune_diag_pruned_after_extract = 0;
-        prune_diag_pruned_after_degen = 0;
-        prune_diag_pruned_after_cotri = 0;
-        prune_diag_degen_time = 0;
-        prune_diag_cotri_time = 0;
-#endif
         IE_graph_cnt = 0;
         IE_graph_size = 0;
         CTCP_time = 0;
@@ -258,16 +206,8 @@ public:
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
             print_progress_bar(percentage);
 
-            int min_key = G_input.get_min_degree_key();
             int u = G_input.get_min_degree_v();
             int previous_lb = lb;
-            printf("root: local=%d orig=%d deg=%d\n", u, G_input.vertex_id[u], min_key);
-            fflush(stdout);
-            if (min_key + paramK <= lb or G_input.vertex_id[u]!=376)
-            {
-                G_input.remove_v(u, lb, false, &CTCP_remove_v_time, nullptr);
-                continue;
-            }
 
             // cout << "========== Processing: " << u << "Graph size: " << G_input.size() << endl;
             auto &vis = bool_array;
@@ -275,68 +215,13 @@ public:
 
             double start_induce = get_system_time_microsecond();
             vector<int> vertices_2hops{u};
+            G_input.induce_to_2hop_and_reduce(u, vis, vertices_2hops, array1_N, lb);
             int id_u = -1;
             Graph_adjacent g;
-            if (!G_input.is_matrix())
-            {
-                edges.clear();
-                bool extracted = G_input.extract_subgraph_and_prune_maple(u, vertices_2hops, array_N, edges,
-                                                                          array1_N, G_input.scratch_state, lb);
-#ifdef PRUNE_DIAG
-                prune_diag_first_layer_roots++;
-                if (!extracted || vertices_2hops.empty() || (int)vertices_2hops.size() <= lb)
-                    prune_diag_first_layer_pruned++;
-                else
-                {
-                    prune_diag_first_layer_pass++;
-                    prune_diag_first_layer_vertices += vertices_2hops.size();
-                    prune_diag_first_layer_edges += edges.size();
-                }
-#endif
-                if (extracted && !vertices_2hops.empty() && (int)vertices_2hops.size() > lb)
-                {
-                    int root_id = 0;
-                    vis.reset(u);
-                    if (prune_oriented_edge_list_before_matrix(u, vertices_2hops, edges, root_id, lb))
-                    {
-                        id_u = root_id;
-                        g = Graph_adjacent(vertices_2hops, edges);
-                    }
-                }
-                else
-                    vis.reset(u);
-            }
-            else
-            {
-                G_input.induce_to_2hop_and_reduce(u, vis, vertices_2hops, array1_N, lb);
-#ifdef PRUNE_DIAG
-                prune_diag_first_layer_roots++;
-                if (!vis[u])
-                    prune_diag_first_layer_pruned++;
-                else
-                {
-                    prune_diag_first_layer_pass++;
-                    prune_diag_first_layer_vertices += vertices_2hops.size();
-                    prune_diag_first_layer_edges += count_active_edges_in_mask(vertices_2hops, vis);
-                }
-#endif
-                if (vis[u] && paramK <= 10)
-                {
-                    vector<int> &inv = array_N;
-                    g = Graph_adjacent(vis, vertices_2hops, G_input, inv);
-                    id_u = inv[u];
-                    for (int x : vertices_2hops)
-                        if (vis[x])
-                            vis.reset(x);
-                }
-                else
-                {
-                    edges.clear();
-                    id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
-                    if (id_u != -1)
-                        g = Graph_adjacent(vertices_2hops, edges);
-                }
-            }
+            edges.clear();
+            id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
+            if (id_u != -1)
+                g = Graph_adjacent(vertices_2hops, edges);
             if (id_u != -1) // this subgraph is not pruned: begin bnb
             {
                 vector<int> &inv = array_N;
@@ -360,9 +245,6 @@ public:
                 // int id_u = inv[u]; // the index of u in the new-induced graph g
                 if (PARA.algorithm == "UMKP+")
                 {
-                    printf("solver_input: framework=default root_orig=%d root_local=%d n=%d m=%d lb=%d\n",
-                           G_input.vertex_id[u], id_u, g.size(), g.edge_size(), lb);
-                    fflush(stdout);
                     bb_solver.load_graph(g);
                     bb_solver.kPlex(lb, g.size(), solution, id_u);
                     AltRB_cnt = bb_solver.get_AltRB_count();
@@ -426,179 +308,6 @@ public:
                 if (row[i] < u)
                     G_input.edge_to[write++] = row[i];
         }
-    }
-
-#ifdef PRUNE_DIAG
-    ll count_active_edges_in_mask(const vector<int> &vertices, MyBitset &vis)
-    {
-        ll edge_cnt = 0;
-        for (int u : vertices)
-        {
-            if (!vis[u])
-                continue;
-            int end = G_input.pend ? G_input.pend[u] : G_input.pstart[u + 1];
-            for (int i = G_input.pstart[u]; i < end; i++)
-            {
-                if (G_input.edge_removed[i])
-                    continue;
-                int v = G_input.edge_to[i];
-                if (!vis[v] || u >= v)
-                    continue;
-                int rev_begin = G_input.pstart[v];
-                int rev_end = G_input.pend ? G_input.pend[v] : G_input.pstart[v + 1];
-                int rev_idx = find(G_input.edge_to + rev_begin, G_input.edge_to + rev_end, u) + rev_begin;
-                if (rev_idx < rev_end && G_input.edge_to[rev_idx] == (ui)u && !G_input.edge_removed[rev_idx])
-                    edge_cnt++;
-            }
-        }
-        return edge_cnt;
-    }
-#endif
-
-    void build_directed_edges_from_undirected(int n, const vector<pii> &undirected_edges, vector<pii> &directed_edges)
-    {
-        directed_edges.clear();
-        directed_edges.resize(undirected_edges.size() << 1);
-        vector<int> degree(n, 0), offset(n, 0);
-        for (const pii &e : undirected_edges)
-        {
-            degree[e.x]++;
-            degree[e.y]++;
-        }
-        for (int i = 1; i < n; i++)
-            offset[i] = offset[i - 1] + degree[i - 1];
-        vector<int> cursor = offset;
-        for (const pii &e : undirected_edges)
-        {
-            directed_edges[cursor[e.x]++] = {e.x, e.y};
-            directed_edges[cursor[e.y]++] = {e.y, e.x};
-        }
-    }
-
-    void rebuild_undirected_edge_list(Graph &g_i, int root_vertex,
-                                      vector<int> &ids, vector<pii> &undirected_edges, int &root_id)
-    {
-        ids.resize(g_i.n);
-        root_id = -1;
-        for (int u = 0; u < (int)g_i.n; u++)
-        {
-            ids[u] = g_i.map_refresh_id[u];
-            if (ids[u] == root_vertex)
-                root_id = u;
-        }
-        undirected_edges.clear();
-        undirected_edges.reserve(g_i.m >> 1);
-        for (int u = 0; u < (int)g_i.n; u++)
-            for (ui i = g_i.pstart[u]; i < g_i.pstart[u + 1]; i++)
-                if ((int)g_i.edge_to[i] > u)
-                    undirected_edges.push_back({u, (int)g_i.edge_to[i]});
-    }
-
-    void rebuild_undirected_edge_list(Graph_reduced_adjacent_list &g_i, int root_vertex,
-                                      const vector<ui> &old_ids,
-                                      vector<int> &ids, vector<pii> &undirected_edges, int &root_id)
-    {
-        vector<int> rid(g_i.n, -1);
-        ids.clear();
-        ids.reserve(g_i.size());
-        for (int u : g_i.vertex)
-        {
-            rid[u] = ids.size();
-            ids.push_back(old_ids[u]);
-        }
-        root_id = -1;
-        for (int i = 0; i < (int)ids.size(); i++)
-            if (ids[i] == root_vertex)
-            {
-                root_id = i;
-                break;
-            }
-        undirected_edges.clear();
-        undirected_edges.reserve(g_i.get_m());
-        for (int u : g_i.vertex)
-        {
-            int nu = rid[u];
-            for (int j = g_i.pstart[u]; j < g_i.pend[u]; j++)
-            {
-                int v = g_i.edge_to[j];
-                if (!g_i.vertex[v])
-                    continue;
-                int nv = rid[v];
-                if (nu < nv)
-                    undirected_edges.push_back({nu, nv});
-            }
-        }
-    }
-
-    bool prune_oriented_edge_list_before_matrix(int root_vertex,
-                                                vector<int> &ids, vector<pii> &undirected_edges,
-                                                int &root_id, int lb)
-    {
-#ifdef PRUNE_DIAG
-        prune_diag_roots++;
-        prune_diag_extract_vertices += ids.size();
-        prune_diag_extract_edges += undirected_edges.size();
-#endif
-        if ((int)ids.size() <= lb)
-        {
-#ifdef PRUNE_DIAG
-            prune_diag_pruned_after_extract++;
-#endif
-            return false;
-        }
-
-        auto &directed_edges = scratch_edges;
-        build_directed_edges_from_undirected(ids.size(), undirected_edges, directed_edges);
-
-        Graph g_i(ids, directed_edges);
-        {
-            Timer tt;
-            g_i.degeneracy_and_reduce(lb);
-#ifdef PRUNE_DIAG
-            prune_diag_degen_time += tt.get_time();
-            prune_diag_after_degen_vertices += g_i.n;
-            prune_diag_after_degen_edges += g_i.m >> 1;
-#endif
-        }
-        if (g_i.n <= (ui)lb)
-        {
-#ifdef PRUNE_DIAG
-            prune_diag_pruned_after_degen++;
-#endif
-            return false;
-        }
-
-        if (lb + 1 > 2 * paramK)
-        {
-            vector<ui> peel_sequence(g_i.n), rid(g_i.n);
-            for (ui i = 0; i < g_i.n; i++)
-                peel_sequence[i] = i;
-            {
-                Timer tt;
-                CTPrune::core_truss_copruning(g_i.n, g_i.m,
-                                              lb + 1 - paramK,
-                                              lb + 1 - 2 * paramK,
-                                              peel_sequence.data(),
-                                              g_i.map_refresh_id.data(),
-                                              rid.data(),
-                                              g_i.pstart, g_i.edge_to, g_i.d, false);
-#ifdef PRUNE_DIAG
-                prune_diag_cotri_time += tt.get_time();
-#endif
-            }
-        }
-#ifdef PRUNE_DIAG
-        prune_diag_after_cotri_vertices += g_i.n;
-        prune_diag_after_cotri_edges += g_i.m >> 1;
-#endif
-
-        rebuild_undirected_edge_list(g_i, root_vertex, ids, undirected_edges, root_id);
-        bool ok = root_id != -1 && (int)ids.size() > lb;
-#ifdef PRUNE_DIAG
-        if (!ok)
-            prune_diag_pruned_after_cotri++;
-#endif
-        return ok;
     }
 
     bool extract_subgraph_with_prune_oriented(int u, int degree_threshold, int triangle_threshold,
@@ -778,25 +487,6 @@ public:
         AltRB_iteration_cnt = 0;
         subgraph_pruned_cnt = 0;
         subgraph_search_cnt = 0;
-#ifdef PRUNE_DIAG
-        prune_diag_first_layer_roots = 0;
-        prune_diag_first_layer_pass = 0;
-        prune_diag_first_layer_vertices = 0;
-        prune_diag_first_layer_edges = 0;
-        prune_diag_first_layer_pruned = 0;
-        prune_diag_roots = 0;
-        prune_diag_extract_vertices = 0;
-        prune_diag_extract_edges = 0;
-        prune_diag_after_degen_vertices = 0;
-        prune_diag_after_degen_edges = 0;
-        prune_diag_after_cotri_vertices = 0;
-        prune_diag_after_cotri_edges = 0;
-        prune_diag_pruned_after_extract = 0;
-        prune_diag_pruned_after_degen = 0;
-        prune_diag_pruned_after_cotri = 0;
-        prune_diag_degen_time = 0;
-        prune_diag_cotri_time = 0;
-#endif
         IE_graph_cnt = 0;
         IE_graph_size = 0;
         CTCP_time = 0;
@@ -825,15 +515,8 @@ public:
             double percentage = G_input.size() ? processed * 1.0 / G_input.size() : 1.0;
             print_progress_bar(percentage);
 
-            int min_key = G_input.get_min_degree_key();
-            printf("root: local=%d orig=%d deg=%d\n", u, G_input.vertex_id[u], min_key);
-            fflush(stdout);
             int forward_deg = G_input.pend[u] - G_input.pstart[u];
 
-            if (min_key + paramK <= lb)
-            {
-                continue;
-            }
             if (forward_deg + paramK <= lb || G_input.n - (u + 1) < lb)
                 continue;
             double start_induce = get_system_time_microsecond();
@@ -848,17 +531,6 @@ public:
             else
                 extracted = extract_subgraph_wo_prune_oriented(u, vertices_2hops, array_N, edges,
                                                                G_input.scratch_state);
-#ifdef PRUNE_DIAG
-            prune_diag_first_layer_roots++;
-            if (!extracted || vertices_2hops.empty() || (int)vertices_2hops.size() <= lb)
-                prune_diag_first_layer_pruned++;
-            else
-            {
-                prune_diag_first_layer_pass++;
-                prune_diag_first_layer_vertices += vertices_2hops.size();
-                prune_diag_first_layer_edges += edges.size();
-            }
-#endif
             if (!extracted || vertices_2hops.empty() || (int)vertices_2hops.size() <= lb)
             {
                 IE_induce_time += get_system_time_microsecond() - start_induce;
@@ -866,19 +538,9 @@ public:
                 continue;
             }
 
+            Graph_adjacent g(vertices_2hops, edges);
             int id_u = 0;
             IE_induce_time += get_system_time_microsecond() - start_induce;
-            {
-                Timer tt;
-                if (!prune_oriented_edge_list_before_matrix(u, vertices_2hops, edges, id_u, lb))
-                {
-                    higher_order_reduce_time += tt.get_time();
-                    subgraph_pruned_cnt++;
-                    continue;
-                }
-                higher_order_reduce_time += tt.get_time();
-            }
-            Graph_adjacent g(vertices_2hops, edges);
             {
                 Timer tt;
                 if (!g.pre_prune_for_bnb(id_u, lb))
@@ -896,9 +558,6 @@ public:
             ptr_g = &g;
             if (PARA.algorithm == "UMKP+")
             {
-                printf("solver_input: framework=oriented root_orig=%d root_local=%d n=%d m=%d lb=%d\n",
-                       G_input.vertex_id[u], id_u, g.size(), g.edge_size(), lb);
-                fflush(stdout);
                 bb_solver.load_graph(g);
                 bb_solver.kPlex(lb, g.size(), solution, id_u);
                 AltRB_cnt = bb_solver.get_AltRB_count();
@@ -1273,29 +932,6 @@ public:
         double avg_altrb_iter = AltRB_cnt ? (AltRB_iteration_cnt * 1.0 / AltRB_cnt) : 0.0;
         printf("avg_AltRB_iteration: %.2lf", avg_altrb_iter);
         puts("");
-#ifdef PRUNE_DIAG
-        if (prune_diag_roots)
-        {
-            if (prune_diag_first_layer_roots)
-                printf("prune_first(umkpex): roots=%lld pass=%lld avg_v=%.2lf avg_e=%.2lf pruned=%lld\n",
-                       prune_diag_first_layer_roots, prune_diag_first_layer_pass,
-                       prune_diag_first_layer_pass ? prune_diag_first_layer_vertices * 1.0 / prune_diag_first_layer_pass : 0.0,
-                       prune_diag_first_layer_pass ? prune_diag_first_layer_edges * 1.0 / prune_diag_first_layer_pass : 0.0,
-                       prune_diag_first_layer_pruned);
-            printf("prune_diag(umkpex): roots=%lld avg_extract_v=%.2lf avg_extract_e=%.2lf avg_after_degen_v=%.2lf avg_after_degen_e=%.2lf avg_after_cotri_v=%.2lf avg_after_cotri_e=%.2lf ",
-                   prune_diag_roots,
-                   prune_diag_extract_vertices * 1.0 / prune_diag_roots,
-                   prune_diag_extract_edges * 1.0 / prune_diag_roots,
-                   prune_diag_after_degen_vertices * 1.0 / prune_diag_roots,
-                   prune_diag_after_degen_edges * 1.0 / prune_diag_roots,
-                   prune_diag_after_cotri_vertices * 1.0 / prune_diag_roots,
-                   prune_diag_after_cotri_edges * 1.0 / prune_diag_roots);
-            printf("pruned_extract=%lld pruned_degen=%lld pruned_cotri=%lld ",
-                   prune_diag_pruned_after_extract, prune_diag_pruned_after_degen, prune_diag_pruned_after_cotri);
-            printf("t_degen=%.4lf t_cotri=%.4lf\n",
-                   prune_diag_degen_time / 1e6, prune_diag_cotri_time / 1e6);
-        }
-#endif
         puts("*************bnb result*************");
         printf("ground truth= %d , exact searching use time= %.4lf s\n", lb, run_time / 1e6);
         if (solution.size())
@@ -1338,11 +974,6 @@ public:
     {
         if (!V_mask[v]) // the subgraph is already pruned due to core-reduction for N(v) and N^2(v)
             return -1;
-#ifdef PRUNE_DIAG
-        prune_diag_roots++;
-        prune_diag_extract_vertices += vertices.size();
-        prune_diag_extract_edges += edges.size() >> 1;
-#endif
         auto &g = G_input;
         sort(vertices.begin(), vertices.end());
         for (int i = 0; i < (int)vertices.size(); i++)
@@ -1399,62 +1030,20 @@ public:
             fflush(stderr);
         }
         Graph g_i(vertices, edges);
-        // clear the mask on the extracted original vertices before any early return
+        if (paramK > 10)
+        {
+            g_i.weak_reduce(lb);
+            if (g_i.n > lb)
+            {
+                Reduction reduce(&g_i);
+                reduce.strong_reduce(lb);
+            }
+        }
+        // clear the mask
         for (int u : vertices)
         {
             assert(V_mask[u]);
             V_mask.reset(u);
-        }
-        if (g_i.n <= (ui)lb)
-        {
-#ifdef PRUNE_DIAG
-            prune_diag_pruned_after_extract++;
-#endif
-            return -1;
-        }
-        {
-            Timer tt;
-            g_i.degeneracy_and_reduce(lb);
-#ifdef PRUNE_DIAG
-            prune_diag_degen_time += tt.get_time();
-            prune_diag_after_degen_vertices += g_i.n;
-            prune_diag_after_degen_edges += g_i.m >> 1;
-#endif
-        }
-        if (g_i.n <= (ui)lb)
-        {
-#ifdef PRUNE_DIAG
-            prune_diag_pruned_after_degen++;
-#endif
-            return -1;
-        }
-        if (lb + 1 > 2 * paramK)
-        {
-            vector<ui> peel_sequence(g_i.n), rid(g_i.n);
-            for (ui i = 0; i < g_i.n; i++)
-                peel_sequence[i] = i;
-            {
-                Timer tt;
-                CTPrune::core_truss_copruning(g_i.n, g_i.m,
-                                              lb + 1 - paramK,
-                                              lb + 1 - 2 * paramK,
-                                              peel_sequence.data(),
-                                              g_i.map_refresh_id.data(),
-                                              rid.data(),
-                                              g_i.pstart, g_i.edge_to, g_i.d, false);
-#ifdef PRUNE_DIAG
-                prune_diag_cotri_time += tt.get_time();
-#endif
-            }
-        }
-#ifdef PRUNE_DIAG
-        prune_diag_after_cotri_vertices += g_i.n;
-        prune_diag_after_cotri_edges += g_i.m >> 1;
-#endif
-        if (paramK > 10 && g_i.n > lb)
-        {
-            Reduction reduce(&g_i);
-            reduce.strong_reduce(lb);
         }
         if (g_i.n > lb)
         {
@@ -1469,7 +1058,7 @@ public:
                 }
             if (ret != -1) // v is still in the subgraph
             {
-                if (g_i.n != vertices.size() || g_i.m != edges.size())
+                if (g_i.m != edges.size())
                 {
                     edges.clear();
                     vertices.resize(g_i.n);
@@ -1486,9 +1075,6 @@ public:
                 return ret;
             }
         }
-#ifdef PRUNE_DIAG
-        prune_diag_pruned_after_cotri++;
-#endif
         // subgraph is pruned
         return -1;
     }

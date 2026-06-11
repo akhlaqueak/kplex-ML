@@ -3,7 +3,7 @@
 
 #include "Utility.h"
 #include "Graph.h"
-// #define _SECOND_ORDER_PRUNING_
+#define _SECOND_ORDER_PRUNING_
 ui altrb_cnt = 0;
 ll dfs_cnt = 0;
 
@@ -60,7 +60,7 @@ private:
 	// AltRB Stuff
 	// info of the search tree
 	vector<int> loss_cnt; // loss_cnt[v] = |S| - |N(v) \cap S|, i.e., non-neighbors of v in S
-    vector<int> one_loss_non_neighbor_cnt;
+	vector<int> one_loss_non_neighbor_cnt;
 	Set one_loss_vertices_in_C;
 	Graph_adjacent *ptr_g;
 	ll AltRB_cnt;
@@ -196,8 +196,8 @@ public:
 		ids = g.vertex_id;
 		n = g.size();
 		loss_cnt.resize(n);
-        one_loss_non_neighbor_cnt.resize(n);
-        one_loss_vertices_in_C = Set(n);
+		one_loss_non_neighbor_cnt.resize(n);
+		one_loss_vertices_in_C = Set(n);
 
 		if (((long long)n) * n > matrix_size)
 		{
@@ -320,6 +320,7 @@ private:
 
 	void initialization(ui &R_end, bool must_include_0)
 	{
+		_UB_=0;
 		// the following computes a degeneracy ordering and a heuristic solution
 		ui *peel_sequence = neighbors;
 		ui *core = nonneighbors;
@@ -342,6 +343,10 @@ private:
 			peelOrder[u] = i;
 			vis[u] = 1;
 
+			ui t_UB = core[u] + K;
+			if(n - i < t_UB) t_UB = n - i;
+			if(t_UB > _UB_) _UB_ = t_UB;
+
 			if (idx == n && min_degree + K >= n - i)
 				idx = i;
 
@@ -349,7 +354,7 @@ private:
 				if (!vis[j] && matrix[u * n + j])
 					--degree[j];
 		}
-		if (!all_kplex_search && (n - idx > lb))
+		if (n - idx > lb)
 		{
 			lb = n - idx;
 			solution.clear();
@@ -463,16 +468,16 @@ private:
 		return true;
 	}
 
-		void BB_search(ui S_end, ui R_end, ui level)
-		{
-			dfs_cnt++;
-			if (S_end > lb)
-				store_solution(S_end);
-			if (R_end > lb && is_kplex(R_end))
-				store_solution(R_end);
-			if (R_end <= lb + 1 || lb >= _UB_)
-				return;
-	#ifndef NDEBUG
+	void BB_search(ui S_end, ui R_end, ui level)
+	{
+		dfs_cnt++;
+		if (S_end > lb)
+			store_solution(S_end);
+		if (R_end > lb && is_kplex(R_end))
+			store_solution(R_end);
+		if (R_end <= lb + 1 || lb >= _UB_)
+			return;
+#ifndef NDEBUG
 		for (ui i = 0; i < R_end; i++)
 		{
 			ui d1 = 0, d2 = 0;
@@ -1146,31 +1151,42 @@ private:
 	// 	}
 	// 	return true;
 	// }
-	bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level) {
-		while(true) {
+	bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level)
+	{
+		while (true)
+		{
 			ui *candidates = S2;
 			ui candidates_n = 0;
-			for(ui i = S_end;i < R_end;i ++) {
+			for (ui i = S_end; i < R_end; i++)
+			{
 				ui u = SR[i];
-				if(R_end - degree[u] > K) continue;
+				if (R_end - degree[u] > K)
+					continue;
 
-				char *t_matrix = matrix + u*n;
+				char *t_matrix = matrix + u * n;
 				bool OK = true;
-				for(ui j = 0;j < R_end;j ++) if(j != i&&!t_matrix[SR[j]]&&R_end - degree[SR[j]] > K) {
-					OK = false;
-					break;
-				}
-				if(OK) candidates[candidates_n ++] = u;
+				for (ui j = 0; j < R_end; j++)
+					if (j != i && !t_matrix[SR[j]] && R_end - degree[SR[j]] > K)
+					{
+						OK = false;
+						break;
+					}
+				if (OK)
+					candidates[candidates_n++] = u;
 			}
 
-			if(!candidates_n) break;
+			if (!candidates_n)
+				break;
 
-			while(candidates_n) {
+			while (candidates_n)
+			{
 				ui u = candidates[--candidates_n];
 				assert(SR_rid[u] >= S_end);
-				if(SR_rid[u] >= R_end) return false;
+				if (SR_rid[u] >= R_end)
+					return false;
 
-				if(!move_u_to_S_with_prune(u, S_end, R_end, level)) return false;
+				if (!move_u_to_S_with_prune(u, S_end, R_end, level))
+					return false;
 			}
 		}
 		return true;
@@ -2018,7 +2034,7 @@ private:
 		std::sort(B.begin(), B.end(), comp);
 	}
 
-		ui SR_branching(ui S_end, ui R_end, ui level)
+	ui SR_branching(ui S_end, ui R_end, ui level)
 	{
 		ui cend = R_end;
 		ui beta = lb - S_end;
@@ -2063,7 +2079,7 @@ private:
 		B.reserve(cend - S_end);
 		for (ui i = S_end; i < cend; i++)
 			B.push_back(SR[i]);
-			return move_candidates_to_end(S_end, R_end, B, level);
+		return move_candidates_to_end(S_end, R_end, B, level);
 		// return move_candidates_to_end(S_end, cend, R_end, level);
 	}
 	ui R_branching(ui S_end, ui R_end, ui level)
@@ -2098,16 +2114,16 @@ private:
 			B.resize(B.size() - dec);
 		}
 
-			return move_candidates_to_end(S_end, R_end, B, level);
-		}
+		return move_candidates_to_end(S_end, R_end, B, level);
+	}
 
-		ui S_branching(ui S_end, ui R_end, ui level)
+	ui S_branching(ui S_end, ui R_end, ui level)
+	{
+		ui beta = lb - S_end;
+		for (ui i = 0; i < S_end; i++)
 		{
-			ui beta = lb - S_end;
-			for (ui i = 0; i < S_end; i++)
-			{
-				ui u = SR[i];
-				psz[i] = 0;
+			ui u = SR[i];
+			psz[i] = 0;
 			if (support(S_end, u) == 0)
 				continue;
 			// skipping it, because this is a boundary vertex, and it can't have any non-neighbor candidate
@@ -2121,30 +2137,30 @@ private:
 					t_LPI[psz[i]++] = v;
 			}
 		}
-			ui cend = R_end;
+		ui cend = R_end;
 
-			while (S_end < cend)
+		while (S_end < cend)
+		{
+			ui maxpi = -1;
+			double maxdise = 0;
+			ui maxcost = 0;
+			for (ui i = 0; i < S_end; i++)
 			{
-				ui maxpi = -1;
-				double maxdise = 0;
-				ui maxcost = 0;
-				for (ui i = 0; i < S_end; i++)
+				ui u = SR[i];
+				if (psz[i] == 0)
+					continue;
+				ui cost = min(support(S_end, u), psz[i]);
+				double dise = (double)psz[i] / (double)cost;
+				if (cost <= beta &&
+					(dise > maxdise || (dise == maxdise && cost > maxcost)))
 				{
-					ui u = SR[i];
-					if (psz[i] == 0)
-						continue;
-					ui cost = min(support(S_end, u), psz[i]);
-					double dise = (double)psz[i] / (double)cost;
-					if (cost <= beta &&
-						(dise > maxdise || (dise == maxdise && cost > maxcost)))
-					{
-						maxpi = i;
-						maxdise = dise;
-						maxcost = cost;
-					}
+					maxpi = i;
+					maxdise = dise;
+					maxcost = cost;
 				}
-				if (maxpi == -1)
-					break;
+			}
+			if (maxpi == -1)
+				break;
 			else
 			{
 				// remove pi* from C
@@ -2175,22 +2191,22 @@ private:
 		}
 		if (beta > 0)
 			cend -= min(beta, cend - S_end);
-			vector<ui> B;
-			B.reserve(cend - S_end);
-			for (ui i = S_end; i < cend; i++)
-				B.push_back(SR[i]);
-			return move_candidates_to_end(S_end, R_end, B, level, false);
-			// return move_candidates_to_end(S_end, cend, R_end, level);
-		}
+		vector<ui> B;
+		B.reserve(cend - S_end);
+		for (ui i = S_end; i < cend; i++)
+			B.push_back(SR[i]);
+		return move_candidates_to_end(S_end, R_end, B, level, false);
+		// return move_candidates_to_end(S_end, cend, R_end, level);
+	}
 
-		ui move_candidates_to_end(ui S_end, ui R_end, vector<ui> &B, ui level, bool sort_by_peel_order = true)
+	ui move_candidates_to_end(ui S_end, ui R_end, vector<ui> &B, ui level, bool sort_by_peel_order = true)
+	{
+		if (sort_by_peel_order)
+			std::sort(B.begin(), B.end(), [&](ui u, ui v)
+					  { return peelOrder[u] < peelOrder[v]; });
+
+		for (ui u : B)
 		{
-			if (sort_by_peel_order)
-				std::sort(B.begin(), B.end(), [&](ui u, ui v)
-						  { return peelOrder[u] < peelOrder[v]; });
-
-			for (ui u : B)
-			{
 			swap_pos(SR_rid[u], --R_end);
 			level_id[u] = level;
 			char *t_matrix = matrix + u * n;
@@ -2461,7 +2477,7 @@ private:
 
 	void neigh_intersect(ui u, Set &P)
 	{
-		auto tempP=P;
+		auto tempP = P;
 		char *row = matrix + u * n;
 		for (ui v : tempP)
 		{
@@ -2472,7 +2488,7 @@ private:
 
 	void non_neigh_intersect(ui u, Set &P)
 	{
-		auto tempP=P;
+		auto tempP = P;
 		char *row = matrix + u * n;
 		for (ui v : tempP)
 		{
@@ -2487,7 +2503,7 @@ private:
 		if (cnt <= paramK || P.size() < cnt)
 			return;
 		double start_core_reduce = get_system_time_microsecond();
-		ui* deg = neighbors; // we reuse the array to decrease time cost
+		ui *deg = neighbors;  // we reuse the array to decrease time cost
 		ui *q = nonneighbors; // faster than std::queue
 		for (int u : P)
 		{
@@ -2880,7 +2896,7 @@ private:
 		}
 		S_is_plex = true;
 		update_lb(S);
-        one_loss_vertices_in_C.clear();
+		one_loss_vertices_in_C.clear();
 		for (int u : C)
 		{
 			// loss_cnt[u] = non_A[u].intersect(S); // u∈C, delta[u] = the number of non-neighbors of u in S
@@ -2888,7 +2904,7 @@ private:
 			if (loss_cnt[u] >= paramK) // u has at least k non-neighbors in S, so u can be removed
 				C.reset(u);
 			else if (loss_cnt[u] == 1)
-			one_loss_vertices_in_C.set(u);
+				one_loss_vertices_in_C.set(u);
 		}
 	}
 
@@ -2900,7 +2916,7 @@ private:
 			S.set(SR[i]);
 		for (ui i = S_end; i < R_end; i++)
 			C.set(SR[i]);
-		bool S_is_plex=true, g_is_plex = false;
+		bool S_is_plex = true, g_is_plex = false;
 		fast_reduction(S, C, g_is_plex, S_is_plex); // existing techniques
 
 		if (!S_is_plex)
@@ -2920,8 +2936,9 @@ private:
 		if (ub <= lb)
 			return ub;
 
-		if(S.size()==S_end && C.size()==(R_end-S_end)) return ub;
-		
+		if (S.size() == S_end && C.size() == (R_end - S_end))
+			return ub;
+
 		for (ui i = S_end; i < R_end;)
 		{
 			ui u = SR[i];
@@ -2939,7 +2956,8 @@ private:
 		ui old_S_end = S_end;
 		for (ui u : S)
 		{
-			if(SR_rid[u]>=old_S_end){
+			if (SR_rid[u] >= old_S_end)
+			{
 				SR[S_end] = u;
 				SR_rid[u] = S_end++;
 			}
@@ -2974,96 +2992,96 @@ private:
 		return ub;
 	}
 
-	    /**
-     * @brief partition ub without reduction rules
-     */
-    int only_part_UB(Set &S, Set &C, int u = -1)
-    {
-        Timer part_timer;
-        // auto &loss = deg;
-        auto &loss = neighbors;
-        for (int v : S)
-            // loss[v] = non_A[v].intersect(S);
-			loss[v]=non_neigh_count(v, S);
+	/**
+	 * @brief partition ub without reduction rules
+	 */
+	int only_part_UB(Set &S, Set &C, int u = -1)
+	{
+		Timer part_timer;
+		// auto &loss = deg;
+		auto &loss = neighbors;
+		for (int v : S)
+			// loss[v] = non_A[v].intersect(S);
+			loss[v] = non_neigh_count(v, S);
 
-        auto copy_S = S;
-        auto copy_C = C;
-        int S_sz = S.size();
-        int ub = S_sz;
-        // we will utilize Pi_u
-        if (u != -1)
-        {
-            // int sz = non_A[u].intersect(copy_C);
-			int sz=non_neigh_count(u, copy_C);
-            int cnt = paramK - loss[u];
-            copy_S.reset(u);
-            ub += cnt;
-            // copy_C &= A[u];
+		auto copy_S = S;
+		auto copy_C = C;
+		int S_sz = S.size();
+		int ub = S_sz;
+		// we will utilize Pi_u
+		if (u != -1)
+		{
+			// int sz = non_A[u].intersect(copy_C);
+			int sz = non_neigh_count(u, copy_C);
+			int cnt = paramK - loss[u];
+			copy_S.reset(u);
+			ub += cnt;
+			// copy_C &= A[u];
 			neigh_intersect(u, copy_C);
-        }
-        for (int v : copy_S)
-        {
-            // one_loss_non_neighbor_cnt[v] = non_A[v].intersect(one_loss_vertices_in_C);
-            one_loss_non_neighbor_cnt[v] = non_neigh_count(v, one_loss_vertices_in_C);
-        }
-        while (copy_S.size())
-        {
-            int sel = -1, size = 0, ub_cnt = 0;
-            for (int v : copy_S)
-            {
-                // int sz = non_A[v].intersect(copy_C);
-				int sz=non_neigh_count(v, copy_C);
+		}
+		for (int v : copy_S)
+		{
+			// one_loss_non_neighbor_cnt[v] = non_A[v].intersect(one_loss_vertices_in_C);
+			one_loss_non_neighbor_cnt[v] = non_neigh_count(v, one_loss_vertices_in_C);
+		}
+		while (copy_S.size())
+		{
+			int sel = -1, size = 0, ub_cnt = 0;
+			for (int v : copy_S)
+			{
+				// int sz = non_A[v].intersect(copy_C);
+				int sz = non_neigh_count(v, copy_C);
 				int cnt = (paramK - loss[v]);
-                if (sz <= cnt) // Pi_i is useless
-                {
-                    copy_S.reset(v);
-                }
-                else
-                {
-                    // int one_loss_cnt = non_A[v].intersect(one_loss_vertices_in_C);
-                    int one_loss_cnt = one_loss_non_neighbor_cnt[v];
-                    if (one_loss_cnt >= cnt)
-                    {
-                        sel = v;
-                        ub_cnt = cnt;
-                        break;
-                    }
-                    if (sel == -1 || size * cnt < sz * ub_cnt) // (size/ub_cnt)<(sz/cnt)
-                    {
-                        sel = v;
-                        size = sz;
-                        ub_cnt = cnt;
-                        // break;
-                    }
-                }
-            }
-            if (sel == -1)
-                break;
-            copy_S.reset(sel);
-            ub += ub_cnt;
-            // copy_C &= A[sel]; // remove the non-neighbors of sel
+				if (sz <= cnt) // Pi_i is useless
+				{
+					copy_S.reset(v);
+				}
+				else
+				{
+					// int one_loss_cnt = non_A[v].intersect(one_loss_vertices_in_C);
+					int one_loss_cnt = one_loss_non_neighbor_cnt[v];
+					if (one_loss_cnt >= cnt)
+					{
+						sel = v;
+						ub_cnt = cnt;
+						break;
+					}
+					if (sel == -1 || size * cnt < sz * ub_cnt) // (size/ub_cnt)<(sz/cnt)
+					{
+						sel = v;
+						size = sz;
+						ub_cnt = cnt;
+						// break;
+					}
+				}
+			}
+			if (sel == -1)
+				break;
+			copy_S.reset(sel);
+			ub += ub_cnt;
+			// copy_C &= A[sel]; // remove the non-neighbors of sel
 			neigh_intersect(sel, copy_C);
-        }
-        // now copy_C = Pi_0
-        auto &Pi_0 = copy_C;
-        int ret = ub + Pi_0.size();
-        if (u == -1 && ret == lb + 1 && Pi_0.size())
-        {
-            S |= Pi_0;
-            C ^= Pi_0;
-            Timer start_fast_reduce;
-            bool S_is_plex, g_is_plex;
-            fast_reduction(S, C, g_is_plex, S_is_plex);
+		}
+		// now copy_C = Pi_0
+		auto &Pi_0 = copy_C;
+		int ret = ub + Pi_0.size();
+		if (u == -1 && ret == lb + 1 && Pi_0.size())
+		{
+			S |= Pi_0;
+			C ^= Pi_0;
+			Timer start_fast_reduce;
+			bool S_is_plex, g_is_plex;
+			fast_reduction(S, C, g_is_plex, S_is_plex);
 
-            if (!S_is_plex)
-                return lb;
-            if (g_is_plex)
-            {
-                update_lb(S, C);
-                return lb;
-            }
-        }
-        return ret;
-    }
+			if (!S_is_plex)
+				return lb;
+			if (g_is_plex)
+			{
+				update_lb(S, C);
+				return lb;
+			}
+		}
+		return ret;
+	}
 };
 #endif

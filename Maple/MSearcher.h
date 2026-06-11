@@ -485,7 +485,6 @@ if(enable){
     }
 
     bool CTCP() {
-		
 		if(!enable){
 			while(!Qe.empty())Qe.pop();
 		}
