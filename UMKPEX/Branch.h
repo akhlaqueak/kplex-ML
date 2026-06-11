@@ -1,6 +1,7 @@
 #ifndef BRANCH_H
 #define BRANCH_H
 double after_maxkp_time;
+double reduce_kPlexT_time_matrix = 0;
 
 class Branch
 {
@@ -62,6 +63,7 @@ public:
                                             subgraph_search_cnt(0), reduce_kPlexT_time(0),
                                             AltRB_cnt(0), AltRB_iteration_cnt(0)
     {
+        reduce_kPlexT_time_matrix = 0;
     }
     ~Branch() {}
     /**
@@ -221,21 +223,13 @@ public:
             edges.clear();
             id_u = CTCP_for_g_i(u, vis, vertices_2hops, array_N, edges, lb);
             if (id_u != -1)
+            {
                 g = Graph_adjacent(vertices_2hops, edges);
+            }
             if (id_u != -1) // this subgraph is not pruned: begin bnb
             {
                 vector<int> &inv = array_N;
                 IE_induce_time += get_system_time_microsecond() - start_induce;
-                {
-                    Timer tt;
-                    if (!g.pre_prune_for_bnb(id_u, lb))
-                    {
-                        higher_order_reduce_time += tt.get_time();
-                        subgraph_pruned_cnt++;
-                        continue;
-                    }
-                    higher_order_reduce_time += tt.get_time();
-                }
                 subgraph_search_cnt++;
                 IE_graph_size += g.size();
                 IE_graph_cnt++;
@@ -541,16 +535,6 @@ public:
             Graph_adjacent g(vertices_2hops, edges);
             int id_u = 0;
             IE_induce_time += get_system_time_microsecond() - start_induce;
-            {
-                Timer tt;
-                if (!g.pre_prune_for_bnb(id_u, lb))
-                {
-                    higher_order_reduce_time += tt.get_time();
-                    subgraph_pruned_cnt++;
-                    continue;
-                }
-                higher_order_reduce_time += tt.get_time();
-            }
             subgraph_search_cnt++;
             IE_graph_size += g.size();
             IE_graph_cnt++;
@@ -922,7 +906,7 @@ public:
         print_module_time("CTCP remove_v", CTCP_remove_v_time);
         print_module_time("CTCP lb_update", CTCP_lb_update_time);
         print_module_time("high-order-reduce", higher_order_reduce_time);
-        print_module_time("reduce-kPlexT", reduce_kPlexT_time);
+        print_module_time("reduce-kPlexT", reduce_kPlexT_time + reduce_kPlexT_time_matrix);
         puts("");
         double avg_gi_size = IE_graph_cnt ? (IE_graph_size * 1.0 / IE_graph_cnt) : 0.0;
         printf("avg_gi_size: %.2lf ", avg_gi_size);
@@ -980,54 +964,15 @@ public:
             inv[vertices[i]] = i;
         for (int u : vertices)
         {
-            int end = g.pend ? g.pend[u] : g.pstart[u + 1];
-            for (int i = g.pstart[u]; i < end; i++)
+            for (int i = g.pstart[u]; i < g.pstart[u + 1]; i++)
             {
                 if (g.edge_removed[i])
                     continue;
                 int v = g.edge_to[i];
                 if (!V_mask[v])
                     continue;
-                int rev_begin = g.pstart[v];
-                int rev_end = g.pend ? g.pend[v] : g.pstart[v + 1];
-                int rev_idx = find(g.edge_to + rev_begin, g.edge_to + rev_end, u) + rev_begin;
-                if (rev_idx >= rev_end || g.edge_to[rev_idx] != (ui)u || g.edge_removed[rev_idx])
-                    continue;
                 edges.push_back({inv[u], inv[v]});
             }
-        }
-        if (edges.size() & 1)
-        {
-            fprintf(stderr,
-                    "[CTCP_for_g_i] odd edge count root=%d vertices=%zu edges=%zu lb=%d\n",
-                    v, vertices.size(), edges.size(), lb);
-            for (const pii &e : edges)
-            {
-                if ((int)e.x == (int)e.y)
-                {
-                    fprintf(stderr,
-                            "[CTCP_for_g_i] self loop root=%d local_v=%d orig_v=%d\n",
-                            v, (int)e.x, vertices[e.x]);
-                    break;
-                }
-                bool found_reverse = false;
-                for (const pii &rev : edges)
-                {
-                    if (rev.x == e.y && rev.y == e.x)
-                    {
-                        found_reverse = true;
-                        break;
-                    }
-                }
-                if (!found_reverse)
-                {
-                    fprintf(stderr,
-                            "[CTCP_for_g_i] asymmetric edge root=%d local=(%d,%d) orig=(%d,%d)\n",
-                            v, (int)e.x, (int)e.y, vertices[e.x], vertices[e.y]);
-                    break;
-                }
-            }
-            fflush(stderr);
         }
         Graph g_i(vertices, edges);
         if (paramK > 10)

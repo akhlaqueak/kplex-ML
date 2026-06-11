@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=UMKP-Binary
-#SBATCH --nodes=4
+#SBATCH --job-name=Maple
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
@@ -56,8 +56,8 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br".split()
-ALGO="UMKPEX".split()
+BR="Pivot-Br".split()
+ALGO="UMKP".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
 BR="Binary-Br".split()
@@ -121,7 +121,9 @@ def get_cmd(ds, k, br, heur, ct):
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct} -bounding None"
+    
+    cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
+    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct} -bounding None"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:

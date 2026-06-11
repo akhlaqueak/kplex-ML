@@ -3,7 +3,7 @@
 
 #include "Utility.h"
 #include "Graph.h"
-#define _SECOND_ORDER_PRUNING_
+// #define _SECOND_ORDER_PRUNING_
 ui altrb_cnt = 0;
 ll dfs_cnt = 0;
 
@@ -699,6 +699,24 @@ private:
 			assert(level_id[SR[i]] > level);
 #endif
 
+		if (PARA.branching == "Pivot-Br")
+		{
+			ui forced_pivot = forced_single_branch_vertex(S_end, R_end);
+			if (forced_pivot < n)
+			{
+				ui t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
+#ifdef _SECOND_ORDER_PRUNING_
+				while (!Qe.empty())
+					Qe.pop();
+				t_old_removed_edges_n = removed_edges_n;
+#endif
+				if (move_u_to_S_with_prune(forced_pivot, S_end, R_end, level))
+					BB_search(S_end, R_end, level + 1, branch_beg_idx, branch_end_idx);
+				restore_SR_and_edges(S_end, R_end, t_old_S_end, t_old_R_end, level, t_old_removed_edges_n);
+				return;
+			}
+		}
+
 		if (PARA.branching == "Binary-Br")
 		{
 			ui u = choose_branch_vertex(S_end, R_end);
@@ -1101,6 +1119,83 @@ private:
 	ui support(ui S_end, ui u)
 	{
 		return K - (S_end - degree_in_S[u]);
+	}
+
+	bool checkNei_maple(ui S_end, ui R_end, ui u)
+	{
+		int not_sat = 0;
+		char *t_matrix = matrix + u * n;
+		for (ui i = S_end; i < R_end; ++i)
+		{
+			ui v = SR[i];
+			if (u != v && !t_matrix[v] && K + degree[v] < R_end)
+			{
+				if (not_sat)
+					return false;
+				++not_sat;
+			}
+		}
+		return true;
+	}
+
+	bool checkTriangle_maple(ui S_end, ui R_end, ui u)
+	{
+		ui first = n, second = n;
+		char *t_matrix = matrix + u * n;
+		for (ui i = S_end; i < R_end; ++i)
+		{
+			ui v = SR[i];
+			if (u != v && !t_matrix[v])
+			{
+				if (first == n)
+					first = v;
+				else
+				{
+					second = v;
+					break;
+				}
+			}
+		}
+		return first < n && second < n && !matrix[first * n + second];
+	}
+
+	ui forced_single_branch_vertex(ui S_end, ui R_end)
+	{
+		ui pivot = n;
+		for (ui i = S_end; i < R_end; ++i)
+		{
+			ui v = SR[i];
+			const ui not_nei = R_end - degree[v];
+			if (not_nei <= 2)
+			{
+				pivot = v;
+				break;
+			}
+			else if (degree_in_S[v] == S_end)
+			{
+				if (not_nei == 3 && checkTriangle_maple(S_end, R_end, v))
+				{
+					pivot = v;
+					break;
+				}
+				else if (not_nei <= K + 1 && checkNei_maple(S_end, R_end, v))
+				{
+					pivot = v;
+					break;
+				}
+			}
+		}
+
+		if (pivot == n)
+		{
+			ui cursor = bound(S_end, R_end);
+			if (cursor >= R_end)
+				return n;
+			if (cursor + 1 == R_end)
+				pivot = SR[cursor];
+		}
+
+		return pivot;
 	}
 
 	// bool greedily_add_vertices_to_S(ui &S_end, ui &R_end, ui level)

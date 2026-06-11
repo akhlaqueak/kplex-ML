@@ -1626,18 +1626,6 @@ public:
     virtual void init_before_IE()
     {
     }
-    virtual void sync_ctcp_state_from_peeling()
-    {
-    }
-    virtual void invalidate_peeling_state()
-    {
-    }
-    virtual void CTCP_lb_update_peeling(int lb)
-    {
-        sync_ctcp_state_from_peeling();
-        CTCP(lb);
-        invalidate_peeling_state();
-    }
     /**
      * @return the vertex with min degree
      */
@@ -1671,10 +1659,6 @@ public:
      */
     virtual void CTCP(int lb, int v = -1)
     {
-    }
-    virtual void CTCP_remove_vertex_local(int lb, int v, bool lb_changed = false)
-    {
-        CTCP(lb, v);
     }
     /**
      * given a vertex v, induce the 2-hop neighbor of v
@@ -1736,15 +1720,7 @@ public:
 class Graph_reduced_adjacent_list : public Graph_reduced
 {
 public:
-    vector<int> local_queue_mark_v, local_queue_mark_e;
     vector<int> induce_queue;
-    int local_queue_epoch = 0;
-    ui *peel_edgelist_pointer = nullptr;
-    ui *peel_tri_cnt = nullptr;
-    char *peel_deleted = nullptr;
-    ui *peel_Qv = nullptr;
-    char *peel_exists = nullptr;
-    bool peeling_state_valid = false;
     Graph_reduced_adjacent_list() : Graph_reduced() {}
     /**
      * init graph after stage-I(preprocessing)
@@ -1809,31 +1785,6 @@ public:
             delete[] triangles_m;
             triangles_m = nullptr;
         }
-        if (peel_edgelist_pointer != nullptr)
-        {
-            delete[] peel_edgelist_pointer;
-            peel_edgelist_pointer = nullptr;
-        }
-        if (peel_tri_cnt != nullptr)
-        {
-            delete[] peel_tri_cnt;
-            peel_tri_cnt = nullptr;
-        }
-        if (peel_deleted != nullptr)
-        {
-            delete[] peel_deleted;
-            peel_deleted = nullptr;
-        }
-        if (peel_Qv != nullptr)
-        {
-            delete[] peel_Qv;
-            peel_Qv = nullptr;
-        }
-        if (peel_exists != nullptr)
-        {
-            delete[] peel_exists;
-            peel_exists = nullptr;
-        }
     }
 
     /**
@@ -1875,26 +1826,6 @@ public:
             }
         }
     }
-    void compact_vertex(int u)
-    {
-        int write = pstart[u];
-        for (int read = pstart[u]; read < pend[u]; read++)
-        {
-            if (edge_removed[read])
-                continue;
-            int v = edge_to[read];
-            if (!vertex[v])
-                continue;
-            if (write != read)
-            {
-                edge_to[write] = edge_to[read];
-                triangles_m[write] = triangles_m[read];
-                edge_removed[write] = false;
-            }
-            write++;
-        }
-        pend[u] = write;
-    }
     /**
      * @brief prepare some thing
      */
@@ -1904,69 +1835,6 @@ public:
         init_heap();
         bool_array_n.resize(n);
         bool_array_m.resize(m);
-        scratch_state.assign(n, 0);
-        local_queue_mark_v.assign(n, 0);
-        local_queue_mark_e.assign(m, 0);
-        induce_queue.clear();
-        induce_queue.reserve(n);
-        local_queue_epoch = 0;
-        build_peeling_state();
-    }
-    void build_peeling_state()
-    {
-        if (peel_edgelist_pointer == nullptr)
-            peel_edgelist_pointer = new ui[m];
-        if (peel_tri_cnt == nullptr)
-            peel_tri_cnt = new ui[m >> 1];
-        if (peel_deleted == nullptr)
-            peel_deleted = new char[m >> 1];
-        if (peel_Qv == nullptr)
-            peel_Qv = new ui[n];
-        if (peel_exists == nullptr)
-            peel_exists = new char[n];
-
-        memset(peel_deleted, 0, sizeof(char) * (m >> 1));
-        memset(peel_exists, 0, sizeof(char) * n);
-        ui edge_id = 0;
-        for (int u = 0; u < n; u++)
-        {
-            if (!vertex[u])
-                continue;
-            compact_vertex(u);
-            for (int j = pstart[u]; j < pend[u]; j++)
-            {
-                int v = edge_to[j];
-                if (!vertex[v] || u > v)
-                    continue;
-                peel_edgelist_pointer[j] = edge_id;
-                int reverse_id = find(edge_to + pstart[v], edge_to + pend[v], u) + pstart[v];
-                peel_edgelist_pointer[reverse_id] = edge_id;
-                peel_tri_cnt[edge_id] = triangles_m[j];
-                edge_id++;
-            }
-        }
-        for (; edge_id < (ui)(m >> 1); edge_id++)
-            peel_tri_cnt[edge_id] = 0;
-        peeling_state_valid = true;
-    }
-    void sync_ctcp_state_from_peeling()
-    {
-        if (!peeling_state_valid)
-            return;
-        for (int u = 0; u < n; u++)
-        {
-            if (!vertex[u])
-                continue;
-            for (int j = pstart[u]; j < pend[u]; j++)
-            {
-                edge_removed[j] = false;
-                triangles_m[j] = peel_tri_cnt[peel_edgelist_pointer[j]];
-            }
-        }
-    }
-    void invalidate_peeling_state()
-    {
-        peeling_state_valid = false;
     }
     inline int find_active_edge(int u, int w, int start = -1)
     {
@@ -1976,267 +1844,6 @@ public:
             return -1;
         return idx;
     }
-    inline bool find_peeling_edge(ui u, ui w, int &b, int e, int &idx)
-    {
-        if (b >= e)
-            return false;
-        while (b + 1 < e)
-        {
-            idx = b + (e - b) / 2;
-            if (edge_to[idx] > w)
-                e = idx;
-            else
-                b = idx;
-        }
-        if (edge_to[b] == w)
-        {
-            idx = peel_edgelist_pointer[b];
-            if (!peel_deleted[idx])
-                return true;
-        }
-        return false;
-    }
-    inline bool edge_in_local_queue(int edge_id) const
-    {
-        return local_queue_mark_e[edge_id] == local_queue_epoch;
-    }
-    inline void mark_local_queue_edge(int edge_id, int reverse_id, int from, queue<pii> &q_edges)
-    {
-        if (edge_in_local_queue(edge_id))
-            return;
-        local_queue_mark_e[edge_id] = local_queue_epoch;
-        local_queue_mark_e[reverse_id] = local_queue_epoch;
-        q_edges.push({edge_id, from});
-    }
-    inline void relax_triangle_edge(int edge_id, int reverse_id, int from, int lb, queue<pii> &q_edges)
-    {
-        if (edge_id == -1 || reverse_id == -1 || edge_in_local_queue(edge_id))
-            return;
-        --triangles_m[edge_id];
-        --triangles_m[reverse_id];
-        if (triangles_m[edge_id] + 2 * paramK <= lb)
-            mark_local_queue_edge(edge_id, reverse_id, from, q_edges);
-    }
-    void peeling_ctcp_run(int lb, ui Qv_idx, ui Qv_n, vector<pii> &q_edges)
-    {
-        if (!peeling_state_valid)
-            build_peeling_state();
-        while (Qv_idx < Qv_n || !q_edges.empty())
-        {
-            if (q_edges.empty())
-            {
-                ui u = peel_Qv[Qv_idx++];
-                if (!vertex[u])
-                    continue;
-                int u_n = pstart[u];
-                for (int k = pstart[u]; k < pend[u]; k++)
-                    if (!peel_deleted[peel_edgelist_pointer[k]])
-                    {
-                        edge_to[u_n] = edge_to[k];
-                        peel_edgelist_pointer[u_n++] = peel_edgelist_pointer[k];
-                        peel_exists[edge_to[k]] = 1;
-                    }
-                pend[u] = u_n;
-
-                for (int k = pstart[u]; k < pend[u]; k++)
-                    peel_deleted[peel_edgelist_pointer[k]] = 1;
-                d[u] = 0;
-                vertex.reset(u);
-                heap.delete_node(u);
-
-                for (int k = pstart[u]; k < pend[u]; k++)
-                {
-                    ui nei = edge_to[k];
-                    if (!vertex[nei] || d[nei] <= 0)
-                        continue;
-                    int nei_n = pstart[nei];
-                    for (int x = pstart[nei]; x < pend[nei]; x++)
-                        if (!peel_deleted[peel_edgelist_pointer[x]])
-                        {
-                            edge_to[nei_n] = edge_to[x];
-                            peel_edgelist_pointer[nei_n++] = peel_edgelist_pointer[x];
-                            if (edge_to[x] > nei && peel_exists[edge_to[x]])
-                            {
-                                ui eid = peel_edgelist_pointer[x];
-                                if ((peel_tri_cnt[eid]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)x, nei});
-                            }
-                        }
-                    pend[nei] = nei_n;
-
-                    if ((d[nei]--) == (ui)(lb + 1 - paramK))
-                        peel_Qv[Qv_n++] = nei;
-                    if (d[nei] >= 0)
-                        heap.decrease((ui)d[nei], nei);
-                }
-
-                for (int k = pstart[u]; k < pend[u]; k++)
-                    peel_exists[edge_to[k]] = 0;
-            }
-            size_t qe_n = q_edges.size();
-            for (size_t j = 0; j < qe_n; j++)
-            {
-                ui idx_pos = q_edges[j].x;
-                ui v_from = q_edges[j].y;
-                ui eid = peel_edgelist_pointer[idx_pos];
-                if (peel_deleted[eid])
-                    continue;
-                ui u = v_from, w = edge_to[idx_pos];
-                if (!vertex[u] || !vertex[w] || d[u] <= 0 || d[w] <= 0)
-                    continue;
-                ui tri_n = peel_tri_cnt[eid];
-                peel_deleted[eid] = 1;
-                if ((d[u]--) == (ui)(lb + 1 - paramK))
-                {
-                    peel_Qv[Qv_n++] = u;
-                    if (vertex[u])
-                        ;
-                }
-                if ((d[w]--) == (ui)(lb + 1 - paramK))
-                {
-                    peel_Qv[Qv_n++] = w;
-                    if (vertex[w])
-                        ;
-                }
-                if (d[u] >= 0)
-                    heap.decrease((ui)d[u], u);
-                if (d[w] >= 0)
-                    heap.decrease((ui)d[w], w);
-
-                if (d[u] < d[w])
-                    swap(u, w);
-
-                if (d[u] > d[w] * 2)
-                {
-                    int v_n = pstart[w], start = pstart[u], idx = -1;
-                    for (int k = pstart[w]; k < pend[w]; k++)
-                        if (!peel_deleted[peel_edgelist_pointer[k]])
-                        {
-                            edge_to[v_n] = edge_to[k];
-                            peel_edgelist_pointer[v_n++] = peel_edgelist_pointer[k];
-                            if (tri_n && find_peeling_edge(u, edge_to[k], start, pend[u], idx))
-                            {
-                                --tri_n;
-                                if ((peel_tri_cnt[idx]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)k, w});
-                                ui rev_eid = peel_edgelist_pointer[k];
-                                if ((peel_tri_cnt[rev_eid]--) == (ui)(lb + 1 - 2 * paramK))
-                                    q_edges.push_back({(ui)k, w});
-                            }
-                        }
-                    pend[w] = v_n;
-                }
-                else
-                {
-                    int ii = pstart[u], jj = pstart[w];
-                    int u_n = pstart[u], w_n = pstart[w];
-                    while (true)
-                    {
-                        while (ii < pend[u] && peel_deleted[peel_edgelist_pointer[ii]])
-                            ++ii;
-                        while (jj < pend[w] && peel_deleted[peel_edgelist_pointer[jj]])
-                            ++jj;
-                        if (ii >= pend[u] || jj >= pend[w])
-                            break;
-                        if (edge_to[ii] == edge_to[jj])
-                        {
-                            edge_to[u_n] = edge_to[ii];
-                            peel_edgelist_pointer[u_n++] = peel_edgelist_pointer[ii];
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
-                            if ((peel_tri_cnt[peel_edgelist_pointer[ii]]--) == (ui)(lb + 1 - 2 * paramK))
-                                q_edges.push_back({(ui)ii, u});
-                            if ((peel_tri_cnt[peel_edgelist_pointer[jj]]--) == (ui)(lb + 1 - 2 * paramK))
-                                q_edges.push_back({(ui)jj, w});
-                            ++ii;
-                            ++jj;
-                        }
-                        else if (edge_to[ii] < edge_to[jj])
-                        {
-                            edge_to[u_n] = edge_to[ii];
-                            peel_edgelist_pointer[u_n++] = peel_edgelist_pointer[ii];
-                            ++ii;
-                        }
-                        else
-                        {
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
-                            ++jj;
-                        }
-                    }
-                    while (ii < pend[u])
-                    {
-                        if (!peel_deleted[peel_edgelist_pointer[ii]])
-                        {
-                            edge_to[u_n] = edge_to[ii];
-                            peel_edgelist_pointer[u_n++] = peel_edgelist_pointer[ii];
-                        }
-                        ++ii;
-                    }
-                    while (jj < pend[w])
-                    {
-                        if (!peel_deleted[peel_edgelist_pointer[jj]])
-                        {
-                            edge_to[w_n] = edge_to[jj];
-                            peel_edgelist_pointer[w_n++] = peel_edgelist_pointer[jj];
-                        }
-                        ++jj;
-                    }
-                    pend[u] = u_n;
-                    pend[w] = w_n;
-                }
-            }
-            q_edges.clear();
-        }
-    }
-    // Backup peeling-style implementation. It is intentionally kept available for
-    // later debugging/experiments, but the active remove_v() path currently uses
-    // the original CTCP-based implementation above for correctness.
-    void CTCP_remove_vertex_local(int lb, int v, bool lb_changed = false)
-    {
-        if (!vertex[v])
-            return;
-        vector<pii> q_edges;
-        q_edges.reserve(1024);
-        peel_Qv[0] = v;
-        if (lb_changed)
-        {
-            ui edge_threshold = lb + 1 - 2 * paramK;
-            for (int u : vertex)
-            {
-                for (int i = pstart[u]; i < pend[u]; i++)
-                {
-                    ui eid = peel_edgelist_pointer[i];
-                    int w = edge_to[i];
-                    if (u < w && !peel_deleted[eid] && peel_tri_cnt[eid] < edge_threshold)
-                        q_edges.push_back({(ui)i, (ui)u});
-                }
-            }
-        }
-        peeling_ctcp_run(lb, 0, 1, q_edges);
-    }
-    void CTCP_lb_update_peeling(int lb)
-    {
-        if (!peeling_state_valid)
-            build_peeling_state();
-        vector<pii> q_edges;
-        q_edges.reserve(1024);
-        ui Qv_n = 0;
-        ui edge_threshold = lb + 1 - 2 * paramK;
-        for (int u : vertex)
-        {
-            if (d[u] + paramK <= lb)
-                peel_Qv[Qv_n++] = u;
-            for (int i = pstart[u]; i < pend[u]; i++)
-            {
-                ui eid = peel_edgelist_pointer[i];
-                int v = edge_to[i];
-                if (u < v && !peel_deleted[eid] && peel_tri_cnt[eid] < edge_threshold)
-                    q_edges.push_back({(ui)i, (ui)u});
-            }
-        }
-        peeling_ctcp_run(lb, 0, Qv_n, q_edges);
-    }
     /**
      * @brief inspired by Lijun Chang
      * @param v if v==-1, called for lb increment; else, remove v
@@ -2245,16 +1852,6 @@ public:
     {
         queue<pii> q_edges; // an edge is stored as (edge_id, from)
         queue<int> q_vertex;
-        vector<int> dirty_vertices;
-        vector<char> dirty_flag(n, 0);
-        auto mark_dirty = [&](int u)
-        {
-            if (!dirty_flag[u])
-            {
-                dirty_flag[u] = 1;
-                dirty_vertices.push_back(u);
-            }
-        };
         vector<char> &in_queue_e = bool_array_m; //(u,v) is already pushed into queue if in_queue_e[edge_id]=1
         vector<char> &in_queue_v = bool_array_n; // a vertex u is already pushed into queue if in_queue_v[u]=1
         // CTCP is called because lb updated
@@ -2262,10 +1859,13 @@ public:
         {
             for (int u : vertex)
             {
-                compact_vertex(u);
-                for (int i = pstart[u]; i < pend[u]; i++)
+                for (int i = pstart[u]; i < pstart[u + 1]; i++)
                 {
+                    if (edge_removed[i])
+                        continue;
                     int v = edge_to[i];
+                    if (!vertex[v])
+                        continue;
                     if (triangles_m[i] + paramK * 2 <= lb)
                     {
                         if (u < v)
@@ -2293,10 +1893,8 @@ public:
                 q_edges.pop();
                 int edge_id = edge.x, u = edge.y, v = edge_to[edge_id];
                 edge_removed[edge_id] = 1;
-                int another_edge_id = find(edge_to + pstart[v], edge_to + pend[v], u) + pstart[v];
+                int another_edge_id = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
                 edge_removed[another_edge_id] = 1;
-                mark_dirty(u);
-                mark_dirty(v);
                 if (--d[u] + paramK <= lb && !in_queue_v[u])
                 {
                     q_vertex.push(u);
@@ -2309,8 +1907,8 @@ public:
                     in_queue_v[v] = 1;
                 }
                 heap.decrease(d[v], v);
-                int *a = edge_to + pstart[u], *b = edge_to + pend[u];
-                int *l = edge_to + pstart[v], *r = edge_to + pend[v];
+                int *a = edge_to + pstart[u], *b = edge_to + pstart[u + 1];
+                int *l = edge_to + pstart[v], *r = edge_to + pstart[v + 1];
                 // update the info of other edge triangles
                 while (a < b && l < r)
                 {
@@ -2329,7 +1927,7 @@ public:
                     {
                         int w = *a; // w is the common neighbor of u,v
                         int id_uw = a - edge_to;
-                        int id_wu = find(edge_to + pstart[w], edge_to + pend[w], u) + pstart[w];
+                        int id_wu = find(edge_to + pstart[w], edge_to + pstart[w + 1], u) + pstart[w];
                         assert(!edge_removed[id_wu]);
                         if (!in_queue_e[id_uw])
                         {
@@ -2343,7 +1941,7 @@ public:
                             }
                         }
                         ui id_vw = l - edge_to;
-                        ui id_wv = find(edge_to + pstart[w], edge_to + pend[w], v) + pstart[w];
+                        ui id_wv = find(edge_to + pstart[w], edge_to + pstart[w + 1], v) + pstart[w];
                         if (!in_queue_e[id_vw])
                         {
                             assert(!in_queue_e[id_wv]);
@@ -2368,8 +1966,7 @@ public:
             {
                 ui u = q_vertex.front();
                 q_vertex.pop();
-                compact_vertex(u);
-                for (ui i = pstart[u]; i < pend[u]; i++)
+                for (ui i = pstart[u]; i < pstart[u + 1]; i++)
                 {
                     if (in_queue_e[i])
                         continue;
@@ -2384,15 +1981,15 @@ public:
                     heap.decrease(d[v], v);
                 }
                 // update the triangles containing u
-                for (ui i = pstart[u]; i < pend[u]; i++)
+                for (ui i = pstart[u]; i < pstart[u + 1]; i++)
                 {
                     if (in_queue_e[i])
                         continue;
                     int v = edge_to[i];
                     if (in_queue_v[v])
                         continue;
-                    int *st = edge_to + pstart[v], *ed = edge_to + pend[v];
-                    for (ui j = i + 1; j < pend[u]; j++)
+                    int *st = edge_to + pstart[v], *ed = edge_to + pstart[v + 1];
+                    for (ui j = i + 1; j < pstart[u + 1]; j++)
                     {
                         if (in_queue_e[j])
                             continue;
@@ -2404,7 +2001,7 @@ public:
                             ui id_vw = find(st, ed, w) + pstart[v];
                             if (in_queue_e[id_vw])
                                 continue;
-                            ui id_wv = find(edge_to + pstart[w], edge_to + pend[w], v) + pstart[w];
+                            ui id_wv = find(edge_to + pstart[w], edge_to + pstart[w + 1], v) + pstart[w];
                             --triangles_m[id_wv];
                             --triangles_m[id_vw];
                             if (triangles_m[id_vw] + 2 * paramK <= lb)
@@ -2419,8 +2016,6 @@ public:
                 heap.delete_node(u);
             }
         }
-        for (int u : dirty_vertices)
-            compact_vertex(u);
     }
     /**
      * given a vertex v, induce the 2-hop neighbor of v
@@ -2429,7 +2024,7 @@ public:
      */
     void induce_to_2hop(int v, MyBitset &vis, vector<int> &vertices)
     {
-        for (int i = pstart[v]; i < pend[v]; i++)
+        for (int i = pstart[v]; i < pstart[v + 1]; i++)
         {
             if (edge_removed[i])
                 continue;
@@ -2441,7 +2036,7 @@ public:
                 vis.set(a);
                 vertices.push_back(a);
             }
-            for (int j = pstart[a]; j < pend[a]; j++)
+            for (int j = pstart[a]; j < pstart[a + 1]; j++)
             {
                 if (edge_removed[j])
                     continue;
@@ -2468,18 +2063,18 @@ public:
     void induce_to_2hop_and_reduce(int v, MyBitset &vis, vector<int> &vertices, vector<int> &deg, int lb)
     {
         vis.reset(v);
-        compact_vertex(v);
         // get G[N(v)] and compute degree
-        for (int i = pstart[v]; i < pend[v]; i++)
+        for (int i = pstart[v]; i < pstart[v + 1]; i++)
         {
+            if (edge_removed[i])
+                continue;
             int a = edge_to[i];
             if (!vertex[a])
                 continue;
             vis.set(a);
             vertices.push_back(a);
             // update the deg
-            compact_vertex(a);
-            for (int j = pstart[a]; j < pend[a]; j++)
+            for (int j = pstart[a]; j < pstart[a + 1]; j++)
             {
                 int b = edge_to[j];
                 if (b > a)
@@ -2519,8 +2114,7 @@ public:
             while (q_head < q.size())
             {
                 int a = q[q_head++];
-                compact_vertex(a);
-                for (int j = pstart[a]; j < pend[a]; j++)
+                for (int j = pstart[a]; j < pstart[a + 1]; j++)
                 {
                     int b = edge_to[j];
                     if (!vis[b])
@@ -2564,9 +2158,10 @@ public:
             for (int i = 1; i <= cnt; i++)
             {
                 int a = vertices[i];
-                compact_vertex(a);
-                for (int j = pstart[a]; j < pend[a]; j++)
+                for (int j = pstart[a]; j < pstart[a + 1]; j++)
                 {
+                    if (edge_removed[j])
+                        continue;
                     int b = edge_to[j];
                     if (!vertex[b])
                         continue;
@@ -2577,7 +2172,7 @@ public:
             {
                 int a = vertices[i];
                 neighbor_cnt[a] = 0;
-                for (int j = pstart[a]; j < pend[a]; j++)
+                for (int j = pstart[a]; j < pstart[a + 1]; j++)
                 {
                     int b = edge_to[j];
                     if (!vertex[b])
@@ -2604,8 +2199,7 @@ public:
             // reduce g_i to a (lb+1-k)-core
             for (int a : vertices)
             {
-                compact_vertex(a);
-                for (int j = pstart[a]; j < pend[a]; j++)
+                for (int j = pstart[a]; j < pstart[a + 1]; j++)
                 {
                     int b = edge_to[j];
                     if (b >= a)
@@ -2633,7 +2227,7 @@ public:
             {
                 int a = q[q_head++];
                 deg[a] = 0;
-                for (int j = pstart[a]; j < pend[a]; j++)
+                for (int j = pstart[a]; j < pstart[a + 1]; j++)
                 {
                     int b = edge_to[j];
                     if (!vertex[b])

@@ -359,13 +359,13 @@ private:
 		}
 		
 		//reduction for high degree vertices
-		if(pivot < n){
-       		ui oldRemoveSz = removeSz;
-			if(!moveC2P_R(pivot))lvl++, reduce(begIdx, endIdx), lvl--;
-       		unR(oldRemoveSz);
-			moveP2C();
-			return;
-		}
+		// if(pivot < n){
+       	// 	ui oldRemoveSz = removeSz;
+		// 	if(!moveC2P_R(pivot))lvl++, reduce(begIdx, endIdx), lvl--;
+       	// 	unR(oldRemoveSz);
+		// 	moveP2C();
+		// 	return;
+		// }
 
 		//no more un-reduced lazy branches
 		if(begIdx >= endIdx || PC_rid[addList[endIdx-1]] >= C_end || PC_rid[addList[endIdx-1]] < P_end)
@@ -485,6 +485,7 @@ if(enable){
     }
 
     bool CTCP() {
+		enable=false;
 		if(!enable){
 			while(!Qe.empty())Qe.pop();
 		}

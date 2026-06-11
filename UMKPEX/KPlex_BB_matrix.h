@@ -3,7 +3,8 @@
 
 #include "Utility.h"
 #include "Graph.h"
-#define _SECOND_ORDER_PRUNING_
+// #define _SECOND_ORDER_PRUNING_
+extern double reduce_kPlexT_time_matrix;
 ui altrb_cnt = 0;
 ll dfs_cnt = 0;
 
@@ -238,24 +239,24 @@ public:
 #endif
 	}
 
-	void kPlex(ui lb, ui _UB_, set<int> &solution, ui root_v)
-	{
-		this->lb = lb;
-		this->_UB_ = _UB_;
-		this->root_v = root_v;
-		if (K <= 1)
+		void kPlex(ui lb, ui _UB_, set<int> &solution, ui root_v)
 		{
-			printf("For the special case of computing maximum clique, please invoke SOTA maximum clique solver!\n");
+			this->lb = lb;
+			this->_UB_ = _UB_;
+			this->root_v = root_v;
+			if (K <= 1)
+			{
+				printf("For the special case of computing maximum clique, please invoke SOTA maximum clique solver!\n");
 			return;
+			}
+			ui n_edges = best_n_edges;
+			ui R_end;
+			initialization(R_end, true);
+			if (R_end && lb < _UB_)
+				BB_search(0, R_end, 1);
+			if (this->solution.size() > solution.size())
+				solution = this->solution;
 		}
-		ui n_edges = best_n_edges;
-		ui R_end;
-		initialization(R_end, true);
-		if (R_end && lb < _UB_)
-			BB_search(0, R_end, 1);
-		if (this->solution.size() > solution.size())
-			solution = this->solution;
-	}
 
 private:
 	void readGraph_binary(char *dir)
@@ -536,6 +537,7 @@ private:
 		}
 		if (PARA.UBR2)
 		{
+			ll ubr2_start = get_system_time_microsecond();
 			ui S2_n = 0;
 			for (ui i = 0; i < S_end; i++)
 				if (R_end - degree[SR[i]] > K)
@@ -546,10 +548,12 @@ private:
 				collect_removable_vertices_based_on_total_edges(S2_n, S_end, R_end, level);
 				if (!remove_vertices_and_edges_with_prune(S_end, R_end, level))
 				{
+					reduce_kPlexT_time_matrix += get_system_time_microsecond() - ubr2_start;
 					restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 					return;
 				}
 			}
+			reduce_kPlexT_time_matrix += get_system_time_microsecond() - ubr2_start;
 		}
 
 #ifndef NDEBUG
@@ -998,13 +1002,15 @@ private:
 					Qe.pop();
 				t_old_removed_edges_n = removed_edges_n;
 #endif
-				bool succeed = remove_u_from_S_with_prune(S_end, R_end, level);
-				if (succeed && lb > pre_lb)
-					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
-				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
-				{
-					BB_search(S_end, R_end, level + 1);
-				}
+					bool succeed = remove_u_from_S_with_prune(S_end, R_end, level);
+					if (succeed && lb > pre_lb)
+						succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
+					if (succeed)
+						succeed = remove_vertices_and_edges_with_prune(S_end, R_end, level);
+					if (succeed)
+					{
+						BB_search(S_end, R_end, level + 1);
+					}
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 		}
@@ -2033,7 +2039,6 @@ private:
 		{ return degree[a] > degree[b]; };
 		std::sort(B.begin(), B.end(), comp);
 	}
-
 	ui SR_branching(ui S_end, ui R_end, ui level)
 	{
 		ui cend = R_end;
