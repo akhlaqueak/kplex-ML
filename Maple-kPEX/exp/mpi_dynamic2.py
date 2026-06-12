@@ -50,6 +50,7 @@ import shlex
 import subprocess
 from pathlib import Path
 import sys
+import traceback
 
 TAG_READY = 1
 TAG_TASK = 2
@@ -462,14 +463,20 @@ def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+    try:
+        if rank == 0:
+            master(comm, size)
+        else:
+            worker(comm, rank)
 
-    if rank == 0:
-        master(comm, size)
-    else:
-        worker(comm, rank)
-
-    if rank == 0:
-        collect_results()
+        if rank == 0:
+            collect_results()
+    except Exception:
+        print(f"[FATAL][rank {rank}] Unhandled exception", flush=True)
+        traceback.print_exc()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        comm.Abort(1)
 
 
 if __name__ == "__main__":

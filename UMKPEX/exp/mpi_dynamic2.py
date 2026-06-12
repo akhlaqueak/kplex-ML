@@ -1,7 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=Maple
-#SBATCH --nodes=3
-#SBATCH --ntasks-per-node=48
+#SBATCH --job-name=UMKP-PP
+#SBATCH --ntasks=200
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=short
@@ -60,7 +59,7 @@ BR="Pivot-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
-BR="Binary-Br".split()
+# BR="Binary-Br".split()
 # ALGO="kPEX".split()
 RESULT_WIDTH = 6
 
