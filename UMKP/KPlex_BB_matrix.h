@@ -58,6 +58,12 @@ private:
 	bool UBR2;
 	bool BR1, BR2, RR1, RR2, RR3;
 
+	bool is_valid_branching_option(const string &name) const
+	{
+		return name == "Default-Br" || name == "Binary-Br" || name == "Pivot-Br" ||
+			   name == "S-Br" || name == "R-Br" || name == "SR-Br";
+	}
+
 public:
 	ui best_n_edges;
 	vector<vector<ui>> all_kplexes;
@@ -87,6 +93,8 @@ public:
 		best_n_edges = 0;
 		all_kplex_search = _ds;
 		branching = cmd.GetOptionValue("-branching", "Default-Br");
+		if (!is_valid_branching_option(branching))
+			branching = "Default-Br";
 
 		bounding = cmd.GetOptionValue("-bounding", "None");
 		UBR2 = cmd.GetOptionValue("-UBR2", "true") == "true";
@@ -241,6 +249,12 @@ public:
 		}
 		if(branching=="Default-Br"){
 			branching = K<=5? "S-Br":"Pivot-Br";
+		}
+		static bool branching_logged = false;
+		if (!branching_logged)
+		{
+			printf("Branching: %s\n", branching.c_str());
+			branching_logged = true;
 		}
 		best_solution_size = kplex.size();
 		ui n_edges = best_n_edges;
@@ -730,15 +744,25 @@ private:
 
 		if (branching == "Binary-Br")
 		{
+			ui u = choose_branch_vertex(S_end, R_end);
+			assert(degree[u] + K > best_solution_size && degree[u] + K > S_end);
 
 			// First branch moves u to S
 			ui pre_best_solution_size = best_solution_size, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
-			ui u = SR[S_end];
+#ifdef _SECOND_ORDER_PRUNING_
+			t_old_removed_edges_n = removed_edges_n;
+#endif
+			assert(Qv.empty());
+#ifdef _SECOND_ORDER_PRUNING_
+			assert(Qe.empty());
+#endif
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
 				BB_search(S_end, R_end, level + 1, false);
+			if (best_solution_size >= _UB_)
+				return;
+			assert(S_end == t_old_S_end + 1 && SR[S_end - 1] == u);
 
 			// the second branch exclude u from G
-			// This version of 2nd branch restores u through remove_u function
 			{
 				restore_SR_and_edges(S_end, R_end, S_end, t_old_R_end, level, t_old_removed_edges_n);
 				while (!Qv.empty())
@@ -748,11 +772,16 @@ private:
 					level_id[v] = n;
 				}
 				B.clear();
-
+#ifdef _SECOND_ORDER_PRUNING_
+				while (!Qe.empty())
+					Qe.pop();
+#endif
 				bool succeed = remove_u_from_S_with_prune(S_end, R_end, level);
 				if (succeed && best_solution_size > pre_best_solution_size)
 					succeed = collect_removable_vertices_and_edges(S_end, R_end, level);
-				if (remove_vertices_and_edges_with_prune(S_end, R_end, level))
+				if (succeed)
+					succeed = remove_vertices_and_edges_with_prune(S_end, R_end, level);
+				if (succeed)
 					BB_search(S_end, R_end, level + 1, false);
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
@@ -815,22 +844,7 @@ private:
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 		}
 		else
-		{ 
-			ui forced_pivot = forced_single_branch_vertex(S_end, R_end);
-			if (forced_pivot < n)
-			{
-				ui t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
-#ifdef _SECOND_ORDER_PRUNING_
-				while (!Qe.empty())
-					Qe.pop();
-				t_old_removed_edges_n = removed_edges_n;
-#endif
-				if (move_u_to_S_with_prune(forced_pivot, S_end, R_end, level))
-						BB_search(S_end, R_end, level + 1, false);
-				restore_SR_and_edges(S_end, R_end, t_old_S_end, t_old_R_end, level, t_old_removed_edges_n);
-				return;
-			}
-			// pivot based branching
+		{ // pivot based branching
 			if (B.empty() || SR_rid[B.back()] >= R_end || SR_rid[B.back()] < S_end)
 				branch(S_end, R_end);
 			if (B.empty())
@@ -878,82 +892,6 @@ private:
 			}
 			restore_SR_and_edges(S_end, R_end, old_S_end, old_R_end, level, old_removed_edges_n);
 		}
-	}
-		bool checkNei_maple(ui S_end, ui R_end, ui u)
-	{
-		int not_sat = 0;
-		char *t_matrix = matrix + u * n;
-		for (ui i = S_end; i < R_end; ++i)
-		{
-			ui v = SR[i];
-			if (u != v && !t_matrix[v] && K + degree[v] < R_end)
-			{
-				if (not_sat)
-					return false;
-				++not_sat;
-			}
-		}
-		return true;
-	}
-
-	bool checkTriangle_maple(ui S_end, ui R_end, ui u)
-	{
-		ui first = n, second = n;
-		char *t_matrix = matrix + u * n;
-		for (ui i = S_end; i < R_end; ++i)
-		{
-			ui v = SR[i];
-			if (u != v && !t_matrix[v])
-			{
-				if (first == n)
-					first = v;
-				else
-				{
-					second = v;
-					break;
-				}
-			}
-		}
-		return first < n && second < n && !matrix[first * n + second];
-	}
-
-	ui forced_single_branch_vertex(ui S_end, ui R_end)
-	{
-		ui pivot = n;
-		for (ui i = S_end; i < R_end; ++i)
-		{
-			ui v = SR[i];
-			const ui not_nei = R_end - degree[v];
-			if (not_nei <= 2)
-			{
-				pivot = v;
-				break;
-			}
-			else if (degree_in_S[v] == S_end)
-			{
-				if (not_nei == 3 && checkTriangle_maple(S_end, R_end, v))
-				{
-					pivot = v;
-					break;
-				}
-				else if (not_nei <= K + 1 && checkNei_maple(S_end, R_end, v))
-				{
-					pivot = v;
-					break;
-				}
-			}
-		}
-
-		if (pivot == n)
-		{
-			ui cursor = bound(S_end, R_end);
-			if (cursor >= R_end)
-				return n;
-			if (cursor + 1 == R_end)
-				pivot = SR[cursor];
-		}
-
-		return pivot;
 	}
 	void collect_removable_vertices_based_on_total_edges(ui S2_n, ui S_end, ui R_end, ui level)
 	{

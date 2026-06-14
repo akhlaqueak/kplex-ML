@@ -6,7 +6,7 @@ Timer thresh, branchings;
 CommandLine cmd;
 #include "KPlex_BB_matrix.h"
 #include "CTPrune.h"
-#define K_THRESH 1
+#define K_THRESH 10
 using namespace std;
 #include <numeric>
 #include <fstream>
@@ -22,8 +22,13 @@ int main(int argc, char *argv[])
 
 	bool dense_search = cmd.GetOptionValue("-dense", "false") == "true";
 	bool verify = cmd.GetOptionValue("-verify", "false") == "true";
+	string branching = cmd.GetOptionValue("-branching", "Default-Br");
+	if (branching != "Default-Br" && branching != "Binary-Br" && branching != "Pivot-Br" &&
+		branching != "S-Br" && branching != "R-Br" && branching != "SR-Br")
+		branching = "Default-Br";
 
 	printf("\n-----------------------------------------------------------------------------------------\n");
+	printf("Branching option: %s\n", branching.c_str());
 	strncpy(filename, argv[1], LEN_LIMIT);
 	int k = atoi(argv[2]);
 	Graph *graph = new Graph(filename, k);
@@ -499,7 +504,6 @@ void Graph::search()
 					min_density_search = density;
 				if (ids_n > max_n_search)
 					max_n_search = ids_n;
-
 				// cout<<"searching: "<<u<<" -> ids_n "<<ids_n<<" density: "<<density<<endl;
 				kplex_solver->load_graph(ids, ids_n, vp);
 				kplex_solver->kPlex(K, UB, kplex, true);

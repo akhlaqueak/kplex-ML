@@ -1,10 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=UMKP-PP
-#SBATCH --ntasks=200
+#SBATCH --job-name=kPEX-Oriented
+# SBATCH --nodes=4
+# SBATCH --ntasks-per-node=48
+
+#SBATCH --ntasks=96
 #SBATCH --cpus-per-task=1
+
 #SBATCH --mem-per-cpu=10G
-#SBATCH --partition=short
-#SBATCH --time=6:00:00
+#SBATCH --partition=medium
+#SBATCH --time=12:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -55,7 +59,7 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="Pivot-Br".split()
+BR="S-Br R-Br Pivot-Br BinaryM-Br Binary-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
@@ -122,7 +126,7 @@ def get_cmd(ds, k, br, heur, ct):
     }
     
     # cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct} -bounding None"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:
@@ -302,6 +306,10 @@ def assign_available_workers(ready_workers, phase_name, phase_tasks, next_idx, c
     return next_idx, inflight
 
 
+def should_retry_task(rc: int, state: str) -> bool:
+    return rc != 0
+
+
 def master(comm, size):
     initial_tasks = generate_tasks()
     retry_tasks = []
@@ -339,7 +347,7 @@ def master(comm, size):
                 phase_name = "retry"
                 phase_tasks = retry_tasks
                 next_idx = 0
-                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} rc=-7 tasks", flush=True)
+                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} failed tasks", flush=True)
                 next_idx, inflight = assign_available_workers(
                     ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
                 )
@@ -356,7 +364,7 @@ def master(comm, size):
             task, rc, outfile, state = msg
             inflight -= 1
             print(f"[MASTER] [rank {src}] {state}: {task}", flush=True)
-            if phase_name == "initial" and rc == -7:
+            if phase_name == "initial" and should_retry_task(rc, state):
                 canon = canonicalize_cmd(task)
                 if canon not in retry_seen:
                     retry_seen.add(canon)
@@ -370,7 +378,7 @@ def master(comm, size):
                 phase_name = "retry"
                 phase_tasks = retry_tasks
                 next_idx = 0
-                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} rc=-7 tasks", flush=True)
+                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} failed tasks", flush=True)
                 next_idx, inflight = assign_available_workers(
                     ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
                 )

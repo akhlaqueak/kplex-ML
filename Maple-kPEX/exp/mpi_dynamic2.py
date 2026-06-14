@@ -302,6 +302,10 @@ def assign_available_workers(ready_workers, phase_name, phase_tasks, next_idx, c
     return next_idx, inflight
 
 
+def should_retry_task(rc: int, state: str) -> bool:
+    return rc != 0
+
+
 def master(comm, size):
     initial_tasks = generate_tasks()
     retry_tasks = []
@@ -339,7 +343,7 @@ def master(comm, size):
                 phase_name = "retry"
                 phase_tasks = retry_tasks
                 next_idx = 0
-                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} rc=-7 tasks", flush=True)
+                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} failed tasks", flush=True)
                 next_idx, inflight = assign_available_workers(
                     ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
                 )
@@ -356,7 +360,7 @@ def master(comm, size):
             task, rc, outfile, state = msg
             inflight -= 1
             print(f"[MASTER] [rank {src}] {state}: {task}", flush=True)
-            if phase_name == "initial" and rc == -7:
+            if phase_name == "initial" and should_retry_task(rc, state):
                 canon = canonicalize_cmd(task)
                 if canon not in retry_seen:
                     retry_seen.add(canon)
@@ -370,7 +374,7 @@ def master(comm, size):
                 phase_name = "retry"
                 phase_tasks = retry_tasks
                 next_idx = 0
-                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} rc=-7 tasks", flush=True)
+                print(f"[MASTER] Starting retry phase with {len(retry_tasks)} failed tasks", flush=True)
                 next_idx, inflight = assign_available_workers(
                     ready_workers, phase_name, phase_tasks, next_idx, comm, inflight, retry_half_local_limit
                 )
