@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=UMKP-Oriented
+#SBATCH --job-name=kPEX-Oriented
 # SBATCH --nodes=4
 # SBATCH --ntasks-per-node=48
 
@@ -17,7 +17,7 @@ module load OpenMPI
 module load mpi4py
 
 set -euo pipefail
-cp ../UMKPEX .
+# cp ../UMKPEX .
 
 SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
 SCRIPT_PATH="${SUBMIT_DIR}/mpi_dynamic2.py"
@@ -59,7 +59,7 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br Binary-Br".split()
+BR="S-Br R-Br Pivot-Br Binary-Br BinaryM-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
@@ -126,8 +126,8 @@ def get_cmd(ds, k, br, heur, ct):
     }
     
     # cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
-    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
+    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:

@@ -283,7 +283,7 @@ void Graph::search() {
 		for(int i = 0;i < n&&m&&kplex.size() < UB;i ++) {
 			ui u, key;
 			linear_heap->pop_min(u, key);
-			if(key != 0) printf("u = %u, key = %u\n", u, key);
+			// if(key != 0) printf("u = %u, key = %u\n", u, key);
 			if(key < kplex.size()+1-K) {
 				if(degree[u] != 0) { // degree[u] == 0 means u is deleted. it could be the case that degree[u] == 0, but key[u] > 0, as key[u] is not fully updated in linear_heap
 					Qv[0] = u; Qv_n = 1;
@@ -315,8 +315,8 @@ void Graph::search() {
 					}
 					if(ids_n > kplex.size()&&vp.size()*2 < m) subgraph_prune(ids, ids_n, vp, rid, Qv, Qe, exists);
 					if (kplex.size() > pre_size) for(ui& u:kplex) u = ids[u];
-					Qv_n=0;
-					if(kplex.size() != pre_size && kplex.size()> 2*K-2) m -= 2*peeling(n, linear_heap, Qv, Qv_n, kplex.size()+1-K, Qe, true, kplex.size()+1-2*K, tri_cnt, active_edgelist, active_edgelist_n, edge_list, edgelist_pointer, deleted, degree, pstart, pend, edges, exists);
+					// Qv_n=0;
+					// if(kplex.size() != pre_size && kplex.size()> 2*K-2) m -= 2*peeling(n, linear_heap, Qv, Qv_n, kplex.size()+1-K, Qe, true, kplex.size()+1-2*K, tri_cnt, active_edgelist, active_edgelist_n, edge_list, edgelist_pointer, deleted, degree, pstart, pend, edges, exists);
 				}
 				while(kplex.size()!=pre_size);
 			}
@@ -330,7 +330,7 @@ void Graph::search() {
 			}
 			last_m=vp.size()*2;
 			ui pre_size = kplex.size();
-			printf("solving %u, edges: %u", u, vp.size());
+			// printf("solving %u ", u);
 			if(ids_n > kplex.size()) {
 				double density = (double(vp.size()*2))/ids_n/(ids_n-1);
 				total_density_search += density; ++ search_cnt;
