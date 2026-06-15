@@ -38,7 +38,7 @@ public:
 
 	std::vector<std::pair<ui,ui> > vp;
 
-	bool enable=true;
+	bool enable=false;
 	bool enableInput=true;
 
 public:
@@ -135,12 +135,10 @@ public:
         if(PC_rid[0] < C_end){
 			if(!moveC2P_R(0)){
 				if(C_end>=bestSz){
-					enable=enableInput;
 					subMax=max(subMax,(long long)(C_end-bestSz));
 					subCnt++;
 					subSum+=(long long)(C_end-bestSz);
 					lvl++,reduce(0, 0),lvl--;
-					enable=true;
 				}
 			}
 		}
