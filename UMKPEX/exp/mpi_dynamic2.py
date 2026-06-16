@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=kPEX-Oriented
+#SBATCH --job-name=UMKP+
 # SBATCH --nodes=4
 # SBATCH --ntasks-per-node=48
 
@@ -8,7 +8,7 @@
 
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
-#SBATCH --time=12:00:00
+#SBATCH --time=20:00:00
 #SBATCH --no-requeue
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
@@ -59,7 +59,8 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br Binary-Br BinaryM-Br".split()
+# BR="S-Br R-Br Pivot-Br Binary-Br BinaryM-Br".split()
+BR="S-Br R-Br Pivot-Br Binary-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
@@ -126,8 +127,9 @@ def get_cmd(ds, k, br, heur, ct):
     }
     
     # cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
-    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
+    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct}"
+    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct}"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct}"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:

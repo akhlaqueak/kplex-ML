@@ -35,6 +35,9 @@ private:
 	char *s_deleted;
 
 public:
+	bool searcher_enableCTCP = true;
+	bool searcher_enableUBR1 = true;
+
 	Graph(const char *_dir, const int _K) ;
 	~Graph() ;
 

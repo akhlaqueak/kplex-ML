@@ -250,6 +250,8 @@ void Graph::search() {
 
 		ui Qv_n = 0;
 		MSearcher *kplex_solver = new MSearcher();
+		kplex_solver->enableCTCP = searcher_enableCTCP;
+		kplex_solver->enableUBR1 = searcher_enableUBR1;
 		
 		if(kplex.size() > 2*K-2 ) {
 			m -= 2*peeling(n, linear_heap, Qv, Qv_n, kplex.size()+1-K, Qe, true, kplex.size()+1-2*K, tri_cnt, active_edgelist, active_edgelist_n, edge_list, edgelist_pointer, deleted, degree, pstart, pend, edges, exists);
@@ -298,8 +300,8 @@ void Graph::search() {
 			ui ids_n = 0;
 			bool mflag=false;
 			
-			if( K<3 || max_n==oldn ) kplex_solver->enableInput=false;
-			if( K>=10 ) kplex_solver->enableInput=true;
+			if( K<3 || max_n==oldn ) kplex_solver->enableCTCPInput=false;
+			if( K>=10 ) kplex_solver->enableCTCPInput=true;
 
 			if(last_m<0.8*m) {
 			// if(true){
@@ -337,6 +339,8 @@ void Graph::search() {
 				if(density < min_density_search) min_density_search = density;
 				if(ids_n > max_n_search) max_n_search = ids_n;
 				kplex_solver->load(ids_n, vp);
+				kplex_solver->enableCTCP = searcher_enableCTCP;
+				kplex_solver->enableUBR1 = searcher_enableUBR1;
 				if(mflag){
 					kplex_solver->runWHOLE(K, kplex);
 					break;

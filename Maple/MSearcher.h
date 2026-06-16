@@ -38,8 +38,9 @@ public:
 
 	std::vector<std::pair<ui,ui> > vp;
 
-	bool enable=false;
-	bool enableInput=true;
+	bool enableCTCP=true;
+	bool enableUBR1=true;
+	bool enableCTCPInput=true;
 
 public:
     MSearcher() {
@@ -153,12 +154,12 @@ public:
         bestSz = res.size();
 		P_end=C_end=lvl=0;
         init();
-		enable=enableInput;
+		enableCTCP=enableCTCPInput;
 		subMax=max(subMax,(long long)(C_end-bestSz));
 		subCnt++;
 		subSum+=(long long)(C_end-bestSz);
 		lvl++,reduce(0,0),lvl--;
-		enable=true;
+		enableCTCP=true;
         if(bestSz > res.size()) {
             res.clear();
             for(int i = 0;i < bestSz;i ++) res.push_back(bestSol[i]);
@@ -433,7 +434,7 @@ private:
                 Qv.push(PC[j]);
             }
         }
-if(enable){
+if(enableCTCP){
         // RR4
         for(ui i = 0;i < nonneighbors_n;i ++) {
             int v = nonneighbors[i];
@@ -484,7 +485,7 @@ if(enable){
 
     bool CTCP() {
 		
-		if(!enable){
+		if(!enableCTCP){
 			while(!Qe.empty())Qe.pop();
 		}
         while(!Qv.empty()||!Qe.empty()) {
@@ -524,7 +525,7 @@ if(enable){
 					else removed[removeSz ++] = std::make_pair(-1,u);
 				}
 
-if(enable){
+if(enableCTCP){
 				for(ui i = 1;i < neighbors_n;i ++) {
 					ui w = neighbors[i];
 					for(ui j = 0;j < i;j ++) {
@@ -565,7 +566,7 @@ if(enable){
         	
 			if(Qe.empty()) break;
 
-if(enable){
+if(enableCTCP){
         	ui v = Qe.front().first, w =  Qe.front().second; Qe.pop();
         	if(lvlID[v] <= lvl||lvlID[w] <= lvl||!matrix[v*n + w]) continue;
         	assert(PC_rid[v] >= P_end&&PC_rid[v] < C_end&&PC_rid[w] >= P_end&&PC_rid[w] < C_end);
@@ -639,7 +640,7 @@ if(enable){
 					neighbors[neighbors_n++] = w;
 					++ neiInG[w];
 				}
-				if(enable){
+				if(enableCTCP){
 					for(ui i = 1;i < neighbors_n;i ++) {
 						ui w = neighbors[i];
 						for(ui j = 0;j < i;j ++) {
@@ -678,7 +679,7 @@ if(enable){
         for(ui i = 0;i < C_end;i ++) if(t_matrix[PC[i]]) neighbors[neighbors_n ++] = PC[i];
         for(ui i = 0;i < neighbors_n;i ++) -- neiInP[neighbors[i]];
 
-if(enable){
+if(enableCTCP){
         for(ui i = 0;i < neighbors_n;i ++) {
         	ui v = neighbors[i];
         	for(ui j = i+1;j < neighbors_n;j ++) {
@@ -715,7 +716,7 @@ if(enable){
         }
         if(ret) return true;
 
-if(enable){
+if(enableCTCP){
         for(ui i = 1;i < neighbors_n;i ++) if(lvlID[neighbors[i]] > lvl) {
         	ui w = neighbors[i];
         	for(ui j = 0;j < i;j ++) {
@@ -741,7 +742,7 @@ if(enable){
     bool updateR() {
     	for(ui i = 0;i < P_end;i ++) if(neiInG[PC[i]] + K <= bestSz) return true;
 
-		if(enable){
+		if(enableCTCP){
 				for(ui i = 0;i < P_end;i ++) for(ui j = i+1;j < P_end;j ++) {
 					if(upper_bound_based_prune(P_end, PC[i], PC[j])) return true;
 				}
@@ -756,7 +757,7 @@ if(enable){
     		}
     		char *t_matrix = matrix + PC[i]*n;
     		for(ui j = 0;j < P_end;j ++) {
-    			if((P_end - neiInP[PC[j]] == K&&!t_matrix[PC[j]])||(enable&&upper_bound_based_prune(P_end, PC[i], PC[j])))
+    			if((P_end - neiInP[PC[j]] == K&&!t_matrix[PC[j]])||(enableCTCP&&upper_bound_based_prune(P_end, PC[i], PC[j])))
     			{
     				assert(lvlID[PC[i]] > lvl);
     				lvlID[PC[i]] = lvl;
@@ -766,7 +767,7 @@ if(enable){
     		}
     	}
 
-if(enable){
+if(enableCTCP){
     	for(ui i = P_end;i < C_end;i ++) if(lvlID[PC[i]] > lvl) {
     		for(ui j = i+1;j < C_end;j ++) if(lvlID[PC[i]] < lvl&&matrix[PC[i]*n + PC[j]]) {
     			if(upper_bound_based_prune(P_end, PC[i], PC[j])) Qe.push(std::make_pair(PC[i], PC[j]));
@@ -807,6 +808,7 @@ if(enable){
     }
 
     bool upper_bound_based_prune(ui P_end, ui u, ui v) {
+		if(!enableUBR1) return false;
     	// ui ub = P_end + 2*K - (P_end - degree_in_S[u]) - (P_end - degree_in_S[v]) + cn[u*n + v];
     	ui ub = 2*K + neiInP[u] - P_end + neiInP[v] + commNeis[u*n + v];
     	if(PC_rid[u] >= P_end) {
