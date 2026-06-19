@@ -3,7 +3,7 @@
 
 #include "Utility.h"
 #include "Graph.h"
-// #define _SECOND_ORDER_PRUNING_
+#define _SECOND_ORDER_PRUNING_
 extern double reduce_kPlexT_time_matrix;
 ui altrb_cnt = 0;
 ll dfs_cnt = 0;
@@ -55,7 +55,6 @@ private:
 	MBitSet bmp;
 	ui sz1h;
 	bool found_larger = false;
-	bool ctcp_enabled = false;
 	bool all_kplex_search, forward_sol;
 
 	// AltRB Stuff
@@ -945,12 +944,9 @@ private:
 
 				ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 #ifdef _SECOND_ORDER_PRUNING_
-				if (ctcp_enabled)
-				{
-					while (!Qe.empty())
-						Qe.pop();
-					t_old_removed_edges_n = removed_edges_n;
-				}
+				while (!Qe.empty())
+					Qe.pop();
+				t_old_removed_edges_n = removed_edges_n;
 #endif
 				if (move_u_to_S_with_prune(u, S_end, R_end, level))
 					BB_search(S_end, R_end, level + 1);
@@ -974,12 +970,9 @@ private:
 			// First branch moves u to S
 			ui pre_lb = lb, t_old_S_end = S_end, t_old_R_end = R_end, t_old_removed_edges_n = 0;
 #ifdef _SECOND_ORDER_PRUNING_
-			if (ctcp_enabled)
-			{
-				while (!Qe.empty())
-					Qe.pop();
-				t_old_removed_edges_n = removed_edges_n;
-			}
+			while (!Qe.empty())
+				Qe.pop();
+			t_old_removed_edges_n = removed_edges_n;
 #endif
 			if (move_u_to_S_with_prune(u, S_end, R_end, level))
 			{

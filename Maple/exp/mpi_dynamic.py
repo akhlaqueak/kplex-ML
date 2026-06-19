@@ -22,6 +22,7 @@ SOURCE_SCRIPT="${BASH_SOURCE[0]:-$0}"
 RUNTIME_SCRIPT="${PWD}/.mpi_dynamic_runtime_${SLURM_JOB_ID:-$$}.py"
 cp "$SOURCE_SCRIPT" "$RUNTIME_SCRIPT"
 SCRIPT_PATH="$RUNTIME_SCRIPT"
+echo "Runtime script: $RUNTIME_SCRIPT"
 
 collect_only=0
 for arg in "$@"; do

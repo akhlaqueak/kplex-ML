@@ -3,6 +3,8 @@
 #include "KPlex_BB_matrix.h"
 #include "2th-Reduction.h"
 #include "Branch.h"
+#include <new>
+
 set<ui> solution;
 
 string file_path;
@@ -13,6 +15,53 @@ double StrongHeuris_time = 0;
 double strong_reduce_time = 0;
 int FastHeuris_lb;
 double heuristic_time, ctcp_time, bnb_time;
+
+struct UmkpexResult
+{
+    int heuristic_size = 0;
+    int max_kplex_size = 0;
+    double heuristic_time_seconds = 0.0;
+    double ctcp_time_seconds = 0.0;
+    double bnb_time_seconds = 0.0;
+    double total_time_seconds = 0.0;
+    bool heuristic_is_ground_truth = false;
+    vector<ui> solution_vertices;
+};
+
+static void reset_solver_state()
+{
+    solution.clear();
+    file_path.clear();
+    g.~Graph();
+    new (&g) Graph();
+    algorithm_start_time = 0;
+    total_heuris_time = 0;
+    FastHeuris_time = 0;
+    StrongHeuris_time = 0;
+    strong_reduce_time = 0;
+    FastHeuris_lb = 0;
+    heuristic_time = 0;
+    ctcp_time = 0;
+    bnb_time = 0;
+    lb = 0;
+    paramK = 0;
+    list_triangle_time = 0;
+    after_maxkp_time = 0;
+    reduce_kPlexT_time_matrix = 0;
+}
+
+static void fill_result(UmkpexResult &result, ui heur_size, double local_bnb_time_seconds)
+{
+    result.heuristic_size = static_cast<int>(heur_size);
+    result.max_kplex_size = static_cast<int>(solution.size());
+    result.heuristic_time_seconds = StrongHeuris_time / 1e6;
+    result.ctcp_time_seconds = FastHeuris_time / 1e6;
+    result.bnb_time_seconds = local_bnb_time_seconds;
+    result.total_time_seconds = (get_system_time_microsecond() - algorithm_start_time) / 1e6;
+    result.heuristic_is_ground_truth = (g.n == 0 || g.n <= static_cast<ui>(lb));
+    result.solution_vertices.assign(solution.begin(), solution.end());
+}
+
 void print_solution()
 {
     if (solution.size() < 2 * paramK - 1)
@@ -25,14 +74,13 @@ void print_solution()
         return;
     }
 #ifndef NO_DUMP
-    // if defined NO_DUMP, then we do not output the detailed solution
     printf("Maximum solution(size= %d ):\n", (int)solution.size());
     print_set(solution);
-#endif // NO_DUMP
+#endif
     fflush(stdout);
 }
 
-void print_heuris_log()
+bool print_heuris_log(UmkpexResult *result = nullptr)
 {
     puts("*************Heuristic result*************");
     after_maxkp_time = get_system_time_microsecond();
@@ -50,43 +98,41 @@ void print_heuris_log()
         printf("The heuristic solution is the ground truth!\n");
         print_solution();
         puts("------------------{whole procedure: kPEX}---------------------");
-        printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n", lb, solution.size(), StrongHeuris_time / 1e6, FastHeuris_time / 1e6, (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-        // printf("ground truth= %u , kPEX time: %.4lf s\n\n", solution.size(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
-        exit(0);
+        printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: prep t_time: %.4lf\n",
+               lb, (ui)solution.size(), StrongHeuris_time / 1e6, FastHeuris_time / 1e6,
+               (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+        if (result != nullptr)
+            fill_result(*result, lb, 0.0);
+        return true;
     }
+    return false;
 }
-void strong_reduce()
-{
-    // strong reduce: CF-CTCP
-    {
-        Timer start_strong_reduce;
-        Reduction reduce(&g);
-        ui pre_n = g.n;
-        reduce.strong_reduce(lb);
-        printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-        strong_reduce_time += start_strong_reduce.get_time();
 
-        if (lb >= g.n)
-        {
-            g.n = 0;
-            print_heuris_log();
-            exit(0);
-        }
+bool strong_reduce(UmkpexResult *result = nullptr)
+{
+    Timer start_strong_reduce;
+    Reduction reduce(&g);
+    reduce.strong_reduce(lb);
+    printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
+    strong_reduce_time += start_strong_reduce.get_time();
+
+    if (lb >= g.n)
+    {
+        g.n = 0;
+        return print_heuris_log(result);
     }
+    return false;
 }
-/**
- * @brief the heuristic stage without StrongHeuris
- */
-void FastHeuris()
+
+bool FastHeuris(UmkpexResult *result = nullptr)
 {
     Timer t("FastHeuris");
-    // degeneracy + weak reduce
     {
 #ifndef NO_SQRT
         lb = g.sqrt_degeneracy(&solution);
         printf("sqrt lb= %d, use time %.4lf s\n", lb, t.get_time() / 1e6);
 #endif
-        lb = max(lb, 2 * paramK - 2); // we only care the solutions with at least 2k-1 vertices
+        lb = max(lb, 2 * paramK - 2);
         lb = max(lb, g.degeneracy_and_reduce(lb, &solution));
         printf("After degeneracy and weak reduce, n= %u , m= %u , lb= %d , use time %.4lf s\n", g.n, g.m / 2, lb, t.get_time() / 1e6);
         if (lb >= g.n)
@@ -94,23 +140,18 @@ void FastHeuris()
             g.n = 0;
             FastHeuris_lb = lb;
             FastHeuris_time = t.get_time();
-            print_heuris_log();
-            exit(0);
+            return print_heuris_log(result);
         }
     }
-    // strong_reduce();
     FastHeuris_lb = lb;
     FastHeuris_time = t.get_time();
+    return false;
 }
 
-/**
- * @brief we make more efforts to get better lb and then reduce graph
- */
-void StrongHeuris()
+bool StrongHeuris(UmkpexResult *result = nullptr)
 {
     int iteration_cnt = 1;
     double time_limit = 0;
-    // time_limit = max(time_limit, 0.5 * 1e6);
     if (PARA.heuristic == "Both-Heur")
     {
         time_limit = max(FastHeuris_time, 10e6);
@@ -122,7 +163,7 @@ void StrongHeuris()
         break;
 #endif
         int extend_lb = 0;
-        if (solution.size() < 2 * paramK - 2) // this means we probably find no larger plex
+        if (solution.size() < 2 * paramK - 2)
         {
             break;
         }
@@ -133,68 +174,57 @@ void StrongHeuris()
         lb = extend_lb;
         g.weak_reduce(lb);
 
-        // strong reduce
-        {
-            Timer start_strong_reduce;
-            Reduction reduce(&g);
-            ui pre_n = g.n;
-            reduce.strong_reduce(lb);
-            printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
-            // strong_reduce_time += start_strong_reduce.get_time();
+        Timer start_strong_reduce;
+        Reduction reduce(&g);
+        reduce.strong_reduce(lb);
+        printf("Afer strong reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, start_strong_reduce.get_time() / 1e6);
 
-            if (lb >= g.n)
-            {
-                g.n = 0;
-                StrongHeuris_time += t_extend.get_time();
-                print_heuris_log();
-                exit(0);
-            }
+        if (lb >= g.n)
+        {
+            g.n = 0;
+            StrongHeuris_time += t_extend.get_time();
+            return print_heuris_log(result);
         }
     }
     StrongHeuris_time += t_extend.get_time();
+    return false;
 }
 
-/**
- * @brief the newly proprosed heuris in kPlexT
- */
-void EgoHeuris()
+bool EgoHeuris(UmkpexResult *result = nullptr)
 {
     Timer t("ego-degen");
     int ego_lb = g.ego_degen(&solution);
 
     StrongHeuris_time = t.get_time();
-    cout << "ego degen lb: " << ego_lb <<" use time: "<< t.get_time_seconds()<< endl;
+    cout << "ego degen lb: " << ego_lb << " use time: " << t.get_time_seconds() << endl;
     if (ego_lb > lb)
     {
         lb = ego_lb;
         g.weak_reduce(lb);
-        Timer t;
-        printf("Afer weak reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, t.get_time() / 1e6);
+        Timer weak_reduce_timer;
+        printf("Afer weak reduce, n= %u , m= %u, use time %.4lf s\n", g.n, g.m / 2, weak_reduce_timer.get_time() / 1e6);
     }
-    strong_reduce();
+    return strong_reduce(result);
 }
 
-/**
- * @brief stage-I: we conduct heuristic and preprocessing stage
- * i.e., KPHeuris
- */
-void heuris()
+bool heuris(UmkpexResult *result = nullptr)
 {
-    FastHeuris();
-    if (PARA.heuristic == "EGO-Heur" or PARA.heuristic == "Both-Heur")
+    if (FastHeuris(result))
+        return true;
+    if (PARA.heuristic == "EGO-Heur" || PARA.heuristic == "Both-Heur")
     {
-        EgoHeuris();
+        if (EgoHeuris(result))
+            return true;
         if (PARA.heuristic == "EGO-Heur")
-            return;
+            return false;
     }
-    else
-        strong_reduce();
-    StrongHeuris(); // generate n subgraphs and compute larger lb
+    else if (strong_reduce(result))
+    {
+        return true;
+    }
+    return StrongHeuris(result);
 }
 
-/**
- * @brief branch and bound searching
- */
 void bnb()
 {
     Graph_reduced *G;
@@ -204,22 +234,24 @@ void bnb()
         branch.IE_framework_oriented();
     else
         branch.IE_framework();
-    if (solution.size() < branch.solution.size()) // record the max plex
+    if (solution.size() < branch.solution.size())
     {
         solution.clear();
         for (int v : branch.solution)
             solution.insert(v);
     }
+    delete G;
 }
 
-int main(int argc, char *argv[])
+int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
 {
+    reset_solver_state();
     PARA = CommandLine(argc, argv);
     if (argc < 3)
     {
         printf("2 params are required !!! \n");
         printf("usage: ./kPEX graph_path k\n");
-        exit(1);
+        return 1;
     }
     file_path = string(argv[1]);
     paramK = atoi(argv[2]);
@@ -227,23 +259,33 @@ int main(int argc, char *argv[])
 
     algorithm_start_time = get_system_time_microsecond();
 
-    // KPHeuris
     puts("------------------{start KPHeuris}---------------------");
     Timer prepro("heuristic and preprocess");
-    heuris();
+    if (heuris(result))
+        return 0;
     prepro.print_time();
     print_heuris_log();
 
     ui heur_size = solution.size();
-    // recursive branch and bound
     puts("------------------{start BRB_Rec}---------------------");
-    Timer bnb_time;
+    Timer bnb_timer;
     bnb();
 
     print_solution();
 
     puts("------------------{whole procedure: kPEX}---------------------");
-    printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n", heur_size, solution.size(), StrongHeuris_time / 1e6, FastHeuris_time / 1e6, bnb_time.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
+    printf("\n>>Heur_Size: %u MaxKPlex_Size: %u heuristic_time: %.4lf ctcp_time: %.4lf bnb_time: %.4lf t_time: %.4lf\n",
+           heur_size, (ui)solution.size(), StrongHeuris_time / 1e6, FastHeuris_time / 1e6,
+           bnb_timer.get_time_seconds(), (get_system_time_microsecond() - algorithm_start_time) / 1e6);
 
+    if (result != nullptr)
+        fill_result(*result, heur_size, bnb_timer.get_time_seconds());
     return 0;
 }
+
+#ifndef UMKPEX_PYTHON_MODULE
+int main(int argc, char *argv[])
+{
+    return run_umkpex_solver(argc, argv, nullptr);
+}
+#endif

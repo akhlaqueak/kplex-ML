@@ -3,7 +3,7 @@
 # SBATCH --nodes=4
 # SBATCH --ntasks-per-node=48
 
-#SBATCH --ntasks=96
+#SBATCH --ntasks=80
 #SBATCH --cpus-per-task=1
 
 #SBATCH --mem-per-cpu=10G
@@ -23,6 +23,7 @@ SOURCE_SCRIPT="${BASH_SOURCE[0]:-$0}"
 RUNTIME_SCRIPT="${PWD}/.mpi_runtime_${SLURM_JOB_ID:-$$}.py"
 cp "$SOURCE_SCRIPT" "$RUNTIME_SCRIPT"
 SCRIPT_PATH="$RUNTIME_SCRIPT"
+echo "Runtime script: $RUNTIME_SCRIPT"
 
 collect_only=0
 for arg in "$@"; do
