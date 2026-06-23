@@ -2,13 +2,13 @@
 
 import json
 
-import UMKP
+import struct
 
 
 def main() -> int:
-    result = UMKP.solve(
-        "ds/hood.bin",
-        7,
+    result = struct.solve(
+        dataset="ds/hood.bin",
+        k=7,
         algorithm="UMKP+",
         branching="Pivot-Br",
         bounding="AltRB",

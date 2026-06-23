@@ -1,4 +1,4 @@
-# UMKP
+# struct
 
 Python package for the `UMKPEX` solver using `pybind11`.
 
@@ -12,15 +12,14 @@ pip install -e .
 ## Use
 
 ```bash
-UMKP path/to/graph.bin 5
-python -m UMKP path/to/graph.bin 5 -algorithm UMKP+ -branching Pivot-Br
+struct path/to/graph.bin 5
+python -m struct path/to/graph.bin 5 -algorithm UMKP+ -branching Pivot-Br
 ```
 
-Or from Python:
+From Python:
 
 ```python
-import UMKP
+import struct
 
-result = UMKP.solve("path/to/graph.bin", 5, algorithm="UMKP+", branching="Pivot-Br")
-print(result["max_kplex_size"])
+result = struct.solve(dataset="path/to/graph.bin", k=5, algorithm="UMKP+", branching="Pivot-Br")
 ```

@@ -4,8 +4,8 @@ from setuptools import find_packages, setup
 
 ext_modules = [
     Pybind11Extension(
-        "UMKP._core",
-        ["python/UMKP/_core.cpp"],
+        "struct._core",
+        ["python/struct/_core.cpp"],
         include_dirs=["."],
         cxx_std=11,
         extra_compile_args=["-O3", "-w", "-DNO_PROGRESS_BAR", "-DNDEBUG"],
@@ -14,14 +14,14 @@ ext_modules = [
 
 
 setup(
-    name="UMKP",
+    name="struct",
     version="0.1.0",
     description="Python package for the UMKPEX maximum k-plex solver",
     package_dir={"": "python"},
     packages=find_packages(where="python"),
     entry_points={
         "console_scripts": [
-            "UMKP=UMKP.cli:main",
+            "struct=struct.cli:main",
         ]
     },
     cmdclass={"build_ext": build_ext},

@@ -14,9 +14,10 @@ def solve_args(args: list[str], *, verbose: bool = False):
 
 
 def solve(
-    graph_path: str,
-    k: int,
+    dataset: Optional[str] = None,
+    k: Optional[int] = None,
     *,
+    graph_path: Optional[str] = None,
     algorithm: str = "kPEX",
     branching: Optional[str] = None,
     bounding: Optional[str] = None,
@@ -26,7 +27,15 @@ def solve(
     framework: Optional[str] = None,
     verbose: bool = False,
 ):
-    args = [graph_path, str(k)]
+    if dataset is None:
+        dataset = graph_path
+
+    if dataset is None:
+        raise TypeError("solve() missing required argument: 'dataset'")
+    if k is None:
+        raise TypeError("solve() missing required argument: 'k'")
+
+    args = [dataset, str(k)]
 
     if algorithm is not None:
         args.extend(["-algorithm", algorithm])

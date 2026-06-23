@@ -3,7 +3,7 @@
 
 #include "Utility.h"
 #include "Graph.h"
-#define _SECOND_ORDER_PRUNING_
+// #define _SECOND_ORDER_PRUNING_
 extern double reduce_kPlexT_time_matrix;
 ui altrb_cnt = 0;
 ll dfs_cnt = 0;

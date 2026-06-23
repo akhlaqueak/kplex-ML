@@ -43,7 +43,7 @@ static py::dict solve_args_impl(const std::vector<std::string> &args, bool verbo
 {
     std::vector<std::string> owned_args;
     owned_args.reserve(args.size() + 1);
-    owned_args.push_back("UMKP");
+    owned_args.push_back("struct");
     owned_args.insert(owned_args.end(), args.begin(), args.end());
 
     std::vector<char *> argv;

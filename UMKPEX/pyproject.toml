@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "pybind11>=2.11"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "UMKP"
+name = "struct"
 version = "0.1.0"
 description = "Python package for the UMKPEX maximum k-plex solver"
 readme = "README.md"
@@ -18,7 +18,7 @@ classifiers = [
 ]
 
 [project.scripts]
-UMKP = "UMKP.cli:main"
+struct = "struct.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "python"}
