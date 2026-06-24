@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=UMKP
 # SBATCH --nodes=4
-# SBATCH --ntasks-per-node=48
+# SBATCH --ntasks-per-node=24
 
 #SBATCH --ntasks=80
 #SBATCH --cpus-per-task=1

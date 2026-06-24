@@ -235,6 +235,13 @@ public:
                 IE_graph_cnt++;
                 matrix_init_time += g.init_time;
                 ptr_g = &g;
+                {
+                    // Match original kPEX: apply high-order reduction on g_i
+                    // before initializing the recursive search state.
+                    Timer tt;
+                    g.edge_reduction(id_u, lb);
+                    higher_order_reduce_time += tt.get_time();
+                }
 
                 // int id_u = inv[u]; // the index of u in the new-induced graph g
                 if (PARA.algorithm == "UMKP+")
@@ -248,6 +255,7 @@ public:
                 }
                 else
                 {
+
                     Set S(g.size()), C(g.size());
                     S.set(id_u);
                     C.flip();
@@ -540,6 +548,13 @@ public:
             IE_graph_cnt++;
             matrix_init_time += g.init_time;
             ptr_g = &g;
+            {
+                // Match original kPEX: apply high-order reduction on g_i
+                // before initializing the recursive search state.
+                Timer tt;
+                g.edge_reduction(id_u, lb);
+                higher_order_reduce_time += tt.get_time();
+            }
             if (PARA.algorithm == "UMKP+")
             {
                 bb_solver.load_graph(g);

@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=kPEX
-# SBATCH --nodes=4
-# SBATCH --ntasks-per-node=48
+#SBATCH --nodes=16
+#SBATCH --ntasks-per-node=4
 
-#SBATCH --ntasks=80
-#SBATCH --cpus-per-task=1
-
+# SBATCH --ntasks=180
+# SBATCH --cpus-per-task=1
+# SBATCH --exclusive
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
 #SBATCH --time=20:00:00
@@ -26,15 +26,19 @@ SCRIPT_PATH="$RUNTIME_SCRIPT"
 echo "Runtime script: $RUNTIME_SCRIPT"
 
 collect_only=0
+show_help=0
 for arg in "$@"; do
     case "$arg" in
         --collect-only|--postprocess-only)
             collect_only=1
             ;;
+        -h|--help)
+            show_help=1
+            ;;
     esac
 done
 
-if [[ "$collect_only" -eq 1 ]]; then
+if [[ "$collect_only" -eq 1 || "$show_help" -eq 1 ]]; then
     exec python3 -u "$SCRIPT_PATH" "$@"
 fi
 
@@ -60,7 +64,7 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="S-Br R-Br Pivot-Br Binary-Br BinaryM-Br".split()
+BR="Binary-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
@@ -75,6 +79,26 @@ OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
 LOG_DIR = Path("logs")
 DS_FILE = Path("ds.txt")
 RESUME_LOG = None
+SKIP_TIMEOUT_LOGS = False
+
+HELP_TEXT = f"""Usage:
+  sbatch mpi_kPEX.py [options]
+  python3 mpi_kPEX.py [options]
+
+Options:
+  --skip-timeout-logs         Skip tasks whose existing per-task log already
+                              contains a TIMEOUT record.
+  --resume-log PATH           Skip tasks already marked SUCCESS or TIMEOUT in
+                              the given master log file.
+  --collect-only              Only collect results from existing logs and write
+                              {OUTFILE}.
+  --postprocess-only          Same as --collect-only.
+  -h, --help                  Show this help message and exit.
+
+Environment:
+  RESUME_LOG=PATH             Same as --resume-log PATH.
+  SKIP_TIMEOUT_LOGS=1         Same as --skip-timeout-logs.
+"""
 
 
 def parse_ntasks_per_node() -> int | None:
@@ -161,6 +185,23 @@ def load_completed_tasks(log_path: str | None):
     return completed
 
 
+def log_has_timeout(log_path: str) -> bool:
+    path = Path(log_path)
+    if not path.is_file():
+        return False
+
+    try:
+        with path.open() as fh:
+            for raw_line in fh:
+                line = raw_line.strip()
+                if "TIMEOUT " in line or "TIMEOUT ::" in line:
+                    return True
+    except Exception:
+        return False
+
+    return False
+
+
 def generate_tasks():
     tasks = []
     completed = load_completed_tasks(RESUME_LOG)
@@ -178,6 +219,8 @@ def generate_tasks():
                         cmd = get_cmd(ds, k, br, heur, ct)
                         task = " ".join(shlex.quote(x) for x in cmd)
                         if task in completed:
+                            continue
+                        if SKIP_TIMEOUT_LOGS and log_has_timeout(get_outfile(task)):
                             continue
                         tasks.append(task)
     return tasks
@@ -445,6 +488,8 @@ def collect_results():
 def parse_args(argv):
     collect_only = any(arg in {"--collect-only", "--postprocess-only"} for arg in argv[1:])
     resume_log = None
+    skip_timeout_logs = False
+    show_help = any(arg in {"-h", "--help"} for arg in argv[1:])
 
     idx = 1
     while idx < len(argv):
@@ -455,15 +500,23 @@ def parse_args(argv):
             continue
         if arg.startswith("--resume-log="):
             resume_log = arg.split("=", 1)[1]
+        if arg == "--skip-timeout-logs":
+            skip_timeout_logs = True
         idx += 1
 
-    return collect_only, resume_log
+    return collect_only, resume_log, skip_timeout_logs, show_help
 
 
 def main():
-    global RESUME_LOG
-    collect_only, resume_log = parse_args(sys.argv)
+    global RESUME_LOG, SKIP_TIMEOUT_LOGS
+    collect_only, resume_log, skip_timeout_logs, show_help = parse_args(sys.argv)
+
+    if show_help:
+        print(HELP_TEXT, end="")
+        return
+
     RESUME_LOG = resume_log or os.environ.get("RESUME_LOG")
+    SKIP_TIMEOUT_LOGS = skip_timeout_logs or os.environ.get("SKIP_TIMEOUT_LOGS") == "1"
 
     if collect_only:
         collect_results()
