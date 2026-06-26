@@ -1,11 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=UMKP+
+#SBATCH --job-name=UMKP-cp
 # SBATCH --nodes=4
-# SBATCH --ntasks-per-node=48
+# SBATCH --ntasks-per-node=24
 
 #SBATCH --ntasks=80
 #SBATCH --cpus-per-task=1
-
 #SBATCH --mem-per-cpu=10G
 #SBATCH --partition=medium
 #SBATCH --time=20:00:00
@@ -19,7 +18,6 @@ module load mpi4py
 set -euo pipefail
 # cp ../UMKPEX .
 
-cd "${SLURM_SUBMIT_DIR:-$PWD}"
 SOURCE_SCRIPT="${BASH_SOURCE[0]:-$0}"
 RUNTIME_SCRIPT="${PWD}/.mpi_runtime_${SLURM_JOB_ID:-$$}.py"
 cp "$SOURCE_SCRIPT" "$RUNTIME_SCRIPT"
@@ -129,8 +127,7 @@ def get_cmd(ds, k, br, heur, ct):
     
     # cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
     # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct}"
-    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct}"
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -branching {br} -heuristic {heur} -ctcp {ct}"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur}"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:

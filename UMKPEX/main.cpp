@@ -4,6 +4,9 @@
 #include "2th-Reduction.h"
 #include "Branch.h"
 #include <new>
+#ifdef __linux__
+#include <sched.h>
+#endif
 
 set<ui> solution;
 
@@ -27,6 +30,254 @@ struct UmkpexResult
     bool heuristic_is_ground_truth = false;
     vector<ui> solution_vertices;
 };
+
+static string read_cpu_model_name()
+{
+#ifdef __linux__
+    ifstream cpuinfo("/proc/cpuinfo");
+    string line;
+    while (getline(cpuinfo, line))
+    {
+        const string key = "model name";
+        if (line.compare(0, key.size(), key) == 0)
+        {
+            size_t pos = line.find(':');
+            if (pos != string::npos)
+            {
+                string model = line.substr(pos + 1);
+                while (!model.empty() && model.front() == ' ')
+                    model.erase(model.begin());
+                return model;
+            }
+        }
+    }
+#endif
+    return "unknown";
+}
+
+static string get_arch_class(const string &cpu_model)
+{
+    if (cpu_model.find("6248R") != string::npos)
+        return "intel-6248r";
+    if (cpu_model.find("7713") != string::npos)
+        return "amd-7713";
+    if (cpu_model.find("Intel") != string::npos)
+        return "intel-other";
+    if (cpu_model.find("AMD") != string::npos)
+        return "amd-other";
+    return "unknown";
+}
+
+static string get_affinity_summary()
+{
+#ifdef __linux__
+    cpu_set_t mask;
+    CPU_ZERO(&mask);
+    if (sched_getaffinity(0, sizeof(mask), &mask) == 0)
+    {
+        int count = 0;
+        vector<int> cpus;
+        for (int cpu = 0; cpu < CPU_SETSIZE; ++cpu)
+        {
+            if (CPU_ISSET(cpu, &mask))
+            {
+                ++count;
+                cpus.push_back(cpu);
+            }
+        }
+        if (!cpus.empty())
+        {
+            return "count=" + to_string(count) +
+                   " first=" + to_string(cpus.front()) +
+                   " last=" + to_string(cpus.back());
+        }
+        return "count=0";
+    }
+#endif
+    return "unknown";
+}
+
+static long long read_meminfo_kb(const string &key)
+{
+#ifdef __linux__
+    ifstream meminfo("/proc/meminfo");
+    string label;
+    long long value = -1;
+    string unit;
+    while (meminfo >> label >> value >> unit)
+    {
+        if (label == key + ":")
+            return value;
+    }
+#endif
+    return -1;
+}
+
+static long long read_self_rss_kb()
+{
+#ifdef __linux__
+    ifstream status("/proc/self/status");
+    string label;
+    while (status >> label)
+    {
+        if (label == "VmRSS:")
+        {
+            long long value = -1;
+            string unit;
+            status >> value >> unit;
+            return value;
+        }
+        string rest;
+        getline(status, rest);
+    }
+#endif
+    return -1;
+}
+
+static double read_loadavg_1m()
+{
+#ifdef __linux__
+    ifstream loadavg("/proc/loadavg");
+    double load1 = -1.0;
+    if (loadavg >> load1)
+        return load1;
+#endif
+    return -1.0;
+}
+
+static double read_current_cpu_mhz()
+{
+#ifdef __linux__
+    ifstream cpuinfo("/proc/cpuinfo");
+    string line;
+    while (getline(cpuinfo, line))
+    {
+        const string key = "cpu MHz";
+        if (line.compare(0, key.size(), key) == 0)
+        {
+            size_t pos = line.find(':');
+            if (pos != string::npos)
+            {
+                string value = line.substr(pos + 1);
+                while (!value.empty() && value.front() == ' ')
+                    value.erase(value.begin());
+                return atof(value.c_str());
+            }
+        }
+    }
+#endif
+    return -1.0;
+}
+
+static long long read_self_status_kb_or_count(const string &key)
+{
+#ifdef __linux__
+    ifstream status("/proc/self/status");
+    string label;
+    while (status >> label)
+    {
+        if (label == key + ":")
+        {
+            long long value = -1;
+            status >> value;
+            return value;
+        }
+        string rest;
+        getline(status, rest);
+    }
+#endif
+    return -1;
+}
+
+static string read_numa_mem_available_summary()
+{
+#ifdef __linux__
+    vector<string> parts;
+    for (int node = 0;; ++node)
+    {
+        string path = "/sys/devices/system/node/node" + to_string(node) + "/meminfo";
+        ifstream meminfo(path);
+        if (!meminfo.is_open())
+            break;
+
+        string line;
+        long long memfree_kb = -1;
+        while (getline(meminfo, line))
+        {
+            if (line.find("MemFree") != string::npos)
+            {
+                stringstream ss(line);
+                string token;
+                long long value = -1;
+                while (ss >> token)
+                {
+                    bool all_digits = !token.empty();
+                    for (char ch : token)
+                        all_digits = all_digits && isdigit(static_cast<unsigned char>(ch));
+                    if (all_digits)
+                        value = atoll(token.c_str());
+                }
+                memfree_kb = value;
+                break;
+            }
+        }
+        if (memfree_kb >= 0)
+        {
+            parts.push_back("n" + to_string(node) + "=" +
+                            to_string(memfree_kb / 1024) + "MB");
+        }
+    }
+    if (!parts.empty())
+    {
+        string summary;
+        for (size_t i = 0; i < parts.size(); ++i)
+        {
+            if (i)
+                summary += ",";
+            summary += parts[i];
+        }
+        return summary;
+    }
+#endif
+    return "unknown";
+}
+
+static void print_runtime_diag()
+{
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) != 0)
+        strcpy(hostname, "unknown");
+    hostname[sizeof(hostname) - 1] = '\0';
+
+    string cpu_model = read_cpu_model_name();
+    string arch_class = get_arch_class(cpu_model);
+    long long mem_available_kb = read_meminfo_kb("MemAvailable");
+    long long mem_total_kb = read_meminfo_kb("MemTotal");
+    long long rss_kb = read_self_rss_kb();
+    double load1 = read_loadavg_1m();
+    double cpu_mhz = read_current_cpu_mhz();
+    long long threads = read_self_status_kb_or_count("Threads");
+    long long ctxt_vol = read_self_status_kb_or_count("voluntary_ctxt_switches");
+    long long ctxt_nonvol = read_self_status_kb_or_count("nonvoluntary_ctxt_switches");
+    string numa_mem = read_numa_mem_available_summary();
+
+    printf("Runtime diag: host=%s pid=%d arch=%s cpu_model=%s affinity=%s rss_mb=%.1f mem_avail_gb=%.1f mem_total_gb=%.1f load1=%.2f cpu_mhz=%.1f threads=%lld ctxt_v=%lld ctxt_nv=%lld numa_free=%s\n",
+           hostname,
+           (int)getpid(),
+           arch_class.c_str(),
+           cpu_model.c_str(),
+           get_affinity_summary().c_str(),
+           rss_kb >= 0 ? rss_kb / 1024.0 : -1.0,
+           mem_available_kb >= 0 ? mem_available_kb / 1024.0 / 1024.0 : -1.0,
+           mem_total_kb >= 0 ? mem_total_kb / 1024.0 / 1024.0 : -1.0,
+           load1,
+           cpu_mhz,
+           threads,
+           ctxt_vol,
+           ctxt_nonvol,
+           numa_mem.c_str());
+    fflush(stdout);
+}
 
 static void reset_solver_state()
 {
@@ -256,6 +507,7 @@ int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
     file_path = string(argv[1]);
     paramK = atoi(argv[2]);
     g.readFromFile(file_path);
+    print_runtime_diag();
 
     algorithm_start_time = get_system_time_microsecond();
 

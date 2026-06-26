@@ -64,7 +64,7 @@ TAG_TASK = 2
 TAG_DONE = 3
 TAG_STOP = 4
 
-BR="Binary-Br".split()
+BR="S-Br R-Br Pivot-Br Binary-Br".split()
 ALGO="UMKPEX".split()
 HEUR="Both-Heur".split()
 CTCP="CTCP".split()
@@ -75,11 +75,12 @@ RESULT_WIDTH = 6
 TASK_TIMEOUT = 1800
 TIMEOUT_GRACE = 30
 DS_LOC = "/home/akhlaque.ak@gmail.com/graphs/large-collection"
-OUTFILE = f"output-{os.environ.get('SLURM_JOB_NAME', 'local')}.txt"
+OUTFILE_BASE = f"output-{os.environ.get('JOB_OUTPUT_TAG', os.environ.get('SLURM_JOB_NAME', 'local'))}"
 LOG_DIR = Path("logs")
 DS_FILE = Path("ds.txt")
 RESUME_LOG = None
 SKIP_TIMEOUT_LOGS = False
+FRAMEWORK = "default"
 
 HELP_TEXT = f"""Usage:
   sbatch mpi_kPEX.py [options]
@@ -91,14 +92,21 @@ Options:
   --resume-log PATH           Skip tasks already marked SUCCESS or TIMEOUT in
                               the given master log file.
   --collect-only              Only collect results from existing logs and write
-                              {OUTFILE}.
+                              the framework-specific output text file.
   --postprocess-only          Same as --collect-only.
+  --framework NAME            Add `-framework NAME` to every UMKPEX command.
   -h, --help                  Show this help message and exit.
 
 Environment:
   RESUME_LOG=PATH             Same as --resume-log PATH.
   SKIP_TIMEOUT_LOGS=1         Same as --skip-timeout-logs.
+  FRAMEWORK=NAME              Same as --framework NAME.
 """
+
+
+def get_output_file() -> str:
+    suffix = "" if FRAMEWORK == "default" else f"-{FRAMEWORK}"
+    return f"{OUTFILE_BASE}{suffix}.txt"
 
 
 def parse_ntasks_per_node() -> int | None:
@@ -143,15 +151,7 @@ def get_outfile(cmd: str) -> str:
 
 
 def get_cmd(ds, k, br, heur, ct):
-    switches={
-        "UMKP": f"-algorithm UMKP+ -bounding None -branching {br}",
-        "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
-        "kPEX": f"-branching {br}"
-    }
-    
-    # cmd = f"UMKP {DS_LOC}/{ds}.bin {k} -branching {br}"
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct}"
-    # cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm UMKP+ -bounding None -branching {br} -heuristic {heur} -ctcp {ct} -framework oriented"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -algorithm kPEX -branching {br} -heuristic {heur} -ctcp {ct} -framework {FRAMEWORK}"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:
@@ -291,6 +291,8 @@ def run_task(cmd: str):
 
     try:
         with open(outfile, "w") as f:
+            f.write(f"COMMAND {cmd}\n")
+            f.flush()
             proc = subprocess.run(
                 run_cmd,
                 stdout=f,
@@ -458,8 +460,9 @@ def worker(comm, rank):
 
 def collect_results():
     print("[POST] Collecting results...", flush=True)
+    outfile_path = get_output_file()
 
-    with open(OUTFILE, "w") as out:
+    with open(outfile_path, "w") as out:
         with open(DS_FILE) as f:
             for line in f:
                 if not line.strip():
@@ -483,13 +486,14 @@ def collect_results():
 
                 out.write("\n")
 
-    print(f"[POST] Wrote {OUTFILE}", flush=True)
+    print(f"[POST] Wrote {outfile_path}", flush=True)
 
 def parse_args(argv):
     collect_only = any(arg in {"--collect-only", "--postprocess-only"} for arg in argv[1:])
     resume_log = None
     skip_timeout_logs = False
     show_help = any(arg in {"-h", "--help"} for arg in argv[1:])
+    framework = None
 
     idx = 1
     while idx < len(argv):
@@ -502,14 +506,20 @@ def parse_args(argv):
             resume_log = arg.split("=", 1)[1]
         if arg == "--skip-timeout-logs":
             skip_timeout_logs = True
+        if arg == "--framework" and idx + 1 < len(argv):
+            framework = argv[idx + 1]
+            idx += 2
+            continue
+        if arg.startswith("--framework="):
+            framework = arg.split("=", 1)[1]
         idx += 1
 
-    return collect_only, resume_log, skip_timeout_logs, show_help
+    return collect_only, resume_log, skip_timeout_logs, show_help, framework
 
 
 def main():
-    global RESUME_LOG, SKIP_TIMEOUT_LOGS
-    collect_only, resume_log, skip_timeout_logs, show_help = parse_args(sys.argv)
+    global RESUME_LOG, SKIP_TIMEOUT_LOGS, FRAMEWORK
+    collect_only, resume_log, skip_timeout_logs, show_help, framework = parse_args(sys.argv)
 
     if show_help:
         print(HELP_TEXT, end="")
@@ -517,6 +527,7 @@ def main():
 
     RESUME_LOG = resume_log or os.environ.get("RESUME_LOG")
     SKIP_TIMEOUT_LOGS = skip_timeout_logs or os.environ.get("SKIP_TIMEOUT_LOGS") == "1"
+    FRAMEWORK = framework or os.environ.get("FRAMEWORK", "default")
 
     if collect_only:
         collect_results()
