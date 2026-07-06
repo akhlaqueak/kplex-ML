@@ -551,9 +551,9 @@ public:
             {
                 // Match original kPEX: apply high-order reduction on g_i
                 // before initializing the recursive search state.
-                // Timer tt;
-                // g.edge_reduction(id_u, lb);
-                // higher_order_reduce_time += tt.get_time();
+                Timer tt;
+                g.edge_reduction(id_u, lb);
+                higher_order_reduce_time += tt.get_time();
             }
             if (PARA.algorithm == "UMKP+")
             {
