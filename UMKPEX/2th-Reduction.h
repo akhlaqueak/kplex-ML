@@ -65,7 +65,7 @@ private:
     vector<char> vertex_removed_from_G_fast, edge_removed_from_G_fast;
     ui n, m;
     ui timestamp;
-    double oriented_pack_time, oriented_count_time, oriented_rebuild_time;
+    double first_round_time, oriented_pack_time, oriented_count_time, oriented_rebuild_time;
     double initial_seed_time, propagation_time, final_rebuild_time;
     // G-slow: this is used to update triangle count
     vector<char> edge_removed_from_G_slow;
@@ -337,7 +337,7 @@ private:
 
 public:
     ReductionCFCTCP(Graph *_g) : G_fast(*_g), triangles(nullptr), compute_time(nullptr), another_edge(nullptr),
-                                 timestamp(0), oriented_pack_time(0), oriented_count_time(0), oriented_rebuild_time(0),
+                                 timestamp(0), first_round_time(0), oriented_pack_time(0), oriented_count_time(0), oriented_rebuild_time(0),
                                  initial_seed_time(0), propagation_time(0), final_rebuild_time(0)
     {
         n = G_fast.n;
@@ -358,10 +358,29 @@ public:
      */
     void strong_reduce(int lb)
     {
-        // CF-CTCP uses CTPrune's forward-oriented enumeration for its initial
-        // edge supports. The subsequent dynamic maintenance remains unchanged.
-        vertex_removed_from_G_fast.assign(n, 0);
-        edge_removed_from_G_fast.assign(m, 0);
+        // Keep the original CF-CTCP first round. It cheaply removes a large
+        // portion of the graph before the dynamic support-maintenance phase.
+        Timer first_round_timer;
+        bool continue_first_round;
+        do
+        {
+            ui previous_m = m, previous_n = n;
+            vertex_removed_from_G_fast.assign(n, 0);
+            edge_removed_from_G_fast.assign(m, 0);
+            Queue q_v(n);
+            first_round_reduce(lb, q_v);
+            if (previous_m == m)
+            {
+                first_round_time += first_round_timer.get_time();
+                printf("CF-CTCP timing: first_round=%.4lf orient=0.0000 count=0.0000 rebuild=0.0000 seed=0.0000 propagate=0.0000 final_rebuild=0.0000 q_init=0 q_done=0\n",
+                       first_round_time / 1e6);
+                return;
+            }
+            continue_first_round = previous_m * 0.8 > m || previous_n * 0.8 > n;
+        } while (continue_first_round);
+        first_round_time += first_round_timer.get_time();
+
+        // Use CTPrune only for the remaining CF-CTCP support initialization.
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
         triangles = new ui[m];
         compute_time = new ui[m];
@@ -497,8 +516,8 @@ public:
         ui initial_queue_size = q_e.size();
         if (!q_e.size())
         {
-            printf("CF-CTCP timing: orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=0.0000 final_rebuild=0.0000 q_init=0 q_done=0\n",
-                   oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6);
+            printf("CF-CTCP timing: first_round=%.4lf orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=0.0000 final_rebuild=0.0000 q_init=0 q_done=0\n",
+                   first_round_time / 1e6, oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6);
             return;
         }
         // update the information of triangle count exactly
@@ -620,8 +639,8 @@ public:
         Timer rebuild_timer;
         rebuild_graph();
         final_rebuild_time += rebuild_timer.get_time();
-        printf("CF-CTCP timing: orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=%.4lf final_rebuild=%.4lf q_init=%u q_done=%u\n",
-               oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6,
+        printf("CF-CTCP timing: first_round=%.4lf orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=%.4lf final_rebuild=%.4lf q_init=%u q_done=%u\n",
+               first_round_time / 1e6, oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6,
                propagation_time / 1e6, final_rebuild_time / 1e6, initial_queue_size, front_idx);
     }
 };
