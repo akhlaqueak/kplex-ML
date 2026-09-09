@@ -355,22 +355,10 @@ public:
      */
     void strong_reduce(int lb)
     {
-        bool continue_first_round;
-        do
-        {
-            ui previous_m = m, previous_n = n;
-            vertex_removed_from_G_fast.resize(n, 0);
-            edge_removed_from_G_fast.resize(m, 0);
-            Queue q_v(n);
-            first_round_reduce(lb, q_v);
-            if (previous_m == m) // none of the edges can be reduced
-            {
-                return;
-            }
-            continue_first_round = previous_m * 0.8 > m || previous_n * 0.8 > n;
-        } while (continue_first_round);
-
-        // prepare for CF-CTCP
+        // CF-CTCP uses CTPrune's forward-oriented enumeration for its initial
+        // edge supports. The subsequent dynamic maintenance remains unchanged.
+        vertex_removed_from_G_fast.assign(n, 0);
+        edge_removed_from_G_fast.assign(m, 0);
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
         triangles = new ui[m];
         compute_time = new ui[m];
@@ -387,7 +375,7 @@ public:
                 another_edge[another_edge_id] = i;
             }
         }
-        edge_removed_from_G_slow.resize(m, 0);
+        edge_removed_from_G_slow.assign(m, 0);
         CF_CTCP(lb);
     }
     void rebuild_graph()
@@ -443,18 +431,70 @@ public:
             }
         }
     }
+    void initialize_triangles_oriented()
+    {
+        ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
+
+        // Vertices are already degeneracy-recoded, so u < v denotes a forward
+        // edge. Store the CSR position of each forward neighbor of u.
+        vector<ui> forward_edge(n, 0);
+        memset(triangles, 0, sizeof(ui) * m);
+        for (ui u = 0; u < n; u++)
+        {
+            ui begin = lower_bound(edge_to + pstart[u], edge_to + pstart[u + 1], u + 1) - edge_to;
+            for (ui j = begin; j < pstart[u + 1]; j++)
+                forward_edge[edge_to[j]] = j + 1;
+
+            for (ui j = begin; j < pstart[u + 1]; j++)
+            {
+                ui v = edge_to[j];
+                ui v_begin = lower_bound(edge_to + pstart[v], edge_to + pstart[v + 1], v + 1) - edge_to;
+                for (ui k = v_begin; k < pstart[v + 1]; k++)
+                {
+                    ui uw = forward_edge[edge_to[k]];
+                    if (uw)
+                    {
+                        ++triangles[j];
+                        ++triangles[k];
+                        ++triangles[uw - 1];
+                    }
+                }
+            }
+
+            for (ui j = begin; j < pstart[u + 1]; j++)
+                forward_edge[edge_to[j]] = 0;
+        }
+
+        // CF-CTCP maintains support on both CSR copies of every edge.
+        ui initial_time = ++timestamp;
+        for (ui u = 0; u < n; u++)
+        {
+            for (ui i = pstart[u]; i < pstart[u + 1]; i++)
+            {
+                ui v = edge_to[i];
+                if (v >= u)
+                    break;
+                ui reverse_i = another_edge[i];
+                triangles[i] = triangles[reverse_i];
+                compute_time[i] = initial_time;
+                compute_time[reverse_i] = initial_time;
+            }
+        }
+    }
     void CF_CTCP(int lb)
     {
         vector<EdgeForQ_E> q_e;
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
-        ui *d = G_fast.d;
         Timer t;
-        // list triangles and reduce G-fast to (lb+1-k)-core whenever we can
+        initialize_triangles_oriented();
+
+        // Seed CF-CTCP's existing dynamic maintenance with initially invalid
+        // edges. Each undirected edge is examined once through its backward CSR
+        // copy; all later propagation below is unchanged.
         for (ui u = 0; u < n; u++)
         {
             if (vertex_removed_from_G_fast[u])
                 continue;
-            // cache: record the neighbor of u(like a hash operation)
             for (ui i = pstart[u]; i < pstart[u + 1]; i++)
             {
                 if (edge_removed_from_G_fast[i])
@@ -474,42 +514,12 @@ public:
                     continue;
                 if (v >= u)
                     break;
-                ui edge_cnt = 0;
-                // compute the triangle count of (u,v)
-                for (ui j = pstart[v]; j < pstart[v + 1]; j++)
-                {
-                    if (edge_removed_from_G_fast[j])
-                        continue;
-                    ui w = edge_to[j];
-                    if (vertex_removed_from_G_fast[w])
-                        continue;
-                    if (vis[w]) // w is a common neighbor
-                        edge_cnt++;
-                }
-                if (edge_cnt + 2 * paramK <= lb) // remove (u,v)
+                if (triangles[i] + 2 * paramK <= lb)
                 {
                     remove_edge_from_G_fast(u, v, i, lb, q_e);
                     if (vertex_removed_from_G_fast[u])
                         break;
-                    else // note that the neighbors of u are changed so we need to update vis
-                    {
-                        vis[v] = 0;
-                    }
                 }
-                else
-                {
-                    triangles[i] = edge_cnt;
-                    compute_time[i] = ++timestamp;
-                    ui another_edge_id = another_edge[i];
-                    triangles[another_edge_id] = edge_cnt;
-                    compute_time[another_edge_id] = timestamp;
-                }
-            }
-            // clear the cache
-            for (ui i = pstart[u]; i < pstart[u + 1]; i++)
-            {
-                ui v = edge_to[i];
-                vis[v] = 0;
             }
         }
         list_triangle_time += t.get_time();
