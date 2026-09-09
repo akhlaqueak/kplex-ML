@@ -65,6 +65,8 @@ private:
     vector<char> vertex_removed_from_G_fast, edge_removed_from_G_fast;
     ui n, m;
     ui timestamp;
+    double oriented_pack_time, oriented_count_time, oriented_rebuild_time;
+    double initial_seed_time, propagation_time, final_rebuild_time;
     // G-slow: this is used to update triangle count
     vector<char> edge_removed_from_G_slow;
     // cache
@@ -335,7 +337,8 @@ private:
 
 public:
     ReductionCFCTCP(Graph *_g) : G_fast(*_g), triangles(nullptr), compute_time(nullptr), another_edge(nullptr),
-                                 timestamp(0)
+                                 timestamp(0), oriented_pack_time(0), oriented_count_time(0), oriented_rebuild_time(0),
+                                 initial_seed_time(0), propagation_time(0), final_rebuild_time(0)
     {
         n = G_fast.n;
         m = G_fast.m;
@@ -428,9 +431,17 @@ public:
         // sequence CTPrune expects. Pack forward edges without recomputing it.
         for (ui u = 0; u < n; u++)
             peel_sequence[u] = u;
+        Timer pack_timer;
         CTPrune::orient_graph(n, m, peel_sequence.data(), pstart, pend.data(), edge_to, rank.data());
+        oriented_pack_time += pack_timer.get_time();
+
+        Timer count_timer;
         CTPrune::oriented_triangle_counting(n, m, pstart, pend.data(), edge_to, triangles, rank.data());
+        oriented_count_time += count_timer.get_time();
+
+        Timer rebuild_timer;
         CTPrune::reorganize_oriented_graph(n, triangles, pstart, pend.data(), pend_buffer.data(), edge_to, another_edge, rank.data());
+        oriented_rebuild_time += rebuild_timer.get_time();
 
         for (ui u = 0; u < n; u++)
             G_fast.d[u] = pstart[u + 1] - pstart[u];
@@ -443,12 +454,13 @@ public:
     {
         vector<EdgeForQ_E> q_e;
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
-        Timer t;
+        Timer total_timer;
         initialize_triangles_oriented();
 
         // Seed CF-CTCP's existing dynamic maintenance with initially invalid
         // edges. Each undirected edge is examined once through its backward CSR
         // copy; all later propagation below is unchanged.
+        Timer seed_timer;
         for (ui u = 0; u < n; u++)
         {
             if (vertex_removed_from_G_fast[u])
@@ -480,10 +492,17 @@ public:
                 }
             }
         }
-        list_triangle_time += t.get_time();
+        initial_seed_time += seed_timer.get_time();
+        list_triangle_time += total_timer.get_time();
+        ui initial_queue_size = q_e.size();
         if (!q_e.size())
+        {
+            printf("CF-CTCP timing: orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=0.0000 final_rebuild=0.0000 q_init=0 q_done=0\n",
+                   oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6);
             return;
+        }
         // update the information of triangle count exactly
+        Timer propagation_timer;
         ui front_idx = 0;
         while (front_idx < q_e.size())
         {
@@ -597,7 +616,13 @@ public:
                 }
             }
         }
+        propagation_time += propagation_timer.get_time();
+        Timer rebuild_timer;
         rebuild_graph();
+        final_rebuild_time += rebuild_timer.get_time();
+        printf("CF-CTCP timing: orient=%.4lf count=%.4lf rebuild=%.4lf seed=%.4lf propagate=%.4lf final_rebuild=%.4lf q_init=%u q_done=%u\n",
+               oriented_pack_time / 1e6, oriented_count_time / 1e6, oriented_rebuild_time / 1e6, initial_seed_time / 1e6,
+               propagation_time / 1e6, final_rebuild_time / 1e6, initial_queue_size, front_idx);
     }
 };
 
