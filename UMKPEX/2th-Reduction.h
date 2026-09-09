@@ -438,17 +438,21 @@ public:
         // Vertices are already degeneracy-recoded, so u < v denotes a forward
         // edge. Store the CSR position of each forward neighbor of u.
         vector<ui> forward_edge(n, 0);
+        vector<ui> forward_begin(n);
+        for (ui u = 0; u < n; u++)
+            forward_begin[u] = lower_bound(edge_to + pstart[u], edge_to + pstart[u + 1], u + 1) - edge_to;
+
         memset(triangles, 0, sizeof(ui) * m);
         for (ui u = 0; u < n; u++)
         {
-            ui begin = lower_bound(edge_to + pstart[u], edge_to + pstart[u + 1], u + 1) - edge_to;
+            ui begin = forward_begin[u];
             for (ui j = begin; j < pstart[u + 1]; j++)
                 forward_edge[edge_to[j]] = j + 1;
 
             for (ui j = begin; j < pstart[u + 1]; j++)
             {
                 ui v = edge_to[j];
-                ui v_begin = lower_bound(edge_to + pstart[v], edge_to + pstart[v + 1], v + 1) - edge_to;
+                ui v_begin = forward_begin[v];
                 for (ui k = v_begin; k < pstart[v + 1]; k++)
                 {
                     ui uw = forward_edge[edge_to[k]];
