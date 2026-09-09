@@ -440,7 +440,14 @@ public:
         vector<ui> forward_edge(n, 0);
         vector<ui> forward_begin(n);
         for (ui u = 0; u < n; u++)
-            forward_begin[u] = lower_bound(edge_to + pstart[u], edge_to + pstart[u + 1], u + 1) - edge_to;
+        {
+            ui begin = pstart[u];
+            // Adjacency lists are sorted after degeneracy recoding. This is the
+            // non-mutating equivalent of CTPrune's oriented pstart/pend ranges.
+            while (begin < pstart[u + 1] && edge_to[begin] <= u)
+                ++begin;
+            forward_begin[u] = begin;
+        }
 
         memset(triangles, 0, sizeof(ui) * m);
         for (ui u = 0; u < n; u++)
