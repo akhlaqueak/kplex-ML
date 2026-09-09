@@ -363,18 +363,6 @@ public:
         triangles = new ui[m];
         compute_time = new ui[m];
         another_edge = new ui[m];
-        for (ui u = 0; u < n; u++)
-        {
-            for (ui i = pstart[u]; i < pstart[u + 1]; i++)
-            {
-                ui v = edge_to[i];
-                if (v >= u)
-                    break;
-                ui another_edge_id = find(edge_to + pstart[v], edge_to + pstart[v + 1], u) + pstart[v];
-                another_edge[i] = another_edge_id;
-                another_edge[another_edge_id] = i;
-            }
-        }
         edge_removed_from_G_slow.assign(m, 0);
         CF_CTCP(lb);
     }
@@ -434,63 +422,22 @@ public:
     void initialize_triangles_oriented()
     {
         ui *pstart = G_fast.pstart, *edge_to = G_fast.edge_to;
+        vector<ui> peel_sequence(n), rank(n), pend(n + 1), pend_buffer(n + 1);
 
-        // Vertices are already degeneracy-recoded, so u < v denotes a forward
-        // edge. Store the CSR position of each forward neighbor of u.
-        vector<ui> forward_edge(n, 0);
-        vector<ui> forward_begin(n);
+        // G_fast is already degeneracy-recoded, so its vertex IDs are the peel
+        // sequence CTPrune expects. Pack forward edges without recomputing it.
         for (ui u = 0; u < n; u++)
-        {
-            ui begin = pstart[u];
-            // Adjacency lists are sorted after degeneracy recoding. This is the
-            // non-mutating equivalent of CTPrune's oriented pstart/pend ranges.
-            while (begin < pstart[u + 1] && edge_to[begin] <= u)
-                ++begin;
-            forward_begin[u] = begin;
-        }
+            peel_sequence[u] = u;
+        CTPrune::orient_graph(n, m, peel_sequence.data(), pstart, pend.data(), edge_to, rank.data());
+        CTPrune::oriented_triangle_counting(n, m, pstart, pend.data(), edge_to, triangles, rank.data());
+        CTPrune::reorganize_oriented_graph(n, triangles, pstart, pend.data(), pend_buffer.data(), edge_to, another_edge, rank.data());
 
-        memset(triangles, 0, sizeof(ui) * m);
         for (ui u = 0; u < n; u++)
-        {
-            ui begin = forward_begin[u];
-            for (ui j = begin; j < pstart[u + 1]; j++)
-                forward_edge[edge_to[j]] = j + 1;
+            G_fast.d[u] = pstart[u + 1] - pstart[u];
 
-            for (ui j = begin; j < pstart[u + 1]; j++)
-            {
-                ui v = edge_to[j];
-                ui v_begin = forward_begin[v];
-                for (ui k = v_begin; k < pstart[v + 1]; k++)
-                {
-                    ui uw = forward_edge[edge_to[k]];
-                    if (uw)
-                    {
-                        ++triangles[j];
-                        ++triangles[k];
-                        ++triangles[uw - 1];
-                    }
-                }
-            }
-
-            for (ui j = begin; j < pstart[u + 1]; j++)
-                forward_edge[edge_to[j]] = 0;
-        }
-
-        // CF-CTCP maintains support on both CSR copies of every edge.
+        // CF-CTCP's later stage expects a timestamp on every CSR copy.
         ui initial_time = ++timestamp;
-        for (ui u = 0; u < n; u++)
-        {
-            for (ui i = pstart[u]; i < pstart[u + 1]; i++)
-            {
-                ui v = edge_to[i];
-                if (v >= u)
-                    break;
-                ui reverse_i = another_edge[i];
-                triangles[i] = triangles[reverse_i];
-                compute_time[i] = initial_time;
-                compute_time[reverse_i] = initial_time;
-            }
-        }
+        fill(compute_time, compute_time + m, initial_time);
     }
     void CF_CTCP(int lb)
     {
