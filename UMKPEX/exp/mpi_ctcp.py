@@ -122,7 +122,7 @@ def get_cmd(ds, k, br, heur, ct):
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -branching {br} -heuristic {heur} -ctcp {ct}"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -branching {br} -ctcp {ct}"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:

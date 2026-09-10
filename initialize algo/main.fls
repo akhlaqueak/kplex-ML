@@ -1,8 +1,8 @@
-PWD /Users/akahmad/Documents/kplex-ML/algo
+PWD /Users/akahmad/Documents/kplex-ML/initialize algo
 INPUT /usr/local/texlive/2023/texmf.cnf
 INPUT /usr/local/texlive/2023/texmf-dist/web2c/texmf.cnf
 INPUT /usr/local/texlive/2023/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/akahmad/Documents/kplex-ML/algo/main.tex
+INPUT /Users/akahmad/Documents/kplex-ML/initialize algo/main.tex
 OUTPUT main.log
 INPUT ./acmart.cls
 INPUT ./acmart.cls

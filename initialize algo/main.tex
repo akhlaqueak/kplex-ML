@@ -18,6 +18,7 @@
 
 \begin{algorithm}[t]
 \caption{\textsc{Initialize}$(G,k)$}
+\label{algo:find-init}
 
 \begin{flushleft}
 \textbf{Input:} A graph $G=(V,E)$ and an integer $k>1$\\
@@ -51,7 +52,7 @@
         \EndIf
     \EndFor
     \If{$|P'| > |P|$}
-        \State $P \gets P'$, $lb \gets |P|$
+        \State $P \gets P', lb \gets |P|$
         \State Apply CTCP for refining $G$ based on $lb$
     \EndIf
 \EndFor
@@ -65,11 +66,67 @@
     \State Apply CTCP for refining $g_v$ based on $lb$
     \State $P' \gets \textsc{KPlex-Degen}(g_v, P)$ \hfill \# \textit{Not computing $ub$ here}
     \State \textbf{if} $|P'|=ub$ \textbf{then return} $P'$
-    \State \textbf{if} $|P'| > |P|$ \textbf{then} $P \gets P'$
+    \State \textbf{if} $|P'| > |P|$ \textbf{then} $P \gets P', lb \gets |P|$
 \EndFor
 \State \Return $P$
 \end{algorithmic}
 
+\end{algorithm}
+
+
+\begin{algorithm}[!t]
+\caption{Top-Level Branching -- Oriented Algorithms}
+\label{algo:toplevel}
+
+\begin{flushleft}
+\textbf{Input:} A graph $G=(V,E)$ and an integer $k\geq 2$\\
+\textbf{Output:} A maximum $k$-plex $P$ in $G$
+\end{flushleft}
+
+\begin{algorithmic}[1]
+\State $P, ub \gets \textsc{Initialize}(G, k)$ 
+\If{$|P| \geq ub$}\label{top:l2}
+    \State \Return $P$
+\EndIf
+\State $\textsc{CTCP}(G, \emptyset, |P|+1-k, |P|+1-2k)$\label{top:l3}
+\State Sort $[v_1,\ldots,v_n]$ following the degeneracy ordering of $G$\label{top:l4}
+
+\For{$i=n$ to $1$}\label{top:l5}
+    \State $H_1 \gets N(v_i) \cap \{v_{i+1},\ldots,v_n\}$\label{top:l6}
+    \State $H_2 \gets N(H_1) \cap \{v_{i+1},\ldots,v_n\}$\label{top:l7}
+    \State $g \gets G[\{v_i\} \cup H_1 \cup H_2]$\label{top:l8}
+    \State $\textsc{BB}(\{v_i\}, V(g) \setminus \{v_i\}, g)$ 
+\EndFor
+\State \Return $P$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!t]
+\caption{Top-Level Branching -- Forward Direction}
+\label{algo:toplevel-c2}
+
+\begin{flushleft}
+\textbf{Input:} A graph $G=(V,E)$ and an integer $k\geq 2$\\
+\textbf{Output:} A maximum $k$-plex $P$ in $G$
+\end{flushleft}
+
+\begin{algorithmic}[1]
+\State $P, ub \gets \textsc{Initialize}(G,k)$ 
+\If{$|P| \geq ub$}\label{top-c2:l2}
+    \State \Return $P$
+\EndIf
+\State $\textsc{CTCP}(G, \emptyset, |P|+1-k, |P|+1-2k)$\label{top-c2:l3}
+\State Sort $[v_1,\ldots,v_n]$ following the degeneracy ordering of $G$\label{top-c2:l4}
+\For{$i=1$ to $|V|$}\label{top-c2:l5}
+    \State $H_1 \gets N(v_i) \cap \{v_{i+1},\ldots,v_n\}$\label{top-c2:l6}
+    \State $H_2 \gets N(H_1) \cap \{v_{i+1},\ldots,v_n\}$\label{top-c2:l7}
+    \State $g \gets G[\{v_i\} \cup H_1 \cup H_2]$\label{top-c2:l8}
+    \State $\textsc{BB}(\{v_i\}, V(g) \setminus \{v_i\}, g)$ 
+    \State Remove $v_i$ from $G$\label{top-c2:l10}
+    \State $\textsc{CTCP}(G, \{v_i\}, |P|+1-k, |P|+1-2k)$\label{top-c2:l11}
+\EndFor
+\State \Return $P$
+\end{algorithmic}
 \end{algorithm}
 
 \end{document}
