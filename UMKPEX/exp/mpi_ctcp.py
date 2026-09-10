@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Heur
+#SBATCH --job-name=Both-Heur
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=48
 #SBATCH --cpus-per-task=1
@@ -122,7 +122,7 @@ def get_cmd(ds, k, br, heur, ct):
         "UMKP+": f"-algorithm UMKP+ -bounding AltRB -branching {br}",
         "kPEX": f"-branching {br}"
     }
-    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -branching {br} -ctcp {ct}"
+    cmd = f"UMKPEX {DS_LOC}/{ds}.bin {k} -branching {br} -ctcp {ct} -heuristic Both-Heur"
     return cmd.split()
 
 def canonicalize_cmd(cmd: str) -> str:
