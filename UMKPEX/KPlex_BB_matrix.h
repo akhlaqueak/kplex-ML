@@ -623,8 +623,8 @@ private:
 
 		if (S_end > lb)
 			store_solution(S_end);
-		// if (R_end > lb && is_kplex(R_end))
-		// 	store_solution(R_end);
+		if (R_end > lb && is_kplex(R_end))
+			store_solution(R_end);
 		if (R_end <= lb + 1 || lb >= _UB_)
 		{
 			// printf("here3\n");

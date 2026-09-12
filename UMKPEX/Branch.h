@@ -235,9 +235,10 @@ public:
                 IE_graph_cnt++;
                 matrix_init_time += g.init_time;
                 ptr_g = &g;
+                if (PARA.algorithm == "kPEX")
                 {
-                    // Match original kPEX: apply high-order reduction on g_i
-                    // before initializing the recursive search state.
+                    // This reduction belongs to the kPEX path. UMKP+ maintains
+                    // its own reductions inside the matrix solver.
                     Timer tt;
                     g.edge_reduction(id_u, lb);
                     higher_order_reduce_time += tt.get_time();
@@ -548,9 +549,10 @@ public:
             IE_graph_cnt++;
             matrix_init_time += g.init_time;
             ptr_g = &g;
+            if (PARA.algorithm == "kPEX")
             {
-                // Match original kPEX: apply high-order reduction on g_i
-                // before initializing the recursive search state.
+                // This reduction belongs to the kPEX path. UMKP+ maintains
+                // its own reductions inside the matrix solver.
                 Timer tt;
                 g.edge_reduction(id_u, lb);
                 higher_order_reduce_time += tt.get_time();

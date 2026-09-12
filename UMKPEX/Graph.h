@@ -1167,7 +1167,10 @@ public:
                 s.insert({d[i], i});
             }
         }
-        int ret = 2 * paramK - 2;
+        // Only use a lower bound backed by an explicitly constructed k-plex.
+        // Starting at 2K-2 can prune the graph against a solution that was
+        // never found, which makes subsequent reductions unsound.
+        int ret = paramK;
         for (auto &h : s)
         {
             ret = max(ret, sqrt_degeneracy(h.y, solution));

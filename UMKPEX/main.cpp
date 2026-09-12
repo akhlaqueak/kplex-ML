@@ -383,7 +383,6 @@ bool FastHeuris(UmkpexResult *result = nullptr)
         lb = g.sqrt_degeneracy(&solution);
         printf("sqrt lb= %d, use time %.4lf s\n", lb, t.get_time() / 1e6);
 #endif
-        lb = max(lb, 2 * paramK - 2);
         lb = max(lb, g.degeneracy_and_reduce(lb, &solution));
         printf("After degeneracy and weak reduce, n= %u , m= %u , lb= %d , use time %.4lf s\n", g.n, g.m / 2, lb, t.get_time() / 1e6);
         if (lb >= g.n)
