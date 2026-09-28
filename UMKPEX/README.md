@@ -16,6 +16,11 @@ struct path/to/graph.bin 5
 python -m struct path/to/graph.bin 5 -algorithm UMKP+ -branching Pivot-Br
 ```
 
+Available binary branching strategies:
+
+- `Binary-Br`: kPlexT branching with its reduction rules applied before branching.
+- `BinaryM-Br`: the previous minimum-degree binary branching strategy.
+
 From Python:
 
 ```python

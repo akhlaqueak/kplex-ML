@@ -87,6 +87,8 @@ Selects the branching strategy used during the search.
   * `S-Br`
   * `R-Br`
   * `SR-Br`
+  * `Binary-Br` — kPlexT branching
+  * `BinaryM-Br` — minimum-degree binary branching
 
 If an invalid value is provided, `Default-Br` is used.
 

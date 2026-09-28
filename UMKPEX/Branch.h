@@ -117,19 +117,35 @@ public:
         // select pivot to generate 2 branches
         int pivot = -1;
 
-        if (PARA.branching == "Binary-Br")
+        if (PARA.branching == "BinaryM-Br")
         {
             pivot = select_pivot_vertex_with_min_degree(C);
             if (pivot == -1)
                 return;
             generate_sub_branches(S, C, pivot);
         }
-        else if (PARA.branching == "BinaryM-Br")
+        else if (PARA.branching == "Binary-Br")
         {
-            pivot = select_pivot_vertex_binary_matrix_style(S, C);
+            // The matrix-style branching rule assumes that kPlexT RR1 and
+            // RR2 have been applied exhaustively to the current instance.
+            Timer kplext_rr_timer;
+            if (!apply_kplext_rr1_rr2(S, C, g_is_plex))
+            {
+                reduce_kPlexT_time += kplext_rr_timer.get_time();
+                return;
+            }
+            reduce_kPlexT_time += kplext_rr_timer.get_time();
+
+            if (g_is_plex)
+            {
+                update_lb(S, C);
+                return;
+            }
+
+            pivot = select_branching_vertex_kplext(S, C);
             if (pivot == -1)
                 return;
-            generate_sub_branches_add_first(S, C, pivot);
+            generate_sub_branches_kplext(S, C, pivot);
         }
         else if (PARA.branching == "Pivot-Br")
         {
@@ -801,7 +817,75 @@ public:
         return sel;
     }
 
-    int select_pivot_vertex_binary_matrix_style(Set &S, Set &C)
+    /**
+     * RR2 from kPlexT: u and every non-neighbor of u are k-satisfied in S+C.
+     * This predicate is shared with case 2 in fast_reduction().
+     */
+    bool is_kplext_rr2_vertex(int u, Set &V, Set &satisfied)
+    {
+        if (!satisfied[u])
+            return false;
+
+        int satisfied_non_neighbor = satisfied.intersect(non_A[u]) - 1;
+        int total_non_neighbor = non_A[u].intersect(V) - 1;
+        return satisfied_non_neighbor == total_non_neighbor;
+    }
+
+    /**
+     * Exhaustively apply only RR1 and RR2 from kPlexT.
+     * RR1 reuses compute_loss_cnt(); RR2 reuses the same predicate used by
+     * fast_reduction(), without running its other reduction cases.
+     */
+    bool apply_kplext_rr1_rr2(Set &S, Set &C, bool &g_is_plex)
+    {
+        while (true)
+        {
+            bool S_is_plex;
+            compute_loss_cnt(S, C, S_is_plex);
+            if (!S_is_plex)
+            {
+                g_is_plex = false;
+                return false;
+            }
+
+            auto V = S;
+            V |= C;
+            int size = V.size();
+            Set satisfied(S.range);
+            g_is_plex = true;
+
+            for (int v : V)
+            {
+                deg[v] = S.size() - loss_cnt[v] + A[v].intersect(C);
+                if (deg[v] + paramK >= size)
+                    satisfied.set(v);
+                else
+                    g_is_plex = false;
+            }
+
+            if (g_is_plex)
+                return true;
+
+            int forced_vertex = -1;
+            for (int u : C)
+            {
+                if (is_kplext_rr2_vertex(u, V, satisfied))
+                {
+                    forced_vertex = u;
+                    break;
+                }
+            }
+
+            if (forced_vertex == -1)
+                return true;
+
+            S.set(forced_vertex);
+            C.reset(forced_vertex);
+            v_just_add = forced_vertex;
+        }
+    }
+
+    int select_branching_vertex_kplext(Set &S, Set &C)
     {
         auto V = S;
         V |= C;
@@ -1198,11 +1282,8 @@ public:
                 }
                 tot_non_neighbor--;
                 // case 2: u is satisfied and all non-neighbors of u are satisfied
-                if (satisfied_non_neighbor == tot_non_neighbor)
-                {
-                    if (satisfied[u])
-                        must_include = 1;
-                }
+                if (is_kplext_rr2_vertex(u, V, satisfied))
+                    must_include = 1;
                 if (loss_cnt[u] > 0)
                     continue;
                 // case 3: deg[u]>=n-k-1 and only one non-neighbor of u is un-satisfied
@@ -1374,6 +1455,62 @@ public:
         // branch 1: remove pivot
         C.reset(pivot);
         v_just_add = -1;
+        bnb(S, C);
+    }
+
+    /**
+     * Generate the two kPlexT branches and apply RR3 to the branch that
+     * excludes pivot. If pivot has exactly one non-neighbor v in S+C and v
+     * has exactly k non-neighbors there, RR3 forces v and every non-neighbor
+     * of v other than pivot into S in the exclusion branch.
+     */
+    void generate_sub_branches_kplext(Set &S, Set &C, int pivot)
+    {
+        add_first = true;
+
+        // Compute RR3 on the parent instance. The include branch recursively
+        // reuses deg[], so the forced set must be saved before that recursion.
+        Set rr3_forced_vertices(S.range);
+        auto V = S;
+        V |= C;
+        int R_end = V.size();
+
+        auto pivot_non_neighbors = V;
+        pivot_non_neighbors &= non_A[pivot];
+        pivot_non_neighbors.reset(pivot); // non_A contains the diagonal
+
+        if (pivot_non_neighbors.size() == 1)
+        {
+            int v = *pivot_non_neighbors.begin();
+            // v has exactly k non-neighbors, excluding itself.
+            if (R_end - deg[v] == paramK + 1)
+            {
+                rr3_forced_vertices = V;
+                rr3_forced_vertices &= non_A[v];
+                rr3_forced_vertices.reset(pivot);
+                rr3_forced_vertices &= C; // vertices already in S need no move
+            }
+        }
+
+        // First branch: include pivot.
+        {
+            auto new_S = S, new_C = C;
+            new_S.set(pivot);
+            new_C.reset(pivot);
+            v_just_add = pivot;
+            bnb(new_S, new_C);
+        }
+
+        B.clear();
+
+        // Second branch: exclude pivot and apply RR3's forced inclusions.
+        C.reset(pivot);
+        for (int u : rr3_forced_vertices)
+        {
+            S.set(u);
+            C.reset(u);
+        }
+        v_just_add = rr3_forced_vertices.empty() ? -1 : *rr3_forced_vertices.begin();
         bnb(S, C);
     }
 
