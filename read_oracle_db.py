@@ -8,6 +8,14 @@ from pathlib import Path
 
 import torch
 
+try:
+    import torch_geometric  # Required by torch.load to reconstruct PyG Data objects.
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "Missing dependency: torch_geometric. Install it with:\n"
+        "  python3 -m pip install --user torch-geometric"
+    ) from exc
+
 
 DEFAULT_DB_PATH = "/home/akhlaque.ak@gmail.com/graphs/oracle"
 
@@ -18,6 +26,11 @@ def main() -> None:
     )
     parser.add_argument("db_path", nargs="?", default=DEFAULT_DB_PATH)
     parser.add_argument("--limit", type=int, default=1, help="Number of sample graphs to print.")
+    parser.add_argument(
+        "--min-nodes",
+        type=int,
+        help="List every graph with more than this many vertices instead of loading samples.",
+    )
     args = parser.parse_args()
 
     db_path = Path(args.db_path)
@@ -35,6 +48,17 @@ def main() -> None:
 
         total = conn.execute("SELECT COUNT(*) FROM rwd").fetchone()[0]
         print(f"\nGraphs: {total}")
+
+        if args.min_nodes is not None:
+            rows = conn.execute(
+                "SELECT rowid, num_nodes, domain, source "
+                "FROM rwd WHERE num_nodes > ? ORDER BY num_nodes, rowid",
+                (args.min_nodes,),
+            ).fetchall()
+            print(f"Graphs with more than {args.min_nodes} nodes: {len(rows)}")
+            for row_id, num_nodes, domain, source in rows:
+                print(f"rowid={row_id} num_nodes={num_nodes} domain={domain} source={source}")
+            return
 
         rows = conn.execute("SELECT data FROM rwd LIMIT ?", (args.limit,)).fetchall()
 
