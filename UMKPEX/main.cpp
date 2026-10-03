@@ -4,6 +4,10 @@
 #include "2th-Reduction.h"
 #include "Branch.h"
 #include <new>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <condition_variable>
 #ifdef __linux__
 #include <sched.h>
 #endif
@@ -493,6 +497,250 @@ void bnb()
     delete G;
 }
 
+struct RaceOption
+{
+    string label;
+    CommandLine para; // fully-resolved config this option's thread should run with
+};
+
+/**
+ * @brief Apply one "key=value" override onto a race option's config, validating
+ * against the same value lists CommandLine's constructor uses. framework, algorithm,
+ * branching, bounding and ctcp may all vary independently per race option because
+ * they're only consulted during the B&B phase (see Branch.h / KPlex_BB_matrix.h /
+ * 2th-Reduction.h); heuristic cannot, because by the time racing starts the shared
+ * heuristic phase has already run once, before any option-specific config exists.
+ */
+static bool apply_race_override(CommandLine &cfg, const string &key, const string &value, string &err)
+{
+    auto invalid = [&](const vector<string> &valid)
+    {
+        err = "invalid value '" + value + "' for '" + key + "'; valid: ";
+        for (auto &v : valid)
+            err += v + " ";
+        return false;
+    };
+    if (key == "framework")
+    {
+        auto valid = CommandLine::valid_frameworks();
+        if (find(valid.begin(), valid.end(), value) == valid.end())
+            return invalid(valid);
+        cfg.framework = value;
+    }
+    else if (key == "algorithm")
+    {
+        auto valid = CommandLine::valid_algorithms();
+        if (find(valid.begin(), valid.end(), value) == valid.end())
+            return invalid(valid);
+        cfg.algorithm = value;
+    }
+    else if (key == "branching")
+    {
+        auto valid = CommandLine::valid_branchings();
+        if (find(valid.begin(), valid.end(), value) == valid.end())
+            return invalid(valid);
+        cfg.branching = value;
+    }
+    else if (key == "bounding")
+    {
+        auto valid = CommandLine::valid_boundings();
+        if (find(valid.begin(), valid.end(), value) == valid.end())
+            return invalid(valid);
+        cfg.bounding = value;
+    }
+    else if (key == "ctcp")
+    {
+        auto valid = CommandLine::valid_ctcp_methods();
+        if (find(valid.begin(), valid.end(), value) == valid.end())
+            return invalid(valid);
+        cfg.ctcp = value;
+    }
+    else if (key == "UBR2")
+    {
+        cfg.UBR2 = (value == "true");
+    }
+    else if (key == "heuristic")
+    {
+        err = "'heuristic' can't be raced: the heuristic phase already ran once, "
+              "in common, before any race option exists";
+        return false;
+    }
+    else
+    {
+        err = "unknown race key '" + key + "' (valid: framework, algorithm, branching, bounding, ctcp, UBR2)";
+        return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Parse a -race spec into fully-resolved per-option configs.
+ *
+ * Format: options separated by ';', each an optional "label:" followed by
+ * comma-separated "key=value" overrides layered onto the already-parsed, shared
+ * `base` config, e.g.:
+ *   -race "fast:framework=oriented,branching=Pivot-Br;exhaustive:framework=default,branching=S-Br"
+ * A bare value list without '=' (as previously supported by -race-framework) still
+ * works as shorthand for "framework=<value>", e.g. "-race default;oriented".
+ */
+static vector<RaceOption> parse_race_options(const string &spec, const CommandLine &base)
+{
+    vector<RaceOption> options;
+    if (spec.empty())
+        return options;
+
+    vector<string> tokens;
+    {
+        stringstream ss(spec);
+        string tok;
+        while (getline(ss, tok, ';'))
+            if (!tok.empty())
+                tokens.push_back(tok);
+    }
+
+    int auto_idx = 0;
+    for (auto &tok : tokens)
+    {
+        string label, body;
+        size_t colon = tok.find(':');
+        size_t eq = tok.find('=');
+        if (colon != string::npos && (eq == string::npos || colon < eq))
+        {
+            label = tok.substr(0, colon);
+            body = tok.substr(colon + 1);
+        }
+        else
+        {
+            body = tok;
+        }
+        if (label.empty())
+            label = "option" + to_string(auto_idx);
+        auto_idx++;
+
+        CommandLine cfg = base;
+        bool ok = true;
+        if (body.find('=') == string::npos)
+        {
+            // shorthand: a bare value means framework=<value>
+            string err;
+            if (!apply_race_override(cfg, "framework", body, err))
+            {
+                printf("Race option '%s': %s\n", label.c_str(), err.c_str());
+                ok = false;
+            }
+        }
+        else
+        {
+            stringstream bs(body);
+            string kv;
+            while (getline(bs, kv, ','))
+            {
+                if (kv.empty())
+                    continue;
+                size_t kv_eq = kv.find('=');
+                if (kv_eq == string::npos)
+                {
+                    printf("Race option '%s': ignoring malformed override '%s' (expected key=value)\n",
+                           label.c_str(), kv.c_str());
+                    continue;
+                }
+                string key = kv.substr(0, kv_eq), value = kv.substr(kv_eq + 1);
+                string err;
+                if (!apply_race_override(cfg, key, value, err))
+                {
+                    printf("Race option '%s': %s\n", label.c_str(), err.c_str());
+                    ok = false;
+                }
+            }
+        }
+        if (ok)
+            options.push_back({label, cfg});
+    }
+
+    if (options.size() < 2)
+    {
+        if (!options.empty())
+            printf("-race needs at least 2 valid options to race; ignoring\n");
+        options.clear();
+    }
+    return options;
+}
+
+/**
+ * @brief Race several fully-independent configs (any mix of framework, algorithm,
+ * branching, bounding, ctcp) in parallel threads on independent copies of the
+ * already-preprocessed graph `g`. Each thread sets its own thread_local PARA before
+ * doing anything else, so one thread's "Adaptive-Br" resolution or bounding/branching
+ * choice can never be observed by another. Since all options solve the identical
+ * exact problem to completion, whichever thread finishes first has the proven-optimal
+ * answer: the others are signalled to abort (via Branch::stop_flag, checked at every
+ * search-tree node) and joined before the parent reports the winner's result.
+ */
+void run_parallel_bnb(const vector<RaceOption> &options)
+{
+    int n_opt = (int)options.size();
+    vector<set<ui>> outcomes(n_opt);
+    atomic<bool> stop_flag(false);
+    atomic<int> winner(-1);
+    mutex done_mutex;
+    condition_variable done_cv;
+    set<ui> heur_solution_snapshot = solution; // heuristic's answer, same for every option
+
+    vector<thread> workers;
+    for (int i = 0; i < n_opt; i++)
+    {
+        workers.emplace_back([&, i]()
+        {
+            PARA = options[i].para; // this thread's own thread_local PARA, independent of all others
+
+            Graph_reduced *G = new Graph_reduced_adjacent_list(g);
+            Branch branch(*G, lb);
+            branch.verbose = false;
+            branch.stop_flag = &stop_flag;
+
+            if (PARA.framework == "oriented")
+                branch.IE_framework_oriented();
+            else
+                branch.IE_framework();
+            delete G;
+
+            if (stop_flag.load(memory_order_relaxed))
+                return; // another option already won; this search was aborted mid-way
+
+            set<ui> final_solution = heur_solution_snapshot;
+            if (branch.solution.size() > final_solution.size())
+            {
+                final_solution.clear();
+                for (int v : branch.solution)
+                    final_solution.insert(v);
+            }
+            outcomes[i] = final_solution;
+
+            int expected = -1;
+            if (winner.compare_exchange_strong(expected, i))
+            {
+                stop_flag.store(true, memory_order_relaxed);
+                lock_guard<mutex> lk(done_mutex);
+                done_cv.notify_all();
+            }
+        });
+    }
+
+    {
+        unique_lock<mutex> lk(done_mutex);
+        done_cv.wait(lk, [&] { return winner.load(memory_order_relaxed) != -1; });
+    }
+    for (auto &t : workers)
+        t.join();
+
+    int w = winner.load();
+    const CommandLine &won = options[w].para;
+    printf("Race winner: '%s' (framework=%s algorithm=%s branching=%s bounding=%s ctcp=%s) out of %d options\n",
+           options[w].label.c_str(), won.framework.c_str(), won.algorithm.c_str(),
+           won.branching.c_str(), won.bounding.c_str(), won.ctcp.c_str(), n_opt);
+    solution = outcomes[w];
+}
+
 int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
 {
     reset_solver_state();
@@ -520,7 +768,11 @@ int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
     ui heur_size = solution.size();
     puts("------------------{start BRB_Rec}---------------------");
     Timer bnb_timer;
-    bnb();
+    vector<RaceOption> race_options = parse_race_options(PARA.race, PARA);
+    if (!race_options.empty())
+        run_parallel_bnb(race_options);
+    else
+        bnb();
 
     print_solution();
 

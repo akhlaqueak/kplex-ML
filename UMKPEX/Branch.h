@@ -1,7 +1,10 @@
 #ifndef BRANCH_H
 #define BRANCH_H
-double after_maxkp_time;
-double reduce_kPlexT_time_matrix = 0;
+#include <atomic>
+// thread_local: written during the search itself (see Branch::update_lb below), so
+// concurrent racer threads (run_parallel_bnb in main.cpp) must not share one instance.
+thread_local double after_maxkp_time;
+thread_local double reduce_kPlexT_time_matrix = 0;
 
 class Branch
 {
@@ -53,6 +56,14 @@ private:
 
 public:
     set<int> solution;
+    // Set by run_parallel_bnb (main.cpp) when racing several configs in parallel threads:
+    // stop_flag lets a losing thread's search notice another thread already won and
+    // unwind cooperatively (std::thread has no safe preemptive kill); verbose=false
+    // silences this instance's diagnostic printing (never the correctness-critical
+    // vertex-id translation in print_result/update_lb) so only the winner's summary
+    // is printed.
+    std::atomic<bool> *stop_flag = nullptr;
+    bool verbose = true;
     Branch(Graph_reduced &input, int _lb) : G_input(input), lb(_lb), bool_array(input.n),
                                             run_time(0), fast_reduce_time(0), core_reduce_time(0),
                                             part_PI_time(0), IE_induce_time(0),
@@ -72,6 +83,8 @@ public:
      */
     void bnb(Set &S, Set &C)
     {
+        if (stop_flag && stop_flag->load(std::memory_order_relaxed))
+            return;
         dfs_cnt++;
         // reduction rules
         Timer start_fast_reduce;
@@ -221,6 +234,8 @@ public:
         edges.reserve(G_input.m);
         while (G_input.size() > lb)
         {
+            if (stop_flag && stop_flag->load(std::memory_order_relaxed))
+                break;
             double percentage = 1.0 - G_input.size() * 1.0 / G_input.n;
             print_progress_bar(percentage);
 
@@ -528,6 +543,8 @@ public:
         int processed = 0;
         for (int u = G_input.n - 1; u >= 0; u--)
         {
+            if (stop_flag && stop_flag->load(std::memory_order_relaxed))
+                break;
             if (!G_input.vertex[u])
                 continue;
             processed++;
@@ -995,39 +1012,45 @@ public:
      */
     void print_result()
     {
-        printf("dfs_cnt= %lld\n", dfs_cnt);
-        print_module_time("fast reduce", fast_reduce_time);
-        print_module_time("partition", part_PI_time);
-        print_module_time("core reduce", core_reduce_time);
-        print_module_time("IE induce", IE_induce_time);
-        puts("");
-        print_module_time("matrix init", matrix_init_time);
-        print_module_time("CTCP", CTCP_time);
-        print_module_time("CTCP init", CTCP_init_time);
-        print_module_time("CTCP remove_v", CTCP_remove_v_time);
-        print_module_time("CTCP lb_update", CTCP_lb_update_time);
-        print_module_time("high-order-reduce", higher_order_reduce_time);
-        print_module_time("reduce-kPlexT", reduce_kPlexT_time + reduce_kPlexT_time_matrix);
-        puts("");
-        double avg_gi_size = IE_graph_cnt ? (IE_graph_size * 1.0 / IE_graph_cnt) : 0.0;
-        printf("avg_gi_size: %.2lf ", avg_gi_size);
-        printf("gi_pruned: %lld gi_searched: %lld ", subgraph_pruned_cnt, subgraph_search_cnt);
-        printf("AltRB_count: %lld ", AltRB_cnt);
-        printf("AltRB_iteration_count: %lld ", AltRB_iteration_cnt);
-        double avg_altrb_iter = AltRB_cnt ? (AltRB_iteration_cnt * 1.0 / AltRB_cnt) : 0.0;
-        printf("avg_AltRB_iteration: %.2lf", avg_altrb_iter);
-        puts("");
-        puts("*************bnb result*************");
-        printf("ground truth= %d , exact searching use time= %.4lf s\n", lb, run_time / 1e6);
+        if (verbose)
+        {
+            printf("dfs_cnt= %lld\n", dfs_cnt);
+            print_module_time("fast reduce", fast_reduce_time);
+            print_module_time("partition", part_PI_time);
+            print_module_time("core reduce", core_reduce_time);
+            print_module_time("IE induce", IE_induce_time);
+            puts("");
+            print_module_time("matrix init", matrix_init_time);
+            print_module_time("CTCP", CTCP_time);
+            print_module_time("CTCP init", CTCP_init_time);
+            print_module_time("CTCP remove_v", CTCP_remove_v_time);
+            print_module_time("CTCP lb_update", CTCP_lb_update_time);
+            print_module_time("high-order-reduce", higher_order_reduce_time);
+            print_module_time("reduce-kPlexT", reduce_kPlexT_time + reduce_kPlexT_time_matrix);
+            puts("");
+            double avg_gi_size = IE_graph_cnt ? (IE_graph_size * 1.0 / IE_graph_cnt) : 0.0;
+            printf("avg_gi_size: %.2lf ", avg_gi_size);
+            printf("gi_pruned: %lld gi_searched: %lld ", subgraph_pruned_cnt, subgraph_search_cnt);
+            printf("AltRB_count: %lld ", AltRB_cnt);
+            printf("AltRB_iteration_count: %lld ", AltRB_iteration_cnt);
+            double avg_altrb_iter = AltRB_cnt ? (AltRB_iteration_cnt * 1.0 / AltRB_cnt) : 0.0;
+            printf("avg_AltRB_iteration: %.2lf", avg_altrb_iter);
+            puts("");
+            puts("*************bnb result*************");
+            printf("ground truth= %d , exact searching use time= %.4lf s\n", lb, run_time / 1e6);
+        }
+        // id-translation below is load-bearing (not just logging), so it always runs,
+        // even when verbose==false during a parallel race (see run_parallel_bnb).
         if (solution.size())
         {
             G_input.get_ground_truth(solution, true);
             assert(solution.size() == lb);
         }
-        else
+        else if (verbose)
             printf("The heuristic solution is the ground truth!\n");
-        for (auto &h : counter)
-            cout << h.x << ' ' << h.y << endl;
+        if (verbose)
+            for (auto &h : counter)
+                cout << h.x << ' ' << h.y << endl;
     }
     /**
      * @brief init information for the induced graph of IE
@@ -1138,8 +1161,11 @@ public:
                 solution.insert(v);
             solution = ptr_g->get_ori_vertices(solution);
             assert(solution.size() == lb);
-            printf("Find a larger plex : %d\n", sz);
-            fflush(stdout);
+            if (verbose)
+            {
+                printf("Find a larger plex : %d\n", sz);
+                fflush(stdout);
+            }
         }
     }
     /**
@@ -1158,8 +1184,11 @@ public:
                 solution.insert(v);
             solution = ptr_g->get_ori_vertices(solution);
             assert(solution.size() == lb);
-            printf("Find a larger plex : %d\n", sz);
-            fflush(stdout);
+            if (verbose)
+            {
+                printf("Find a larger plex : %d\n", sz);
+                fflush(stdout);
+            }
             after_maxkp_time = get_system_time_microsecond();
         }
     }

@@ -4,9 +4,11 @@
 #include "Utility.h"
 #include "Graph.h"
 // #define _SECOND_ORDER_PRUNING_
-extern double reduce_kPlexT_time_matrix;
+// thread_local: written per search run; see run_parallel_bnb in main.cpp, which runs
+// multiple searches concurrently in separate threads and must not race on these.
+extern thread_local double reduce_kPlexT_time_matrix;
 ui altrb_cnt = 0;
-ll dfs_cnt = 0;
+thread_local ll dfs_cnt = 0;
 
 #define CSIZE (R_end - S_end)
 class KPLEX_BB_MATRIX

@@ -8,7 +8,8 @@ ext_modules = [
         ["python/struct/_core.cpp"],
         include_dirs=["."],
         cxx_std=11,
-        extra_compile_args=["-O3", "-w", "-DNO_PROGRESS_BAR", "-DNDEBUG"],
+        extra_compile_args=["-O3", "-w", "-pthread", "-DNO_PROGRESS_BAR", "-DNDEBUG"],
+        extra_link_args=["-pthread"],
     )
 ]
 
