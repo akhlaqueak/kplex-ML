@@ -1,0 +1,29 @@
+{
+  "kPEX-S-bnb": {"algorithm": "kPEX","branching": "S-Br"},
+  "kPEX-R-bnb": {"algorithm": "kPEX","branching": "R-Br"},
+  "kPEX-P-bnb": {"algorithm": "kPEX","branching": "Pivot-Br"},
+  "kPEX-B-bnb": {"algorithm": "kPEX","branching": "Binary-Br"},
+  "kPEX-oriented-S-bnb": {"algorithm": "kPEX","framework": "oriented","branching": "S-Br"},
+  "kPEX-oriented-R-bnb": {"algorithm": "kPEX","framework": "oriented","branching": "R-Br"},
+  "kPEX-oriented-P-bnb": {"algorithm": "kPEX","framework": "oriented","branching": "Pivot-Br"},
+  "kPEX-oriented-B-bnb": {"algorithm": "kPEX","framework": "oriented","branching": "Binary-Br"},
+  
+  "UMKP-S-bnb": {"algorithm": "UMKP+","bounding": "None","branching": "S-Br"},
+  "UMKP-R-bnb": {"algorithm": "UMKP+","bounding": "None","branching": "R-Br"},
+  "UMKP-P-bnb": {"algorithm": "UMKP+","bounding": "None","branching": "Pivot-Br"},
+  "UMKP-B-bnb": {"algorithm": "UMKP+","bounding": "None","branching": "Binary-Br"},
+  "UMKP-oriented-S-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "None","branching": "S-Br"},
+  "UMKP-oriented-R-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "None","branching": "R-Br"},
+  "UMKP-oriented-P-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "None","branching": "Pivot-Br"},
+  "UMKP-oriented-B-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "None","branching": "Binary-Br"},
+  
+  "UMKP+-S-bnb": {"algorithm": "UMKP+","bounding": "AltRB","branching": "S-Br"},
+  "UMKP+-R-bnb": {"algorithm": "UMKP+","bounding": "AltRB","branching": "R-Br"},
+  "UMKP+-P-bnb": {"algorithm": "UMKP+","bounding": "AltRB","branching": "Pivot-Br"},
+  "UMKP+-B-bnb": {"algorithm": "UMKP+","bounding": "AltRB","branching": "Binary-Br"},
+  "UMKP+-oriented-S-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "AltRB","branching": "S-Br"},
+  "UMKP+-oriented-R-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "AltRB","branching": "R-Br"},
+  "UMKP+-oriented-P-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "AltRB","branching": "Pivot-Br"},
+  "UMKP+-oriented-B-bnb": {"framework": "oriented","algorithm": "UMKP+","bounding": "AltRB","branching": "Binary-Br"}
+}
+

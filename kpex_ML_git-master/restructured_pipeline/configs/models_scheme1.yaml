@@ -1,0 +1,134 @@
+scheme1:
+  shared:
+    scheme_name: scheme1
+    target_type: flat_multiclass
+    target_column: target
+    algorithms_ref: project.targets.scheme1.algorithms
+    feature_cols_ref: project.features.feature_cols
+    sample_weight_col: weight
+    use_sample_weight: true
+    class_weight: null
+    calibration:
+      enabled: false
+      method: sigmoid
+      cv: 5
+    routing:
+      tau: null
+
+  random_forest:
+    model_type: RandomForestClassifier
+    defaults:
+      class_weight: balanced
+      use_sample_weight: true
+      calibration:
+        enabled: false
+        method: sigmoid
+        cv: 5
+      routing:
+        tau: null
+    variants:
+      rf_strat_y:
+        split_mode: strat_y
+        holdout_mode: without_holdout
+        fit_intermediate_name: rf_strat_y
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 20
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+      rf_strat_y_K:
+        split_mode: strat_y_K
+        holdout_mode: without_holdout
+        fit_intermediate_name: rf_strat_y_K
+        hyperparameters:
+          n_estimators: 400
+          max_depth: 20
+          min_samples_split: 2
+          class_weight: balanced
+          random_state: 42
+      rf_holdout_strat_y:
+        split_mode: strat_y
+        holdout_mode: with_holdout
+        fit_intermediate_name: rf_holdout_strat_y
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 20
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+      rf_holdout_strat_y_K:
+        split_mode: strat_y_K
+        holdout_mode: with_holdout
+        fit_intermediate_name: rf_holdout_strat_y_K
+        hyperparameters:
+          n_estimators: 400
+          max_depth: 20
+          min_samples_split: 2
+          class_weight: balanced
+          random_state: 42
+
+  xgboost:
+    model_type: XGBClassifier
+    defaults:
+      objective: multi:softprob
+      use_label_encoder: false
+      use_sample_weight: true
+      label_encoding: true
+      calibration:
+        enabled: false
+        method: sigmoid
+        cv: 5
+      routing:
+        tau: null
+    variants:
+      xgb_strat_y:
+        split_mode: strat_y
+        holdout_mode: without_holdout
+        fit_intermediate_name: xgb_strat_y
+        hyperparameters:
+          objective: multi:softprob
+          num_class: 24
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+      xgb_strat_y_K:
+        split_mode: strat_y_K
+        holdout_mode: without_holdout
+        fit_intermediate_name: xgb_strat_y_K
+        hyperparameters:
+          objective: multi:softprob
+          num_class: 24
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+      xgb_holdout_strat_y:
+        split_mode: strat_y
+        holdout_mode: with_holdout
+        fit_intermediate_name: xgb_holdout_strat_y
+        hyperparameters:
+          objective: multi:softprob
+          num_class: 24
+          n_estimators: 200
+          max_depth: 10
+          learning_rate: 0.1
+          use_label_encoder: false
+          random_state: 42
+      xgb_holdout_strat_y_K:
+        split_mode: strat_y_K
+        holdout_mode: with_holdout
+        fit_intermediate_name: xgb_holdout_strat_y_K
+        hyperparameters:
+          objective: multi:softprob
+          num_class: 24
+          n_estimators: 150
+          max_depth: 15
+          learning_rate: 0.75
+          use_label_encoder: false
+          random_state: 42

@@ -3,11 +3,14 @@
 #include "KPlex_BB_matrix.h"
 #include "2th-Reduction.h"
 #include "Branch.h"
+#include "MLPredictor.h"
+#include "MLAlgoConfig.h"
 #include <new>
 #include <thread>
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 #ifdef __linux__
 #include <sched.h>
 #endif
@@ -675,8 +678,18 @@ static vector<RaceOption> parse_race_options(const string &spec, const CommandLi
  * exact problem to completion, whichever thread finishes first has the proven-optimal
  * answer: the others are signalled to abort (via Branch::stop_flag, checked at every
  * search-tree node) and joined before the parent reports the winner's result.
+ *
+ * `options` may hold more entries than are meant to run at once: if `batch_size` is
+ * positive and smaller than options.size(), only the first `batch_size` options are
+ * started immediately. If none of the running options has won after
+ * `escalate_timeout_sec` seconds, the next `batch_size` options are started alongside
+ * the still-running ones (they all share the same stop_flag/winner, so late starters
+ * race the earlier ones exactly as if they'd all started together); this repeats until
+ * a winner is found or `options` is exhausted, at which point the wait becomes
+ * unbounded. batch_size == 0 (or >= options.size()) starts every option immediately,
+ * matching the original non-escalating behavior used by manual -race specs.
  */
-void run_parallel_bnb(const vector<RaceOption> &options)
+void run_parallel_bnb(const vector<RaceOption> &options, size_t batch_size = 0, int escalate_timeout_sec = 0)
 {
     int n_opt = (int)options.size();
     vector<set<ui>> outcomes(n_opt);
@@ -687,7 +700,7 @@ void run_parallel_bnb(const vector<RaceOption> &options)
     set<ui> heur_solution_snapshot = solution; // heuristic's answer, same for every option
 
     vector<thread> workers;
-    for (int i = 0; i < n_opt; i++)
+    auto launch = [&](int i)
     {
         workers.emplace_back([&, i]()
         {
@@ -724,10 +737,37 @@ void run_parallel_bnb(const vector<RaceOption> &options)
                 done_cv.notify_all();
             }
         });
-    }
+    };
+
+    auto announce_and_launch = [&](int from, int to)
+    {
+        printf("Race: starting %d option(s):", to - from);
+        for (int i = from; i < to; i++)
+            printf(" '%s'", options[i].label.c_str());
+        printf("\n");
+        for (int i = from; i < to; i++)
+            launch(i);
+    };
+
+    size_t round_size = (batch_size == 0 || batch_size >= (size_t)n_opt) ? (size_t)n_opt : batch_size;
+    int launched = 0;
+    announce_and_launch(launched, (int)round_size);
+    launched = (int)round_size;
 
     {
         unique_lock<mutex> lk(done_mutex);
+        while (winner.load(memory_order_relaxed) == -1 && launched < n_opt)
+        {
+            if (done_cv.wait_for(lk, chrono::seconds(escalate_timeout_sec),
+                                  [&] { return winner.load(memory_order_relaxed) != -1; }))
+                break; // a winner showed up during this round
+
+            int round_end = min(n_opt, launched + (int)round_size);
+            printf("ML race: no winner after %ds with %d option(s) running -- adding %d more\n",
+                   escalate_timeout_sec, launched, round_end - launched);
+            announce_and_launch(launched, round_end);
+            launched = round_end;
+        }
         done_cv.wait(lk, [&] { return winner.load(memory_order_relaxed) != -1; });
     }
     for (auto &t : workers)
@@ -735,11 +775,80 @@ void run_parallel_bnb(const vector<RaceOption> &options)
 
     int w = winner.load();
     const CommandLine &won = options[w].para;
-    printf("Race winner: '%s' (framework=%s algorithm=%s branching=%s bounding=%s ctcp=%s) out of %d options\n",
+    printf("Race winner: '%s' (framework=%s algorithm=%s branching=%s bounding=%s ctcp=%s) out of %d option(s) started (of %d total)\n",
            options[w].label.c_str(), won.framework.c_str(), won.algorithm.c_str(),
-           won.branching.c_str(), won.bounding.c_str(), won.ctcp.c_str(), n_opt);
+           won.branching.c_str(), won.bounding.c_str(), won.ctcp.c_str(), launched, n_opt);
     solution = outcomes[w];
 }
+
+#ifdef USE_ML_PREDICTOR
+
+/**
+ * @brief Per-label CommandLine overrides, reusing the same "key=value" override
+ * mechanism -race uses (apply_race_override above). The actual mapping table lives
+ * in MLAlgoConfig.h -- edit that file, not this one, to fill in per-algorithm configs.
+ */
+static CommandLine ml_label_to_commandline(const string &label, const CommandLine &base)
+{
+    CommandLine cfg = base;
+    const auto &overrides_table = load_ml_algo_config(base.ml_algo_config_path);
+    auto it = overrides_table.find(label);
+    if (it == overrides_table.end())
+    {
+        printf("ML predictor: unrecognized algorithm label '%s', falling back to base config\n", label.c_str());
+        return cfg;
+    }
+    for (auto &kv : it->second)
+    {
+        string err;
+        if (!apply_race_override(cfg, kv.first, kv.second, err))
+            printf("ML predictor: label '%s': %s\n", label.c_str(), err.c_str());
+    }
+    return cfg;
+}
+
+/**
+ * @brief Build race options from the saved model's full ranking of algorithms for the
+ * current, already-preprocessed graph `g` -- the ML-driven alternative to a manual
+ * -race spec. Returns every rankable algorithm (not just one batch): run_parallel_bnb
+ * is the one that decides, via base.ml_batch_size/ml_escalate_timeout_sec, how many of
+ * these to start at once and when to add more.
+ */
+static vector<RaceOption> build_ml_race_options(const Graph &graph, int paramK_, const CommandLine &base)
+{
+    vector<RaceOption> options;
+    try
+    {
+        GraphMLFeatures feats = extract_ml_features(graph, paramK_);
+        printf("ML predictor: features n=%.0f m=%.0f d_avg=%.3f d_max=%.0f core_max=%.0f core_min=%.0f "
+               "shell_num=%.0f shell_avgSize=%.2f shell_maxSize=%.0f shell_minSize=%.0f shell_stdSize=%.2f\n",
+               feats.n, feats.m, feats.d_avg, feats.d_max, feats.core_max, feats.core_min,
+               feats.shell_num, feats.shell_avgSize, feats.shell_maxSize, feats.shell_minSize, feats.shell_stdSize);
+
+        Scheme1Predictor &predictor = Scheme1Predictor::instance(base.ml_model_path, base.ml_meta_path);
+        auto ranked = predictor.predict_ranked(feats);
+
+        for (auto &pr : ranked)
+        {
+            printf("ML predictor: candidate '%s' prob=%.4f\n", pr.first.c_str(), pr.second);
+            options.push_back({pr.first, ml_label_to_commandline(pr.first, base)});
+        }
+    }
+    catch (const std::exception &e)
+    {
+        printf("ML predictor: %s -- falling back to single bnb()\n", e.what());
+        return {};
+    }
+
+    if (options.size() < 2)
+    {
+        printf("ML predictor: fewer than 2 usable race options, falling back to single bnb()\n");
+        options.clear();
+    }
+    return options;
+}
+
+#endif // USE_ML_PREDICTOR
 
 int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
 {
@@ -769,8 +878,25 @@ int run_umkpex_solver(int argc, char *argv[], UmkpexResult *result = nullptr)
     puts("------------------{start BRB_Rec}---------------------");
     Timer bnb_timer;
     vector<RaceOption> race_options = parse_race_options(PARA.race, PARA);
+    bool ml_race_active = false;
+#ifdef USE_ML_PREDICTOR
+    if (race_options.empty() && PARA.ml_race)
+    {
+        race_options = build_ml_race_options(g, paramK, PARA);
+        ml_race_active = !race_options.empty();
+    }
+#else
+    if (PARA.ml_race)
+        printf("Warning: -ml-race requested but this binary was built without ML support "
+               "(build with `make ml`; see makefile and MLPredictor.h). Falling back to single bnb().\n");
+#endif
     if (!race_options.empty())
-        run_parallel_bnb(race_options);
+    {
+        if (ml_race_active)
+            run_parallel_bnb(race_options, (size_t)PARA.ml_batch_size, PARA.ml_escalate_timeout_sec);
+        else
+            run_parallel_bnb(race_options);
+    }
     else
         bnb();
 

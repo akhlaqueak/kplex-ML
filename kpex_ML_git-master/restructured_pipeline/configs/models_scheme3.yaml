@@ -1,0 +1,173 @@
+# Scheme 3 is scaffolded only in this pass.
+# This file reserves stable config names and interfaces for later implementation.
+
+scheme3:
+  shared:
+    scheme_name: scheme3
+    hierarchy_name: hier3
+    target_columns_ref: project.targets.scheme3.target_columns
+    feature_cols_ref: project.features.feature_cols
+    use_sample_weight: true
+    calibration:
+      enabled: false
+      method: sigmoid
+      cv: 5
+    routing:
+      tau: null
+      tau_group: 0.0
+      tau_sparse: 0.0
+      tau_orientation: 0.0
+      tau_router: 0.0
+    fallback_label: SAFE_DEFAULT_ALGO
+    stage_weight_columns:
+      group: weight_group
+      sparse_subgroup: weight_sparse_subgroup
+      orientation: weight_orientation
+      router4: weight_router4
+
+  random_forest:
+    model_type: HierarchicalClassifier3
+    base_estimator_type: RandomForestClassifier
+    defaults:
+      use_sample_weight: true
+      class_weight: balanced
+      calibration:
+        enabled: false
+        method: sigmoid
+        cv: 5
+      routing:
+        tau: null
+        tau_group: 0.0
+        tau_sparse: 0.0
+        tau_orientation: 0.0
+        tau_router: 0.0
+      fallback_label: SAFE_DEFAULT_ALGO
+    stages:
+      group_clf:
+        stage_name: stage_1
+        estimator_name: group_clf
+        hyperparameters:
+          n_estimators: 300
+          max_depth: 10
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+        sample_weight_col: weight_group
+      sparse_subgroup_clf:
+        stage_name: stage_2
+        estimator_name: sparse_subgroup_clf
+        hyperparameters:
+          n_estimators: 300
+          max_depth: 10
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+        sample_weight_col: weight_sparse_subgroup
+      orientation_clf:
+        stage_name: stage_3
+        estimator_name: orientation_clf
+        hyperparameters:
+          n_estimators: 300
+          max_depth: 10
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+        sample_weight_col: weight_orientation
+      router4_clf:
+        estimator_name: router4_clf
+        hyperparameters:
+          n_estimators: 300
+          max_depth: 8
+          min_samples_split: 4
+          class_weight: balanced
+          random_state: 42
+        sample_weight_col: weight_router4
+    stage_wise_parameters:
+      tau_group: 0.0
+      tau_sparse: 0.0
+      tau_router: 0.0
+      tau_orientation: 0.0
+      fallback_label: SAFE_DEFAULT_ALGO
+
+  xgboost:
+    model_type: HierarchicalClassifier3
+    base_estimator_type: XGBClassifier
+    defaults:
+      use_sample_weight: true
+      label_encoding: true
+      use_label_encoder: false
+      calibration:
+        enabled: false
+        method: sigmoid
+        cv: 5
+      routing:
+        tau: null
+        tau_group: 0.0
+        tau_sparse: 0.0
+        tau_orientation: 0.0
+        tau_router: 0.0
+      fallback_label: SAFE_DEFAULT_ALGO
+    stages:
+      group_clf:
+        stage_name: stage_1
+        estimator_name: group_clf
+        hyperparameters:
+          objective: binary:logistic
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+        sample_weight_col: weight_group
+      sparse_subgroup_clf:
+        stage_name: stage_2
+        estimator_name: sparse_subgroup_clf
+        hyperparameters:
+          objective: binary:logistic
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+        sample_weight_col: weight_sparse_subgroup
+      orientation_clf:
+        stage_name: stage_3
+        estimator_name: orientation_clf
+        hyperparameters:
+          objective: binary:logistic
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+        sample_weight_col: weight_orientation
+      router4_clf:
+        stage_name: stage_4
+      router4_clf:
+        stage_name: stage_4
+        estimator_name: router4_clf
+        hyperparameters:
+          objective: multi:softprob
+          num_class: 4
+          n_estimators: 400
+          max_depth: 10
+          learning_rate: 0.1
+          subsample: 0.8
+          use_label_encoder: false
+          random_state: 42
+        sample_weight_col: weight_router4
+    encoders:
+      le_group: LabelEncoder
+      le_sparse: LabelEncoder
+      le_orientation: LabelEncoder
+      le_router: LabelEncoder
+      le_algo: LabelEncoder
+    stage_wise_parameters:
+      tau_group: 0.0
+      tau_sparse: 0.0
+      tau_orientation: 0.0
+      tau_router: 0.0
+      fallback_label: SAFE_DEFAULT_ALGO

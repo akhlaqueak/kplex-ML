@@ -1,0 +1,87 @@
+scheme5:
+  shared:
+    sample_weight_col: weight
+
+  b:
+    random_forest:
+      variants:
+        rf_strat_y:
+          split_mode: strat_y
+          hyperparameters:
+            n_estimators: 200
+            max_depth: 20
+            min_samples_split: 4
+            class_weight: balanced
+            random_state: 42
+        rf_strat_y_K:
+          split_mode: strat_y_K
+          hyperparameters:
+            n_estimators: 400
+            max_depth: 20
+            min_samples_split: 2
+            class_weight: balanced
+            random_state: 42
+    xgboost:
+      variants:
+        xgb_strat_y:
+          split_mode: strat_y
+          hyperparameters:
+            objective: multi:softprob
+            n_estimators: 400
+            max_depth: 10
+            learning_rate: 0.1
+            subsample: 0.8
+            use_label_encoder: false
+            random_state: 42
+        xgb_strat_y_K:
+          split_mode: strat_y_K
+          hyperparameters:
+            objective: multi:softprob
+            n_estimators: 400
+            max_depth: 10
+            learning_rate: 0.1
+            subsample: 0.8
+            use_label_encoder: false
+            random_state: 42
+
+  other:
+    random_forest:
+      variants:
+        rf_strat_y:
+          split_mode: strat_y
+          hyperparameters:
+            n_estimators: 200
+            max_depth: 20
+            min_samples_split: 4
+            class_weight: balanced
+            random_state: 42
+        rf_strat_y_K:
+          split_mode: strat_y_K
+          hyperparameters:
+            n_estimators: 400
+            max_depth: 20
+            min_samples_split: 2
+            class_weight: balanced
+            random_state: 42
+    xgboost:
+      variants:
+        xgb_strat_y:
+          split_mode: strat_y
+          hyperparameters:
+            objective: multi:softprob
+            n_estimators: 400
+            max_depth: 10
+            learning_rate: 0.1
+            subsample: 0.8
+            use_label_encoder: false
+            random_state: 42
+        xgb_strat_y_K:
+          split_mode: strat_y_K
+          hyperparameters:
+            objective: multi:softprob
+            n_estimators: 400
+            max_depth: 10
+            learning_rate: 0.1
+            subsample: 0.8
+            use_label_encoder: false
+            random_state: 42

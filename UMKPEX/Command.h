@@ -6,6 +6,22 @@ public:
 	string branching, bounding, algorithm, ctcp, heuristic, framework;
 	string race; // raw -race spec (parsed by parse_race_options in main.cpp); empty = no racing
 	bool UBR2;
+
+	// ML-driven racing (see build_ml_race_options/run_parallel_bnb in main.cpp): instead
+	// of a manual -race spec, rank all algorithms for the preprocessed graph with the
+	// saved Scheme 1 XGBoost model and race the top ml_batch_size of them. If none of
+	// those finishes within ml_escalate_timeout_sec, the next ml_batch_size-ranked
+	// algorithms are added to the still-running race (so e.g. batch size 3 means 3
+	// options race first, growing to 6 after one escalation, 9 after two, etc., until a
+	// winner is found or predictions run out). Ignored if -race is also given (explicit
+	// -race always wins), and a no-op unless this binary was built with
+	// -DUSE_ML_PREDICTOR (see makefile's `ml` target).
+	bool ml_race;
+	string ml_model_path;       // exported booster, e.g. from export_xgb_booster.py's model.json
+	string ml_meta_path;        // exported model_meta.txt (class labels + feature order)
+	string ml_algo_config_path; // ml_algo_config.json: per-label CommandLine overrides
+	int ml_batch_size;          // algorithms raced per round (and added per escalation)
+	int ml_escalate_timeout_sec; // seconds to wait before adding the next batch
 	// bool BR1, BR2, RR1, RR2, RR3;
 
 	// Valid-value lists, shared between this constructor's own validation below and
@@ -31,6 +47,12 @@ public:
     heuristic = GetOptionValue("-heuristic", "Both-Heur");
     framework = GetOptionValue("-framework", "default");
     race = GetOptionValue("-race", "");
+    ml_race = GetOptionEnabled("-ml-race");
+    ml_model_path = GetOptionValue("-ml-model", "ml_export/model.json");
+    ml_meta_path = GetOptionValue("-ml-meta", "ml_export/model_meta.txt");
+    ml_algo_config_path = GetOptionValue("-ml-algo-config", "ml_algo_config.json");
+    ml_batch_size = GetOptionIntValue("-ml-batch-size", 3);
+    ml_escalate_timeout_sec = GetOptionIntValue("-ml-escalate-timeout", 600);
 
 
     cout<<"----------------------Parameters-----------------------\n";
@@ -97,6 +119,9 @@ public:
     cout<<"Framework: "<<framework<<endl;
     if(!race.empty())
       cout<<"Race: "<<race<<endl;
+    if(ml_race)
+      cout<<"ML-Race: batch size "<<ml_batch_size<<", escalate every "<<ml_escalate_timeout_sec
+          <<"s (model="<<ml_model_path<<", meta="<<ml_meta_path<<")"<<endl;
     cout<<"----------------------**********-----------------------\n";
   }
 

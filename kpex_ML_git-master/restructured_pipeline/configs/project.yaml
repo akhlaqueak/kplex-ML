@@ -1,0 +1,447 @@
+project:
+  name: kpex_restructured_pipeline
+  legacy_workspace_preserved: true
+
+paths:
+  repo_root: .
+  legacy:
+    input_data_dir: input_data
+    primary_dataset: input_data/ml-data.csv
+    old_input_data_dir: input_data/old
+    notebooks_dir: notebooks
+    outputs_dir: outputs
+  pipeline:
+    root: restructured_pipeline
+    configs_dir: restructured_pipeline/configs
+    src_dir: restructured_pipeline/src
+    data_dir: restructured_pipeline/data
+    raw_data_dir: restructured_pipeline/data/raw
+    processed_data_dir: restructured_pipeline/data/processed
+    splits_data_dir: restructured_pipeline/data/splits
+    outputs_dir: restructured_pipeline/outputs
+    models_dir: restructured_pipeline/outputs/models
+    metrics_dir: restructured_pipeline/outputs/metrics
+    predictions_dir: restructured_pipeline/outputs/predictions
+    wrong_cases_dir: restructured_pipeline/outputs/wrong_cases
+    logs_dir: restructured_pipeline/outputs/logs
+    notebooks_dir: restructured_pipeline/notebooks
+    notebooks_analysis_dir: restructured_pipeline/notebooks/analysis
+    notebooks_archive_dir: restructured_pipeline/notebooks/archive
+
+data:
+  file_path: input_data/ml-data.csv
+  timeout_replacement: 1800
+  timeout_marker: "x"
+  sep: ","
+  quotechar: "\""
+  engine: python
+  rename_columns:
+    shell_sizes: kcore_list
+    core_number: core_max
+    k: k_value
+  id_columns:
+    - dataset
+    - k_value
+  raw_target_columns:
+    - kPEX-S-bnb
+    - kPEX-R-bnb
+    - kPEX-P-bnb
+    - kPEX-B-bnb    
+    - kPEX-oriented-S-bnb
+    - kPEX-oriented-R-bnb
+    - kPEX-oriented-P-bnb
+    - kPEX-oriented-B-bnb
+    - UMKP-S-bnb
+    - UMKP-R-bnb
+    - UMKP-P-bnb
+    - UMKP-B-bnb
+    - UMKP-oriented-S-bnb
+    - UMKP-oriented-R-bnb
+    - UMKP-oriented-P-bnb
+    - UMKP-oriented-B-bnb
+    - UMKP+-S-bnb
+    - UMKP+-R-bnb
+    - UMKP+-P-bnb
+    - UMKP+-B-bnb
+    - UMKP+-oriented-S-bnb
+    - UMKP+-oriented-R-bnb
+    - UMKP+-oriented-P-bnb
+    - UMKP+-oriented-B-bnb
+
+
+features:
+  feature_cols:
+    - k_value
+    - n
+    - m
+    - d_avg
+    - d_max
+    - core_max
+    - core_min
+    - shell_num
+    - shell_avgSize
+    - shell_maxSize
+    - shell_minSize
+    - shell_stdSize
+  feature_cols_for_nn:
+    - k_value
+    - n
+    - m
+    - d_avg
+    - d_max
+    - core_max
+    - core_min
+    - shell_num
+    - shell_avgSize
+    - shell_maxSize
+    - shell_minSize
+    - shell_stdSize
+    - fastest_time
+  feature_cols_with_kcore_list:
+    - k_value
+    - n
+    - m
+    - d_avg
+    - d_max
+    - core_max
+    - core_min
+    - shell_num
+    - shell_avgSize
+    - shell_maxSize
+    - shell_minSize
+    - shell_stdSize
+    - kcore_list
+  derived_kcore_columns:
+    - shell_num
+    - core_min
+    - shell_avgSize
+    - shell_maxSize
+    - shell_minSize
+    - shell_stdSize
+
+targets:
+  scheme1:
+    target_column: target
+    y_columns:
+      - kPEX-S-bnb
+      - kPEX-R-bnb
+      - kPEX-P-bnb
+      - kPEX-B-bnb    
+      - kPEX-oriented-S-bnb
+      - kPEX-oriented-R-bnb
+      - kPEX-oriented-P-bnb
+      - kPEX-oriented-B-bnb
+      - UMKP-S-bnb
+      - UMKP-R-bnb
+      - UMKP-P-bnb
+      - UMKP-B-bnb
+      - UMKP-oriented-S-bnb
+      - UMKP-oriented-R-bnb
+      - UMKP-oriented-P-bnb
+      - UMKP-oriented-B-bnb
+      - UMKP+-S-bnb
+      - UMKP+-R-bnb
+      - UMKP+-P-bnb
+      - UMKP+-B-bnb
+      - UMKP+-oriented-S-bnb
+      - UMKP+-oriented-R-bnb
+      - UMKP+-oriented-P-bnb
+      - UMKP+-oriented-B-bnb
+    algorithms:
+      - kPEX-S-bnb
+      - kPEX-R-bnb
+      - kPEX-P-bnb
+      - kPEX-B-bnb    
+      - kPEX-oriented-S-bnb
+      - kPEX-oriented-R-bnb
+      - kPEX-oriented-P-bnb
+      - kPEX-oriented-B-bnb
+      - UMKP-S-bnb
+      - UMKP-R-bnb
+      - UMKP-P-bnb
+      - UMKP-B-bnb
+      - UMKP-oriented-S-bnb
+      - UMKP-oriented-R-bnb
+      - UMKP-oriented-P-bnb
+      - UMKP-oriented-B-bnb
+      - UMKP+-S-bnb
+      - UMKP+-R-bnb
+      - UMKP+-P-bnb
+      - UMKP+-B-bnb
+      - UMKP+-oriented-S-bnb
+      - UMKP+-oriented-R-bnb
+      - UMKP+-oriented-P-bnb
+      - UMKP+-oriented-B-bnb
+  scheme2:
+    target_columns:
+      y_algo: y_algo
+      y_group: y_group
+      y_sparse_subgroup: y_sparse_subgroup
+    group_labels:
+      - Sparse
+      - Dense
+    sparse_subgroup_labels:
+      - AltRB
+      - No-AltRB
+    leaf_labels:
+      AltRB:
+        - UMKP+-S-bnb
+        - UMKP+-R-bnb
+        - UMKP+-P-bnb
+      No-AltRB:
+        - UMKP-S-bnb
+        - UMKP-R-bnb
+        - UMKP-P-bnb
+      Dense:
+        - kPEX-S-bnb
+        - kPEX-R-bnb
+        - kPEX-P-bnb
+        - kPEX-B-bnb
+    weight_columns:
+      group: weight_group
+      sparse_subgroup: weight_sparse_subgroup
+      altRB: weight_altRB
+      noAltRB: weight_noAltRB
+      dense: weight_dense
+  scheme3:
+    target_columns:
+      y_algo: y_algo
+      y_group: y_group
+      y_sparse_subgroup: y_sparse_subgroup
+      y_orientation: y_orientation
+      y_router4: y_router4
+    group_labels:
+      - Sparse
+      - Dense
+    sparse_subgroup_labels:
+      - AltRB
+      - No-AltRB
+    router4_labels:
+      - ClassB
+      - ClassS
+      - ClassR
+      - ClassP
+    router4_leaf_labels:
+      ClassB:
+        - kPEX-B-bnb
+        - kPEX-oriented-B-bnb
+        - UMKP-B-bnb
+        - UMKP-oriented-B-bnb
+        - UMKP+-B-bnb
+        - UMKP+-oriented-B-bnb
+      ClassS:
+        - UMKP-S-bnb
+        - UMKP-oriented-S-bnb
+        - UMKP+-S-bnb
+        - UMKP+-oriented-S-bnb
+        - kPEX-S-bnb
+        - kPEX-oriented-S-bnb
+      ClassR:
+        - UMKP-R-bnb
+        - UMKP-oriented-R-bnb
+        - UMKP+-R-bnb
+        - UMKP+-oriented-R-bnb
+        - kPEX-R-bnb
+        - kPEX-oriented-R-bnb
+      ClassP:
+        - UMKP-P-bnb
+        - UMKP-oriented-P-bnb
+        - UMKP+-P-bnb
+        - UMKP+-oriented-P-bnb
+        - kPEX-P-bnb
+        - kPEX-oriented-P-bnb
+    weight_columns:
+      group: weight_group
+      sparse_subgroup: weight_sparse_subgroup
+      orientation: weight_orientation
+      router4: weight_router4
+
+split_rules:
+  defaults:
+    test_size: 0.2
+    random_state: 42
+    tie_tolerance: 0.0
+    weight_col: weight
+    stratify_on_target_only: strat_y
+    stratify_on_target_and_k: strat_y_K
+  experiment_orders:
+    - expand_and_split
+    - split_and_expand
+  holdout_modes:
+    - without_holdout
+    - with_holdout
+  scheme1:
+    split_functions:
+      strat_y: prepare_train_test_strat_Y
+      strat_y_K: prepare_train_test_strat_Y_K
+  scheme2:
+    split_functions:
+      strat_y: prepare_train_test_strat_Y_hier
+      strat_y_K: prepare_train_test_strat_Y_K_hier
+  scheme3:
+    split_functions:
+      strat_y: prepare_train_test_strat_Y_hier3
+      strat_y_K: prepare_train_test_strat_Y_K_hier3
+
+random_seeds:
+  default_random_state: 42
+  project_seed: 42
+  model_seed: 42
+
+evaluation:
+  epsilon: 0.001
+  save_files_default: false
+  compute_classification_metrics: true
+  compute_time_metrics: true
+  attach_prediction_probabilities: true
+  wrong_prediction_sort_column: weight
+  wrong_prediction_threshold_metric: time_gap_ratio
+  wrong_prediction_highlight_threshold: 0.5
+  tolerance_values:
+    - 0.0
+    - 0.1
+    - 0.2
+    - 0.5
+  inference_modes:
+    - inference_test_set
+    - inference_entire_data
+
+output_locations:
+  scheme1:
+    RF_results: outputs/RF_results
+    XGB_results: outputs/XGB_results
+  scheme2:
+    RF_results_hier5: outputs/RF_results/hier5
+    XGB_results_hier5: outputs/XGB_results/hier5
+  scheme3:
+    RF_results_hier3: outputs/RF_results/hier3
+    XGB_results_hier3: outputs/XGB_results/hier3
+  filenames:
+    all_predictions_prefix: all_predictions
+    wrong_predictions_prefix: wrong_predictions
+    metrics_workbook: model_performance_for_all_exp.xlsx
+    stage_per_class_report_prefix: hierarchical_per_class_report
+    stage_summary_report_prefix: hierarchical_summary_report
+
+tolerances:
+  tie_tolerance: 0.0
+  supported_tolerances:
+    - 0.0
+    - 0.1
+    - 0.2
+    - 0.5
+
+hierarchy:
+  name: hier5
+  fallback_label: SAFE_DEFAULT_ALGO
+  thresholds:
+    tau_group: 0.0
+    tau_sparse: 0.0
+    tau_algo: 0.0
+  stage_names:
+    stage_1: Stage 1 (Sparse vs Dense)
+    stage_2: Stage 2 (AltRB vs No-AltRB)
+    stage_3: Stage 3 (AltRB leaf)
+    stage_4: Stage 4 (No-AltRB leaf)
+    stage_5: Stage 5 (Dense leaf)
+    overall: Overall leaf prediction
+  stage_targets:
+    stage_1:
+      output_column: y_group
+      labels:
+        - Sparse
+        - Dense
+    stage_2:
+      parent_group: Sparse
+      output_column: y_sparse_subgroup
+      labels:
+        - AltRB
+        - No-AltRB
+    stage_3:
+      parent_sparse_subgroup: AltRB
+      output_column: y_algo
+      labels:
+        - UMKP+-S-bnb
+        - UMKP+-R-bnb
+        - UMKP+-P-bnb
+    stage_4:
+      parent_sparse_subgroup: No-AltRB
+      output_column: y_algo
+      labels:
+        - UMKP-S-bnb
+        - UMKP-R-bnb
+        - UMKP-P-bnb
+    stage_5:
+      parent_group: Dense
+      output_column: y_algo
+      labels:
+        - kPEX-S-bnb
+        - kPEX-R-bnb
+        - kPEX-P-bnb
+        - kPEX-B-bnb
+hierarchy_scheme3:
+  name: hier3
+  fallback_label: SAFE_DEFAULT_ALGO
+  thresholds:
+    tau_group: 0.0
+    tau_sparse: 0.0
+    tau_orientation: 0.0
+    tau_router: 0.0
+  stage_names:
+    stage_1: Stage 1 (Sparse vs Dense)
+    stage_2: Stage 2 (Sparse -> AltRB vs No-AltRB)
+    stage_3: Stage 3 (Oriented vs NonOriented)
+    stage_4: Stage 4 (B-S-R-P router)
+  stage_targets:
+    stage_1:
+      output_column: y_group
+      labels:
+        - Sparse
+        - Dense
+    stage_2:
+      parent_group: Sparse
+      output_column: y_sparse_subgroup
+      labels:
+        - AltRB
+        - No-AltRB
+    stage_3:
+      output_column: y_orientation
+      labels:
+        - Oriented
+        - NonOriented
+    stage_4:
+      output_column: y_router4
+      labels:
+        - ClassB
+        - ClassS
+        - ClassR
+        - ClassP
+      router_leaf_labels:
+        ClassB:
+          - kPEX-B-bnb
+          - kPEX-oriented-B-bnb
+          - UMKP-B-bnb
+          - UMKP-oriented-B-bnb
+          - UMKP+-B-bnb
+          - UMKP+-oriented-B-bnb
+        ClassS:
+          - UMKP-S-bnb
+          - UMKP-oriented-S-bnb
+          - UMKP+-S-bnb
+          - UMKP+-oriented-S-bnb
+          - kPEX-S-bnb
+          - kPEX-oriented-S-bnb
+        ClassR:
+          - UMKP-R-bnb
+          - UMKP-oriented-R-bnb
+          - UMKP+-R-bnb
+          - UMKP+-oriented-R-bnb
+          - kPEX-R-bnb
+          - kPEX-oriented-R-bnb
+        ClassP:
+          - UMKP-P-bnb
+          - UMKP-oriented-P-bnb
+          - UMKP+-P-bnb
+          - UMKP+-oriented-P-bnb
+          - kPEX-P-bnb
+          - kPEX-oriented-P-bnb
