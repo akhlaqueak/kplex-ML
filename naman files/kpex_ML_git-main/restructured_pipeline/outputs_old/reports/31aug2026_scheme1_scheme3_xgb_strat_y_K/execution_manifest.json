@@ -1,0 +1,2285 @@
+{
+  "run_date": "31aug2026",
+  "created_at": "2026-08-31T23:05:21",
+  "report_dir": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K",
+  "scope": {
+    "schemes": [
+      "scheme1",
+      "scheme3"
+    ],
+    "model_family": "xgboost",
+    "model_label": "XGB",
+    "split_mode": "strat_y_K",
+    "excluded": [
+      "random_forest",
+      "scheme2",
+      "strat_y"
+    ]
+  },
+  "commands_executed": [
+    {
+      "step": "preflight",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_preflight /opt/miniconda3/envs/kpex/bin/python - <<PY ..."
+    },
+    {
+      "step": "train_scheme1_xgb",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s1_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --file-suffix scheme1_xgb_strat_y_K_31aug2026 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml --save-files"
+    },
+    {
+      "step": "train_scheme3_xgb",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s3_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --file-suffix scheme3_xgb_strat_y_K_31aug2026 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml --save-files"
+    },
+    {
+      "step": "predict_scheme1_test",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s1_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --run-name scheme1_xgb_strat_y_K_31aug2026 --inference-mode inference_test_set --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "predict_scheme1_entire",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s1_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --run-name scheme1_xgb_strat_y_K_31aug2026 --inference-mode inference_entire_data --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "predict_scheme3_test",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s3_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --run-name scheme3_xgb_strat_y_K_31aug2026 --inference-mode inference_test_set --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "predict_scheme3_entire",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s3_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --run-name scheme3_xgb_strat_y_K_31aug2026 --inference-mode inference_entire_data --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "evaluate_scheme1_test",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s1_eval_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --run-name scheme1_xgb_strat_y_K_31aug2026 --inference-mode inference_test_set --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "evaluate_scheme1_entire",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s1_eval_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --run-name scheme1_xgb_strat_y_K_31aug2026 --inference-mode inference_entire_data --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "evaluate_scheme3_test",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s3_eval_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --run-name scheme3_xgb_strat_y_K_31aug2026 --inference-mode inference_test_set --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "evaluate_scheme3_entire",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_s3_eval_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --run-name scheme3_xgb_strat_y_K_31aug2026 --inference-mode inference_entire_data --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "compare_test_with_bad_metadata",
+      "status": 0,
+      "command": "initial direct-file compare using xgb run-name files; output was overwritten after metadata validation failed"
+    },
+    {
+      "step": "compare_test_corrected_metadata",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_compare_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file scheme1_xgboost_strat_y_K_predict_inference_test_data=... --wrong-predictions-file scheme3_xgboost_strat_y_K_predict_inference_test_data=... --output-path ... --generate-tolerance-report ... --generate-important-failure-report ..."
+    },
+    {
+      "step": "compare_entire_corrected_metadata",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_compare_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file scheme1_xgboost_strat_y_K_predict_inference_entire_data=... --wrong-predictions-file scheme3_xgboost_strat_y_K_predict_inference_entire_data=... --output-path ... --generate-tolerance-report ... --generate-important-failure-report ..."
+    },
+    {
+      "step": "failure_case_filter_entire",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_filter /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_case_filter.py --input-workbook restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx --output-path restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "step": "failure_analysis_enrich",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_enrich /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_summary.py --mode enrich --failure-workbook ... --enriched-failure-workbook-output ... --project-config restructured_pipeline/configs/project.yaml"
+    },
+    {
+      "step": "failure_analysis_unfiltered",
+      "status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_31aug2026_unfiltered /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_unfiltered_summary.py --raw-glob 'restructured_pipeline/outputs/wrong_cases/scheme[13]/xgboost/wrong_predictions_scheme[13]_xgb_strat_y_K_31aug2026_predict_inference_entire_data.xlsx' --project-config-path restructured_pipeline/configs/project.yaml --output-path ... --filtered-reference-path ..."
+    }
+  ],
+  "warnings": [
+    "Root README.md is absent; used restructured_pipeline/README.md as the active workflow README.",
+    "Initial test-data compare run with raw xgb filenames produced blank scheme/model metadata; corrected by rerunning with direct-file NAME labels containing xgboost. Final report files are from the corrected run.",
+    "predict.py entire-data runs reported wrote_entire_data_export for both schemes; duplicate physical full-dataset prediction/wrong-case files were generated instead of canonical alias reuse.",
+    "Mixed failure-case combinations skipped: current PAIRING_RULES include Scheme 1 + Scheme 2 pairings, so the script cannot cleanly generate a Scheme 1 + Scheme 3-only workbook without wrong-scope/empty Scheme 2 validation issues."
+  ],
+  "skipped_steps": [
+    {
+      "step": "mixed_failure_case_combinations",
+      "reason": "Current script PAIRING_RULES include Scheme 1 + Scheme 2 pairings and validate only Scheme1+2 or Scheme1+3 per sheet; no CLI exists to request Scheme1+3-only pairings."
+    }
+  ],
+  "prediction_metrics": {
+    "scheme1_test": {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_test_data.csv",
+      "rows": 1149,
+      "accuracy": 0.369887,
+      "tolerance_accuracy": {
+        "tol_0": 0.369887,
+        "tol_10": 0.503916,
+        "tol_20": 0.598782,
+        "tol_50": 0.714534
+      },
+      "wrong_predictions": 724,
+      "average_predicted_fastest_time_ratio": 809.633287,
+      "median_predicted_fastest_time_ratio": 1.237165,
+      "max_predicted_fastest_time_ratio": 580645.16129,
+      "average_time_gap": 59.387911,
+      "median_time_gap": 0.009,
+      "top_confusions": [
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 140
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 98
+        },
+        {
+          "fastest": "UMKP-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 49
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 47
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 42
+        },
+        {
+          "fastest": "UMKP+-oriented-R-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 32
+        },
+        {
+          "fastest": "kPEX-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 29
+        },
+        {
+          "fastest": "UMKP+-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 26
+        }
+      ],
+      "hardest_datasets_by_wrong_count": {
+        "Hook_1498": 6,
+        "pkustk14": 6,
+        "barrier2-11": 5,
+        "crankseg_1": 5,
+        "crystk03": 5,
+        "edit-ukwiki": 5,
+        "f855_mat9": 5,
+        "orkut-links": 5
+      },
+      "hardest_k_values_by_wrong_count": {
+        "15": 79,
+        "20": 76,
+        "6": 73,
+        "10": 72,
+        "9": 70,
+        "4": 70,
+        "5": 69,
+        "8": 62
+      },
+      "probability_columns": 24,
+      "invalid_predicted_labels": [],
+      "blank_predicted_count": 0
+    },
+    "scheme1_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_entire_data.csv",
+      "rows": 4279,
+      "accuracy": 0.183688,
+      "tolerance_accuracy": {
+        "tol_0": 0.183688,
+        "tol_10": 0.355691,
+        "tol_20": 0.473008,
+        "tol_50": 0.616265
+      },
+      "wrong_predictions": 3493,
+      "average_predicted_fastest_time_ratio": 307.183161,
+      "median_predicted_fastest_time_ratio": 1.283889,
+      "max_predicted_fastest_time_ratio": 580645.16129,
+      "average_time_gap": 81.677964,
+      "median_time_gap": 0.0967,
+      "top_confusions": [
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 680
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 506
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 239
+        },
+        {
+          "fastest": "UMKP-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP+-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 151
+        },
+        {
+          "fastest": "UMKP+-oriented-R-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 142
+        },
+        {
+          "fastest": "kPEX-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 128
+        }
+      ],
+      "hardest_datasets_by_wrong_count": {
+        "af_1_k101": 11,
+        "af_4_k101": 11,
+        "af_5_k101": 11,
+        "af_shell10": 11,
+        "af_shell1": 11,
+        "consph": 11,
+        "crankseg_2": 11,
+        "f855_mat9_I": 11
+      },
+      "hardest_k_values_by_wrong_count": {
+        "20": 392,
+        "15": 370,
+        "10": 346,
+        "6": 332,
+        "5": 328,
+        "8": 326,
+        "9": 321,
+        "7": 318
+      },
+      "probability_columns": 24,
+      "invalid_predicted_labels": [],
+      "blank_predicted_count": 0
+    },
+    "scheme3_test": {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_test_data.csv",
+      "rows": 854,
+      "accuracy": 0.442623,
+      "tolerance_accuracy": {
+        "tol_0": 0.442623,
+        "tol_10": 0.694379,
+        "tol_20": 0.754098,
+        "tol_50": 0.816159
+      },
+      "wrong_predictions": 476,
+      "average_predicted_fastest_time_ratio": 684.757916,
+      "median_predicted_fastest_time_ratio": 1.01648,
+      "max_predicted_fastest_time_ratio": 227848.101266,
+      "average_time_gap": 46.648562,
+      "median_time_gap": 0.0014,
+      "top_confusions": [
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 15
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 15
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 13
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "kPEX-oriented-P-bnb",
+          "count": 12
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 12
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 11
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 10
+        }
+      ],
+      "hardest_datasets_by_wrong_count": {
+        "RM07R": 5,
+        "nd3k": 4,
+        "opt1": 4,
+        "ship_001": 4,
+        "soc-digg": 4,
+        "socfb-A-anon": 4,
+        "trdheim": 4,
+        "barrier2-4": 3
+      },
+      "hardest_k_values_by_wrong_count": {
+        "15": 60,
+        "10": 57,
+        "20": 51,
+        "7": 47,
+        "5": 45,
+        "6": 43,
+        "4": 39,
+        "9": 37
+      },
+      "probability_columns": 24,
+      "invalid_predicted_labels": [],
+      "blank_predicted_count": 0
+    },
+    "scheme3_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_entire_data.csv",
+      "rows": 4279,
+      "accuracy": 0.80416,
+      "tolerance_accuracy": {
+        "tol_0": 0.80416,
+        "tol_10": 0.90839,
+        "tol_20": 0.928955,
+        "tol_50": 0.94695
+      },
+      "wrong_predictions": 838,
+      "average_predicted_fastest_time_ratio": 996.735172,
+      "median_predicted_fastest_time_ratio": 1.0,
+      "max_predicted_fastest_time_ratio": 2571428.571429,
+      "average_time_gap": 12.614058,
+      "median_time_gap": 0.0,
+      "top_confusions": [
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 32
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-P-bnb",
+          "count": 23
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 22
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP-oriented-S-bnb",
+          "count": 18
+        }
+      ],
+      "hardest_datasets_by_wrong_count": {
+        "barrier2-1": 8,
+        "barrier2-9": 7,
+        "pattern1": 7,
+        "reactome": 7,
+        "barrier2-2": 6,
+        "barrier2-3": 6,
+        "barrier2-4": 6,
+        "Ga3As3H12": 6
+      },
+      "hardest_k_values_by_wrong_count": {
+        "15": 112,
+        "10": 107,
+        "7": 87,
+        "20": 81,
+        "6": 80,
+        "5": 71,
+        "9": 69,
+        "3": 65
+      },
+      "probability_columns": 24,
+      "invalid_predicted_labels": [],
+      "blank_predicted_count": 0
+    }
+  },
+  "important_failure_counts": {
+    "test_data": {
+      "scheme_1_tol0": 162,
+      "scheme_2_tol0": 0,
+      "scheme_3_tol0": 84
+    },
+    "entire_data": {
+      "scheme_1_tol0": 888,
+      "scheme_2_tol0": 0,
+      "scheme_3_tol0": 103
+    },
+    "filtered_single_sheet_entire": {
+      "scheme_1_XGB": 888,
+      "scheme_3_XGB": 103,
+      "total": 991
+    }
+  },
+  "workbooks": {
+    "compare": {
+      "test_data": {
+        "compare": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_test_data_31aug2026.xlsx",
+          "sheet_names": [
+            "on 20% test set"
+          ],
+          "row_counts": {
+            "on 20% test set": 485
+          },
+          "blank_key_counts": {
+            "on 20% test set": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "on 20% test set": {
+              "scheme": [
+                "scheme 1",
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            }
+          }
+        },
+        "tolerance": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_report_test_data_31aug2026.xlsx",
+          "sheet_names": [
+            "scheme_1_tol_0",
+            "scheme_1_tol_10",
+            "scheme_1_tol_20",
+            "scheme_1_tol_50",
+            "scheme_2_tol_0",
+            "scheme_2_tol_10",
+            "scheme_2_tol_20",
+            "scheme_2_tol_50",
+            "scheme_3_tol_0",
+            "scheme_3_tol_10",
+            "scheme_3_tol_20",
+            "scheme_3_tol_50"
+          ],
+          "row_counts": {
+            "scheme_1_tol_0": 328,
+            "scheme_1_tol_10": 328,
+            "scheme_1_tol_20": 328,
+            "scheme_1_tol_50": 328,
+            "scheme_2_tol_0": 0,
+            "scheme_2_tol_10": 0,
+            "scheme_2_tol_20": 0,
+            "scheme_2_tol_50": 0,
+            "scheme_3_tol_0": 157,
+            "scheme_3_tol_10": 157,
+            "scheme_3_tol_20": 157,
+            "scheme_3_tol_50": 157
+          },
+          "blank_key_counts": {
+            "scheme_1_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "scheme_1_tol_0": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_10": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_20": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_50": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_2_tol_0": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_10": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_20": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_50": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_3_tol_0": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_10": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_20": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_50": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            }
+          }
+        },
+        "important": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_important_failures_test_data_31aug2026.xlsx",
+          "sheet_names": [
+            "scheme_1_tol_0",
+            "scheme_1_tol_10",
+            "scheme_1_tol_20",
+            "scheme_1_tol_50",
+            "scheme_2_tol_0",
+            "scheme_2_tol_10",
+            "scheme_2_tol_20",
+            "scheme_2_tol_50",
+            "scheme_3_tol_0",
+            "scheme_3_tol_10",
+            "scheme_3_tol_20",
+            "scheme_3_tol_50",
+            "filter_summary"
+          ],
+          "row_counts": {
+            "scheme_1_tol_0": 162,
+            "scheme_1_tol_10": 162,
+            "scheme_1_tol_20": 162,
+            "scheme_1_tol_50": 162,
+            "scheme_2_tol_0": 0,
+            "scheme_2_tol_10": 0,
+            "scheme_2_tol_20": 0,
+            "scheme_2_tol_50": 0,
+            "scheme_3_tol_0": 84,
+            "scheme_3_tol_10": 84,
+            "scheme_3_tol_20": 84,
+            "scheme_3_tol_50": 84,
+            "filter_summary": 13
+          },
+          "blank_key_counts": {
+            "scheme_1_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "scheme_1_tol_0": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_10": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_20": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_1_tol_50": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_2_tol_0": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_10": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_20": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_50": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_3_tol_0": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_10": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_20": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            },
+            "scheme_3_tol_50": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on 20% test set"
+              ]
+            }
+          }
+        }
+      },
+      "entire_data": {
+        "compare": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx",
+          "sheet_names": [
+            "on entire dataset"
+          ],
+          "row_counts": {
+            "on entire dataset": 1869
+          },
+          "blank_key_counts": {
+            "on entire dataset": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "on entire dataset": {
+              "scheme": [
+                "scheme 1",
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            }
+          }
+        },
+        "tolerance": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_report_entire_data_31aug2026.xlsx",
+          "sheet_names": [
+            "scheme_1_tol_0",
+            "scheme_1_tol_10",
+            "scheme_1_tol_20",
+            "scheme_1_tol_50",
+            "scheme_2_tol_0",
+            "scheme_2_tol_10",
+            "scheme_2_tol_20",
+            "scheme_2_tol_50",
+            "scheme_3_tol_0",
+            "scheme_3_tol_10",
+            "scheme_3_tol_20",
+            "scheme_3_tol_50"
+          ],
+          "row_counts": {
+            "scheme_1_tol_0": 1642,
+            "scheme_1_tol_10": 1642,
+            "scheme_1_tol_20": 1642,
+            "scheme_1_tol_50": 1642,
+            "scheme_2_tol_0": 0,
+            "scheme_2_tol_10": 0,
+            "scheme_2_tol_20": 0,
+            "scheme_2_tol_50": 0,
+            "scheme_3_tol_0": 227,
+            "scheme_3_tol_10": 227,
+            "scheme_3_tol_20": 227,
+            "scheme_3_tol_50": 227
+          },
+          "blank_key_counts": {
+            "scheme_1_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "scheme_1_tol_0": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_10": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_20": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_50": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_2_tol_0": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_10": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_20": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_50": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_3_tol_0": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_10": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_20": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_50": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            }
+          }
+        },
+        "important": {
+          "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_important_failures_entire_data_31aug2026.xlsx",
+          "sheet_names": [
+            "scheme_1_tol_0",
+            "scheme_1_tol_10",
+            "scheme_1_tol_20",
+            "scheme_1_tol_50",
+            "scheme_2_tol_0",
+            "scheme_2_tol_10",
+            "scheme_2_tol_20",
+            "scheme_2_tol_50",
+            "scheme_3_tol_0",
+            "scheme_3_tol_10",
+            "scheme_3_tol_20",
+            "scheme_3_tol_50",
+            "filter_summary"
+          ],
+          "row_counts": {
+            "scheme_1_tol_0": 888,
+            "scheme_1_tol_10": 888,
+            "scheme_1_tol_20": 888,
+            "scheme_1_tol_50": 888,
+            "scheme_2_tol_0": 0,
+            "scheme_2_tol_10": 0,
+            "scheme_2_tol_20": 0,
+            "scheme_2_tol_50": 0,
+            "scheme_3_tol_0": 103,
+            "scheme_3_tol_10": 103,
+            "scheme_3_tol_20": 103,
+            "scheme_3_tol_50": 103,
+            "filter_summary": 13
+          },
+          "blank_key_counts": {
+            "scheme_1_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_1_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_2_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_0": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_10": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_20": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            },
+            "scheme_3_tol_50": {
+              "scheme": 0,
+              "model": 0,
+              "strat_on": 0,
+              "inference_on": 0
+            }
+          },
+          "unique_key_values": {
+            "scheme_1_tol_0": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_10": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_20": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_1_tol_50": {
+              "scheme": [
+                "scheme 1"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_2_tol_0": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_10": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_20": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_2_tol_50": {
+              "scheme": [],
+              "model": [],
+              "strat_on": [],
+              "inference_on": []
+            },
+            "scheme_3_tol_0": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_10": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_20": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            },
+            "scheme_3_tol_50": {
+              "scheme": [
+                "scheme 3"
+              ],
+              "model": [
+                "XGB"
+              ],
+              "strat_on": [
+                "y and K"
+              ],
+              "inference_on": [
+                "on entire dataset"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "filtered_failure_input": {
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "sheet_names": [
+        "on entire dataset",
+        "filter_summary"
+      ],
+      "row_counts": {
+        "on entire dataset": 991,
+        "filter_summary": 2
+      },
+      "blank_key_counts": {
+        "on entire dataset": {
+          "scheme": 0,
+          "model": 0,
+          "strat_on": 0,
+          "inference_on": 0
+        }
+      },
+      "unique_key_values": {
+        "on entire dataset": {
+          "scheme": [
+            "scheme 1",
+            "scheme 3"
+          ],
+          "model": [
+            "XGB"
+          ],
+          "strat_on": [
+            "y and K"
+          ],
+          "inference_on": [
+            "on entire dataset"
+          ]
+        }
+      }
+    },
+    "filtered_failure_analysis": {
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_filtered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "sheet_names": [
+        "scheme_1_RF",
+        "scheme_1_XGB",
+        "scheme_2_RF",
+        "scheme_2_XGB",
+        "scheme_3_RF",
+        "scheme_3_XGB"
+      ],
+      "row_counts": {
+        "scheme_1_RF": 0,
+        "scheme_1_XGB": 888,
+        "scheme_2_RF": 0,
+        "scheme_2_XGB": 0,
+        "scheme_3_RF": 0,
+        "scheme_3_XGB": 103
+      },
+      "blank_key_counts": {
+        "scheme_1_RF": {
+          "model": 0
+        },
+        "scheme_1_XGB": {
+          "model": 0
+        },
+        "scheme_2_RF": {
+          "model": 0
+        },
+        "scheme_2_XGB": {
+          "model": 0
+        },
+        "scheme_3_RF": {
+          "model": 0
+        },
+        "scheme_3_XGB": {
+          "model": 0
+        }
+      },
+      "unique_key_values": {
+        "scheme_1_RF": {
+          "model": []
+        },
+        "scheme_1_XGB": {
+          "model": [
+            "XGB"
+          ]
+        },
+        "scheme_2_RF": {
+          "model": []
+        },
+        "scheme_2_XGB": {
+          "model": []
+        },
+        "scheme_3_RF": {
+          "model": []
+        },
+        "scheme_3_XGB": {
+          "model": [
+            "XGB"
+          ]
+        }
+      }
+    },
+    "unfiltered_failure_analysis": {
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_unfiltered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "sheet_names": [
+        "summary",
+        "scheme_1_RF",
+        "scheme_1_XGB",
+        "scheme_2_RF",
+        "scheme_2_XGB",
+        "scheme_3_RF",
+        "scheme_3_XGB"
+      ],
+      "row_counts": {
+        "summary": 2,
+        "scheme_1_RF": 0,
+        "scheme_1_XGB": 3493,
+        "scheme_2_RF": 0,
+        "scheme_2_XGB": 0,
+        "scheme_3_RF": 0,
+        "scheme_3_XGB": 838
+      },
+      "blank_key_counts": {
+        "summary": {
+          "scheme": 0,
+          "model": 0
+        },
+        "scheme_1_RF": {
+          "model": 0
+        },
+        "scheme_1_XGB": {
+          "model": 0
+        },
+        "scheme_2_RF": {
+          "model": 0
+        },
+        "scheme_2_XGB": {
+          "model": 0
+        },
+        "scheme_3_RF": {
+          "model": 0
+        },
+        "scheme_3_XGB": {
+          "model": 0
+        }
+      },
+      "unique_key_values": {
+        "summary": {
+          "scheme": [
+            "scheme 1",
+            "scheme 3"
+          ],
+          "model": [
+            "XGB"
+          ]
+        },
+        "scheme_1_RF": {
+          "model": []
+        },
+        "scheme_1_XGB": {
+          "model": [
+            "XGB"
+          ]
+        },
+        "scheme_2_RF": {
+          "model": []
+        },
+        "scheme_2_XGB": {
+          "model": []
+        },
+        "scheme_3_RF": {
+          "model": []
+        },
+        "scheme_3_XGB": {
+          "model": [
+            "XGB"
+          ]
+        }
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "key": "scheme1_test",
+      "type": "pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_test_data.csv",
+      "exists": true,
+      "size_bytes": 875970
+    },
+    {
+      "key": "scheme1_test",
+      "type": "wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_test_data.xlsx",
+      "exists": true,
+      "size_bytes": 405482
+    },
+    {
+      "key": "scheme1_entire",
+      "type": "pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_entire_data.csv",
+      "exists": true,
+      "size_bytes": 2953567
+    },
+    {
+      "key": "scheme1_entire",
+      "type": "wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgb_strat_y_K_31aug2026_predict_inference_entire_data.xlsx",
+      "exists": true,
+      "size_bytes": 1991788
+    },
+    {
+      "key": "scheme1_entire",
+      "type": "canonical_pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgb_strat_y_K_31aug2026.csv",
+      "exists": true,
+      "size_bytes": 2953567
+    },
+    {
+      "key": "scheme1_entire",
+      "type": "canonical_wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 1991788
+    },
+    {
+      "key": "scheme3_test",
+      "type": "pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_test_data.csv",
+      "exists": true,
+      "size_bytes": 1198829
+    },
+    {
+      "key": "scheme3_test",
+      "type": "wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_test_data.xlsx",
+      "exists": true,
+      "size_bytes": 517986
+    },
+    {
+      "key": "scheme3_entire",
+      "type": "pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_entire_data.csv",
+      "exists": true,
+      "size_bytes": 6007687
+    },
+    {
+      "key": "scheme3_entire",
+      "type": "wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgb_strat_y_K_31aug2026_predict_inference_entire_data.xlsx",
+      "exists": true,
+      "size_bytes": 895233
+    },
+    {
+      "key": "scheme3_entire",
+      "type": "canonical_pred_path",
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgb_strat_y_K_31aug2026.csv",
+      "exists": true,
+      "size_bytes": 6007687
+    },
+    {
+      "key": "scheme3_entire",
+      "type": "canonical_wrong_path",
+      "path": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 843508
+    },
+    {
+      "key": "test_data",
+      "type": "compare",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_test_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 187025
+    },
+    {
+      "key": "test_data",
+      "type": "tolerance",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_report_test_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 554100
+    },
+    {
+      "key": "test_data",
+      "type": "important",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_important_failures_test_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 299469
+    },
+    {
+      "key": "entire_data",
+      "type": "compare",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 542731
+    },
+    {
+      "key": "entire_data",
+      "type": "tolerance",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_report_entire_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 1632893
+    },
+    {
+      "key": "entire_data",
+      "type": "important",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_tolerance_important_failures_entire_data_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 858253
+    },
+    {
+      "key": "filtered_failure_input",
+      "type": "filtered_failure_input",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 287353
+    },
+    {
+      "key": "filtered_failure_analysis",
+      "type": "filtered_failure_analysis",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_filtered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 345740
+    },
+    {
+      "key": "unfiltered_failure_analysis",
+      "type": "unfiltered_failure_analysis",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_unfiltered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 1451676
+    },
+    {
+      "key": "mixed_failure_combinations",
+      "type": "mixed_failure_combinations",
+      "path": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/mixed_failure_case_combinations_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": false,
+      "size_bytes": null
+    }
+  ],
+  "stage_artifacts": [
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/hierarchical_summary_report_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 5349
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/hierarchical_per_class_report_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "exists": true,
+      "size_bytes": 9480
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_scheme3_xgb_strat_y_K_31aug2026_final.png",
+      "exists": true,
+      "size_bytes": 315199
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_scheme3_xgb_strat_y_K_31aug2026_stage1.png",
+      "exists": true,
+      "size_bytes": 52589
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_scheme3_xgb_strat_y_K_31aug2026_stage2.png",
+      "exists": true,
+      "size_bytes": 52191
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_scheme3_xgb_strat_y_K_31aug2026_stage3.png",
+      "exists": true,
+      "size_bytes": 58335
+    },
+    {
+      "path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_scheme3_xgb_strat_y_K_31aug2026_stage4.png",
+      "exists": true,
+      "size_bytes": 72290
+    }
+  ],
+  "provenance": [
+    {
+      "output_file": "model_*.pkl, all_predictions_<run>.csv, wrong_predictions_<run>.xlsx, split CSVs, metrics/confusion matrices",
+      "report_type": "training artifacts",
+      "generated_by_script": "restructured_pipeline/src/train.py",
+      "main_function_cli_path": "main -> run_training -> train_scheme1/train_scheme3 -> save_model_artifact/save_dataframe_outputs/save_metrics_outputs/save_split_indices",
+      "input_files": "project.yaml, models_scheme*.yaml, input_data/ml-data.csv",
+      "rows_sheets": "Scheme1 train/test 9350/2338 expanded rows; Scheme3 train/test 3425/854 rows",
+      "notes": "Scheme3 also writes stage summary/per-class reports."
+    },
+    {
+      "output_file": "all_predictions_*_predict_inference_*.csv and wrong_predictions_*_predict_inference_*.xlsx",
+      "report_type": "prediction export",
+      "generated_by_script": "restructured_pipeline/src/predict.py",
+      "main_function_cli_path": "main -> run_prediction -> load_results_for_prediction/select_prediction_subset/save_dataframe_outputs",
+      "input_files": "saved model artifacts and split indices",
+      "rows_sheets": "test: 1149/854 rows; entire: 4279/4279 rows",
+      "notes": "Entire-data export regenerated physical files in this run."
+    },
+    {
+      "output_file": "compare_wrong_predictions_*_31aug2026.xlsx",
+      "report_type": "strict compare workbook",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "main_function_cli_path": "main -> run_compare_mode -> build_combined_dataframe_from_args -> build_compare_wrong_predictions_from_files -> write_by_inference_on",
+      "input_files": "direct wrong_predictions files",
+      "rows_sheets": "test compare 485 rows; entire compare 1869 rows",
+      "notes": "Direct NAME labels used xgboost token for metadata parsing."
+    },
+    {
+      "output_file": "compare_wrong_predictions_tolerance_report_*_31aug2026.xlsx",
+      "report_type": "tolerance workbook",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "main_function_cli_path": "run_compare_mode -> build_tolerance_sheet_frames -> write_tolerance_sheet_frames",
+      "input_files": "in-memory strict compare dataframe",
+      "rows_sheets": "12 tolerance sheets per scope",
+      "notes": "Scheme2 sheets are empty compatibility sheets."
+    },
+    {
+      "output_file": "compare_wrong_predictions_tolerance_important_failures_*_31aug2026.xlsx",
+      "report_type": "integrated important-failure workbook",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "main_function_cli_path": "run_compare_mode -> write_important_failures_report_from_tolerance_frames -> build_important_failure_sheet_frames",
+      "input_files": "in-memory tolerance sheet frames",
+      "rows_sheets": "12 tolerance important-failure sheets plus summary",
+      "notes": "Counts do not exceed tolerance parent rows."
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "report_type": "single-sheet filtered failure-analysis input",
+      "generated_by_script": "restructured_pipeline/src/failure_case_filter.py",
+      "main_function_cli_path": "main -> run_failure_case_filter -> annotate_failure_cases -> write_by_inference_on",
+      "input_files": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx",
+      "rows_sheets": "991 rows, sheet on entire dataset",
+      "notes": "Required by enrich mode shape."
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_filtered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "report_type": "filtered six-sheet failure-analysis summary",
+      "generated_by_script": "restructured_pipeline/src/failure_analysis_summary.py",
+      "main_function_cli_path": "main -> run_enrichment_mode -> _build_failure_analysis_sheet -> _write_failure_analysis_workbook",
+      "input_files": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "rows_sheets": "6 sheets; Scheme1 XGB 888 rows, Scheme3 XGB 103 rows",
+      "notes": "RF/Scheme2 sheets are empty."
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_unfiltered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx",
+      "report_type": "unfiltered six-sheet failure-analysis summary",
+      "generated_by_script": "restructured_pipeline/src/failure_analysis_unfiltered_summary.py",
+      "main_function_cli_path": "main -> load_unfiltered_records -> build_summary_sheet/build_detail_sheets -> write_workbook",
+      "input_files": "scoped scheme[13]/xgboost entire-data wrong-case glob",
+      "rows_sheets": "6 detail sheets plus summary; Scheme1 XGB 3493 rows, Scheme3 XGB 838 rows",
+      "notes": "Canonical unfiltered workflow."
+    }
+  ],
+  "validation_checks": [
+    {
+      "check": "test_data: compare has no RF rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_test_data_31aug2026.xlsx"
+    },
+    {
+      "check": "test_data: compare has no Scheme 2 rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_test_data_31aug2026.xlsx"
+    },
+    {
+      "check": "test_data: compare only strat_y_K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: compare no blank scheme/model/strat/inference",
+      "passed": true,
+      "details": "checked key columns"
+    },
+    {
+      "check": "test_data: scheme_1_tol_0 no RF unless expected empty",
+      "passed": true,
+      "details": "328"
+    },
+    {
+      "check": "test_data: scheme_1_tol_0 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_1_tol_10 no RF unless expected empty",
+      "passed": true,
+      "details": "328"
+    },
+    {
+      "check": "test_data: scheme_1_tol_10 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_1_tol_20 no RF unless expected empty",
+      "passed": true,
+      "details": "328"
+    },
+    {
+      "check": "test_data: scheme_1_tol_20 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_1_tol_50 no RF unless expected empty",
+      "passed": true,
+      "details": "328"
+    },
+    {
+      "check": "test_data: scheme_1_tol_50 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_1 tolerance monotonic",
+      "passed": true,
+      "details": "[328, 328, 328, 328]"
+    },
+    {
+      "check": "test_data: scheme_1 important <= tolerance",
+      "passed": true,
+      "details": "important=[162, 162, 162, 162], tolerance=[328, 328, 328, 328]"
+    },
+    {
+      "check": "test_data: scheme_2 tolerance monotonic",
+      "passed": true,
+      "details": "[0, 0, 0, 0]"
+    },
+    {
+      "check": "test_data: scheme_2 important <= tolerance",
+      "passed": true,
+      "details": "important=[0, 0, 0, 0], tolerance=[0, 0, 0, 0]"
+    },
+    {
+      "check": "test_data: scheme_3_tol_0 no RF unless expected empty",
+      "passed": true,
+      "details": "157"
+    },
+    {
+      "check": "test_data: scheme_3_tol_0 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_3_tol_10 no RF unless expected empty",
+      "passed": true,
+      "details": "157"
+    },
+    {
+      "check": "test_data: scheme_3_tol_10 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_3_tol_20 no RF unless expected empty",
+      "passed": true,
+      "details": "157"
+    },
+    {
+      "check": "test_data: scheme_3_tol_20 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_3_tol_50 no RF unless expected empty",
+      "passed": true,
+      "details": "157"
+    },
+    {
+      "check": "test_data: scheme_3_tol_50 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "test_data: scheme_3 tolerance monotonic",
+      "passed": true,
+      "details": "[157, 157, 157, 157]"
+    },
+    {
+      "check": "test_data: scheme_3 important <= tolerance",
+      "passed": true,
+      "details": "important=[84, 84, 84, 84], tolerance=[157, 157, 157, 157]"
+    },
+    {
+      "check": "entire_data: compare has no RF rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx"
+    },
+    {
+      "check": "entire_data: compare has no Scheme 2 rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/compare_wrong_predictions_entire_data_31aug2026.xlsx"
+    },
+    {
+      "check": "entire_data: compare only strat_y_K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: compare no blank scheme/model/strat/inference",
+      "passed": true,
+      "details": "checked key columns"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_0 no RF unless expected empty",
+      "passed": true,
+      "details": "1642"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_0 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_10 no RF unless expected empty",
+      "passed": true,
+      "details": "1642"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_10 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_20 no RF unless expected empty",
+      "passed": true,
+      "details": "1642"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_20 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_50 no RF unless expected empty",
+      "passed": true,
+      "details": "1642"
+    },
+    {
+      "check": "entire_data: scheme_1_tol_50 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_1 tolerance monotonic",
+      "passed": true,
+      "details": "[1642, 1642, 1642, 1642]"
+    },
+    {
+      "check": "entire_data: scheme_1 important <= tolerance",
+      "passed": true,
+      "details": "important=[888, 888, 888, 888], tolerance=[1642, 1642, 1642, 1642]"
+    },
+    {
+      "check": "entire_data: scheme_2 tolerance monotonic",
+      "passed": true,
+      "details": "[0, 0, 0, 0]"
+    },
+    {
+      "check": "entire_data: scheme_2 important <= tolerance",
+      "passed": true,
+      "details": "important=[0, 0, 0, 0], tolerance=[0, 0, 0, 0]"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_0 no RF unless expected empty",
+      "passed": true,
+      "details": "227"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_0 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_10 no RF unless expected empty",
+      "passed": true,
+      "details": "227"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_10 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_20 no RF unless expected empty",
+      "passed": true,
+      "details": "227"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_20 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_50 no RF unless expected empty",
+      "passed": true,
+      "details": "227"
+    },
+    {
+      "check": "entire_data: scheme_3_tol_50 only y and K",
+      "passed": true,
+      "details": "['y and K']"
+    },
+    {
+      "check": "entire_data: scheme_3 tolerance monotonic",
+      "passed": true,
+      "details": "[227, 227, 227, 227]"
+    },
+    {
+      "check": "entire_data: scheme_3 important <= tolerance",
+      "passed": true,
+      "details": "important=[103, 103, 103, 103], tolerance=[227, 227, 227, 227]"
+    },
+    {
+      "check": "filtered_failure_input: no RF rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "check": "filtered_failure_input: no Scheme 2 rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_case_analysis_important_failures_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "check": "enriched_failure_analysis: no RF rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_filtered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "check": "unfiltered_failure_analysis: no RF rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_unfiltered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "check": "unfiltered_failure_analysis: no Scheme 2 rows",
+      "passed": true,
+      "details": "restructured_pipeline/outputs/reports/31aug2026_scheme1_scheme3_xgb_strat_y_K/failure_analysis_summary_unfiltered_scheme1_scheme3_xgb_strat_y_K_31aug2026.xlsx"
+    },
+    {
+      "check": "unfiltered_failure_analysis: only strat_y_K",
+      "passed": true,
+      "details": "['strat_y_K']"
+    },
+    {
+      "check": "scheme1_test: predicted labels valid",
+      "passed": true,
+      "details": "{\"invalid\": [], \"blank\": 0}"
+    },
+    {
+      "check": "scheme1_entire: predicted labels valid",
+      "passed": true,
+      "details": "{\"invalid\": [], \"blank\": 0}"
+    },
+    {
+      "check": "scheme3_test: predicted labels valid",
+      "passed": true,
+      "details": "{\"invalid\": [], \"blank\": 0}"
+    },
+    {
+      "check": "scheme3_entire: predicted labels valid",
+      "passed": true,
+      "details": "{\"invalid\": [], \"blank\": 0}"
+    },
+    {
+      "check": "scheme1_entire: duplicate full-dataset export was not skipped",
+      "passed": false,
+      "details": "predict.py reported wrote_entire_data_export; pred_byte_equal=True; wrong_size_equal=True"
+    },
+    {
+      "check": "scheme3_entire: duplicate full-dataset export was not skipped",
+      "passed": false,
+      "details": "predict.py reported wrote_entire_data_export; pred_byte_equal=True; wrong_size_equal=False"
+    }
+  ],
+  "validation_passed": true,
+  "validation_warnings_count": 4
+}

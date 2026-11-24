@@ -1,0 +1,609 @@
+{
+  "run_label": "xgb_strat_yK_scheme1_scheme3_fullrun_20260624",
+  "status": "partial_failure",
+  "generated_at_utc": "2026-06-24T18:56:01Z",
+  "scope": {
+    "schemes_requested": [
+      "scheme1",
+      "scheme3"
+    ],
+    "model_family_requested": "xgboost",
+    "split_mode_requested": "strat_y_K",
+    "constraints_honored": {
+      "no_random_forest_training": true,
+      "no_scheme2_training": true,
+      "no_strat_y_training": true
+    }
+  },
+  "preflight": {
+    "imports_ok": true,
+    "configs_found": [
+      "restructured_pipeline/configs/project.yaml",
+      "restructured_pipeline/configs/models_scheme1.yaml",
+      "restructured_pipeline/configs/models_scheme3.yaml"
+    ],
+    "split_mode_supported": true,
+    "scheduled_training_commands": [
+      "scheme1+xgboost+strat_y_K",
+      "scheme3+xgboost+strat_y_K"
+    ]
+  },
+  "runs": [
+    {
+      "scheme": "scheme1",
+      "model_family": "xgboost",
+      "split_mode": "strat_y_K",
+      "variant": "xgb_strat_y_K",
+      "run_name": "scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624"
+    },
+    {
+      "scheme": "scheme3",
+      "model_family": "xgboost",
+      "split_mode": "strat_y_K",
+      "variant": null,
+      "run_name": "scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624"
+    }
+  ],
+  "commands": [
+    {
+      "step": "preflight_imports",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_exec_preflight /opt/miniconda3/envs/kpex/bin/python - <<'PY' ... importlib.import_module(...) ... PY"
+    },
+    {
+      "step": "train_scheme1_xgb_strat_y_K",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s1_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --tol 0.0 --save-files --file-suffix scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "train_scheme3_xgb_strat_y_K",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s3_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --tol 0.0 --save-files --file-suffix scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "evaluate_scheme1_test",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s1_eval_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "evaluate_scheme1_entire",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s1_eval_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "evaluate_scheme3_test",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s3_eval_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "evaluate_scheme3_entire",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s3_eval_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/evaluate.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "predict_scheme1_test",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s1_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "step": "predict_scheme1_entire",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s1_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml",
+      "entire_data_export_behavior": "physically_regenerated"
+    },
+    {
+      "step": "predict_scheme3_test",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s3_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "step": "predict_scheme3_entire",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_xgb_s3_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml",
+      "entire_data_export_behavior": "physically_regenerated"
+    },
+    {
+      "step": "compare_test_data",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_compare_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file wrong_predictions_predict_inference_test_data_with_holdout_strat_y_K_scheme1_xgboost=restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx --wrong-predictions-file wrong_predictions_predict_inference_test_data_with_holdout_strat_y_K_scheme3_xgboost=restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx --source-model-label XGB --threshold 0.5 --output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_test_data.xlsx --generate-tolerance-report --tolerance-output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_test_data.xlsx --generate-important-failure-report --important-failure-output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx"
+    },
+    {
+      "step": "compare_entire_data",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_compare_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file wrong_predictions_inference_entire_data_without_holdout_strat_y_K_scheme1_xgboost=restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx --wrong-predictions-file wrong_predictions_inference_entire_data_without_holdout_strat_y_K_scheme3_xgboost=restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx --source-model-label XGB --threshold 0.5 --output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx --generate-tolerance-report --tolerance-output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_entire_data.xlsx --generate-important-failure-report --important-failure-output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_entire_data.xlsx"
+    },
+    {
+      "step": "failure_case_filter_entire",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_filter_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_case_filter.py --input-workbook restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx --output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx"
+    },
+    {
+      "step": "failure_analysis_enrich",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_enrich_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_summary.py --mode enrich --failure-workbook restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx --enriched-failure-workbook-output restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_data.xlsx --project-config restructured_pipeline/configs/project.yaml"
+    },
+    {
+      "step": "failure_analysis_summary_mode",
+      "status": "success",
+      "exit_code": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_summary_mode /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_summary.py --mode summary --entire-important-workbook restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx --entire-base-workbook restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx --test-compare-workbook restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_test_data.xlsx --output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_vs_test.xlsx"
+    },
+    {
+      "step": "failure_analysis_unfiltered_summary",
+      "status": "failed",
+      "exit_code": 1,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_unfiltered_summary /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_unfiltered_summary.py --raw-glob 'restructured_pipeline/outputs/wrong_cases/*/xgboost/wrong_predictions_scheme*_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx' --project-config-path restructured_pipeline/configs/project.yaml --filtered-reference-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_data.xlsx --output-path restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_unfiltered_entire_data.xlsx",
+      "error": "ValueError: Unfiltered sheet scheme_3_XGB has fewer rows than filtered reference: 0 < 17"
+    }
+  ],
+  "key_outputs": [
+    {
+      "path": "restructured_pipeline/outputs/models/scheme1/xgboost/model_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.pkl",
+      "type": "model_artifact",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/models/scheme3/xgboost/model_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.pkl",
+      "type": "model_artifact",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.csv",
+      "type": "training_full_dataset_predictions",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.csv",
+      "type": "training_full_dataset_predictions",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_test_data.xlsx",
+      "type": "compare_workbook_test",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx",
+      "type": "compare_workbook_entire",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_test_data.xlsx",
+      "type": "tolerance_report_test",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_entire_data.xlsx",
+      "type": "tolerance_report_entire",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx",
+      "type": "important_failures_test",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_entire_data.xlsx",
+      "type": "important_failures_entire",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx",
+      "type": "filtered_failure_workbook",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_data.xlsx",
+      "type": "failure_analysis_enriched",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_vs_test.xlsx",
+      "type": "failure_analysis_summary_mode",
+      "exists": true
+    },
+    {
+      "path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_unfiltered_entire_data.xlsx",
+      "type": "unfiltered_failure_summary_failed_output",
+      "exists": true,
+      "valid": false
+    }
+  ],
+  "row_counts": {
+    "training": {
+      "scheme1": {
+        "train_rows": 2427,
+        "test_rows": 607
+      },
+      "scheme3": {
+        "train_rows": 2403,
+        "test_rows": 601
+      }
+    },
+    "evaluation_rows": {
+      "scheme1_test": 604,
+      "scheme1_entire": 3004,
+      "scheme3_test": 601,
+      "scheme3_entire": 3004
+    },
+    "prediction_rows": {
+      "scheme1_test": {
+        "rows": 604,
+        "wrong_rows": 311
+      },
+      "scheme1_entire": {
+        "rows": 3004,
+        "wrong_rows": 403
+      },
+      "scheme3_test": {
+        "rows": 601,
+        "wrong_rows": 287
+      },
+      "scheme3_entire": {
+        "rows": 3004,
+        "wrong_rows": 414
+      }
+    },
+    "report_rows": {
+      "compare_test": {
+        "total": 87,
+        "sheet_rows": {
+          "on 20% test set": 87
+        }
+      },
+      "compare_entire": {
+        "total": 89,
+        "sheet_rows": {
+          "on entire dataset": 89
+        }
+      },
+      "tolerance_test": {
+        "scheme1": {
+          "tol0": 48,
+          "tol10": 48,
+          "tol20": 48,
+          "tol50": 48
+        },
+        "scheme2": {
+          "tol0": 0,
+          "tol10": 0,
+          "tol20": 0,
+          "tol50": 0
+        },
+        "scheme3": {
+          "tol0": 39,
+          "tol10": 39,
+          "tol20": 39,
+          "tol50": 39
+        }
+      },
+      "important_failures_test": {
+        "scheme1": {
+          "tol0": 28,
+          "tol10": 28,
+          "tol20": 28,
+          "tol50": 28
+        },
+        "scheme2": {
+          "tol0": 0,
+          "tol10": 0,
+          "tol20": 0,
+          "tol50": 0
+        },
+        "scheme3": {
+          "tol0": 17,
+          "tol10": 17,
+          "tol20": 17,
+          "tol50": 17
+        }
+      },
+      "tolerance_entire": {
+        "scheme1": {
+          "tol0": 48,
+          "tol10": 48,
+          "tol20": 48,
+          "tol50": 48
+        },
+        "scheme2": {
+          "tol0": 0,
+          "tol10": 0,
+          "tol20": 0,
+          "tol50": 0
+        },
+        "scheme3": {
+          "tol0": 41,
+          "tol10": 41,
+          "tol20": 41,
+          "tol50": 41
+        }
+      },
+      "important_failures_entire": {
+        "scheme1": {
+          "tol0": 28,
+          "tol10": 28,
+          "tol20": 28,
+          "tol50": 28
+        },
+        "scheme2": {
+          "tol0": 0,
+          "tol10": 0,
+          "tol20": 0,
+          "tol50": 0
+        },
+        "scheme3": {
+          "tol0": 17,
+          "tol10": 17,
+          "tol20": 17,
+          "tol50": 17
+        }
+      },
+      "failure_case_filter_entire": {
+        "on entire dataset": 45,
+        "filter_summary": 2
+      },
+      "failure_analysis_summary_entire_data": {
+        "scheme_1_RF": 0,
+        "scheme_1_XGB": 28,
+        "scheme_2_RF": 0,
+        "scheme_2_XGB": 0,
+        "scheme_3_RF": 0,
+        "scheme_3_XGB": 17
+      },
+      "failure_analysis_summary_entire_vs_test": {
+        "scheme_1_entire_data": 23,
+        "scheme_1_test_data": 23,
+        "scheme_2_entire_data": 23,
+        "scheme_2_test_data": 23,
+        "scheme_3_entire_data": 23,
+        "scheme_3_test_data": 23,
+        "summary_overview": 7
+      },
+      "failure_analysis_summary_unfiltered_failed_output": {
+        "summary": 1,
+        "scheme_1_XGB": 817,
+        "scheme_3_XGB": 0
+      }
+    }
+  },
+  "validations": {
+    "all_expected_success_outputs_exist": true,
+    "no_random_forest_trained": true,
+    "no_scheme2_trained": true,
+    "only_strat_y_K_trained": true,
+    "scheme2_nonzero_rows_present": false,
+    "tolerance_counts_monotonic": true,
+    "important_failure_counts_do_not_exceed_parent_tolerance": true,
+    "entire_data_predict_outputs_reused_or_symlinked": false,
+    "entire_data_predict_outputs_physically_regenerated": true
+  },
+  "warnings": [
+    "xgboost emitted repeated warning: Parameters: { 'use_label_encoder' } are not used.",
+    "compare_wrong_predictions.py computed missing time_gap_ratio for the scheme3 entire-data training wrong-prediction workbook during compare_entire_data.",
+    "Some fixed-shape reports still emit zero-row Scheme 2 and RF sheets even though this run was scoped to Scheme 1 and Scheme 3 XGB only."
+  ],
+  "failures": [
+    {
+      "step": "failure_analysis_unfiltered_summary",
+      "error": "ValueError: Unfiltered sheet scheme_3_XGB has fewer rows than filtered reference: 0 < 17",
+      "failed_output_path": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_unfiltered_entire_data.xlsx",
+      "failed_output_should_not_be_treated_as_valid": true
+    }
+  ],
+  "skipped_steps": [
+    {
+      "step": "mixed_failure_case_combinations",
+      "status": "skipped",
+      "reason": "Downstream execution stopped immediately after the unfiltered summary command failed."
+    },
+    {
+      "step": "xgb_only_corrected_mixed_failure_workflow",
+      "status": "skipped",
+      "reason": "Downstream execution stopped immediately after the unfiltered summary command failed."
+    }
+  ],
+  "provenance": [
+    {
+      "output_file": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.csv",
+      "report_type": "training_full_dataset_predictions",
+      "generated_by_script": "restructured_pipeline/src/train.py",
+      "cli_path": "main -> run_training -> train_scheme1",
+      "writer_function": "save_dataframe_outputs",
+      "input_files": [
+        "restructured_pipeline/configs/project.yaml",
+        "restructured_pipeline/configs/models_scheme1.yaml"
+      ],
+      "scope": "scheme1 / XGB / strat_y_K"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.csv",
+      "report_type": "training_full_dataset_predictions",
+      "generated_by_script": "restructured_pipeline/src/train.py",
+      "cli_path": "main -> run_training -> train_scheme3",
+      "writer_function": "save_dataframe_outputs",
+      "input_files": [
+        "restructured_pipeline/configs/project.yaml",
+        "restructured_pipeline/configs/models_scheme3.yaml"
+      ],
+      "scope": "scheme3 / XGB / strat_y_K"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx",
+      "report_type": "held_out_wrong_predictions",
+      "generated_by_script": "restructured_pipeline/src/predict.py",
+      "cli_path": "main -> run_prediction",
+      "writer_function": "train.save_dataframe_outputs via resolve_prediction_output_paths",
+      "input_files": [
+        "restructured_pipeline/outputs/models/scheme1/xgboost/model_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.pkl"
+      ],
+      "scope": "scheme1 / XGB / strat_y_K / inference_test_set"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx",
+      "report_type": "held_out_wrong_predictions",
+      "generated_by_script": "restructured_pipeline/src/predict.py",
+      "cli_path": "main -> run_prediction",
+      "writer_function": "train.save_dataframe_outputs via resolve_prediction_output_paths",
+      "input_files": [
+        "restructured_pipeline/outputs/models/scheme3/xgboost/model_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.pkl"
+      ],
+      "scope": "scheme3 / XGB / strat_y_K / inference_test_set"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx",
+      "report_type": "training_time_entire_wrong_predictions",
+      "generated_by_script": "restructured_pipeline/src/train.py",
+      "cli_path": "main -> run_training -> train_scheme1",
+      "writer_function": "save_dataframe_outputs",
+      "input_files": [
+        "restructured_pipeline/configs/project.yaml",
+        "restructured_pipeline/configs/models_scheme1.yaml"
+      ],
+      "scope": "scheme1 / XGB / strat_y_K / entire_dataset"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx",
+      "report_type": "training_time_entire_wrong_predictions",
+      "generated_by_script": "restructured_pipeline/src/train.py",
+      "cli_path": "main -> run_training -> train_scheme3",
+      "writer_function": "save_dataframe_outputs",
+      "input_files": [
+        "restructured_pipeline/configs/project.yaml",
+        "restructured_pipeline/configs/models_scheme3.yaml"
+      ],
+      "scope": "scheme3 / XGB / strat_y_K / entire_dataset"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_test_data.xlsx",
+      "report_type": "compare_wrong_predictions_test",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_compare_wrong_predictions_from_files -> write_by_inference_on",
+      "input_files": [
+        "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx",
+        "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624_predict_inference_test_data.xlsx"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / test"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_test_data.xlsx",
+      "report_type": "tolerance_report_test",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_tolerance_sheet_frames -> write_tolerance_sheet_frames",
+      "input_files": [
+        "in-memory compare dataframe from compare_wrong_predictions_test_data flow"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / test"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx",
+      "report_type": "important_failures_test",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_important_failure_sheet_frames -> write_important_failures_report_from_tolerance_frames",
+      "input_files": [
+        "in-memory tolerance sheet frames from compare_wrong_predictions_test_data flow"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / test"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx",
+      "report_type": "compare_wrong_predictions_entire",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_compare_wrong_predictions_from_files -> write_by_inference_on",
+      "input_files": [
+        "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx",
+        "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_report_entire_data.xlsx",
+      "report_type": "tolerance_report_entire",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_tolerance_sheet_frames -> write_tolerance_sheet_frames",
+      "input_files": [
+        "in-memory compare dataframe from compare_wrong_predictions_entire_data flow"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_tolerance_important_failures_entire_data.xlsx",
+      "report_type": "important_failures_entire",
+      "generated_by_script": "restructured_pipeline/src/compare_wrong_predictions.py",
+      "cli_path": "main -> run_compare_mode",
+      "writer_function": "build_important_failure_sheet_frames -> write_important_failures_report_from_tolerance_frames",
+      "input_files": [
+        "in-memory tolerance sheet frames from compare_wrong_predictions_entire_data flow"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx",
+      "report_type": "filtered_important_failures",
+      "generated_by_script": "restructured_pipeline/src/failure_case_filter.py",
+      "cli_path": "main -> run_failure_case_filter",
+      "writer_function": "write_summary_sheet",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_data.xlsx",
+      "report_type": "failure_analysis_enriched",
+      "generated_by_script": "restructured_pipeline/src/failure_analysis_summary.py",
+      "cli_path": "main -> run_enrichment_mode",
+      "writer_function": "run_enrichment_mode",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx",
+        "restructured_pipeline/configs/project.yaml"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_vs_test.xlsx",
+      "report_type": "failure_analysis_summary",
+      "generated_by_script": "restructured_pipeline/src/failure_analysis_summary.py",
+      "cli_path": "main -> run_summary_mode",
+      "writer_function": "run_summary_mode",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_case_analysis_important_failures_entire_data.xlsx",
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_entire_data.xlsx",
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/compare_wrong_predictions_test_data.xlsx"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire vs test"
+    },
+    {
+      "output_file": "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_unfiltered_entire_data.xlsx",
+      "report_type": "unfiltered_failure_summary",
+      "generated_by_script": "restructured_pipeline/src/failure_analysis_unfiltered_summary.py",
+      "cli_path": "main",
+      "writer_function": "load_unfiltered_records -> write_workbook -> validate_output",
+      "input_files": [
+        "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_scheme1_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx",
+        "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_scheme3_xgboost_strat_y_K_xgb_strat_yK_scheme1_scheme3_fullrun_20260624.xlsx",
+        "restructured_pipeline/outputs/reports/xgb_strat_yK_scheme1_scheme3_fullrun_20260624/failure_analysis_summary_entire_data.xlsx"
+      ],
+      "scope": "scheme1 + scheme3 / XGB / strat_y_K / entire",
+      "notes": "Command failed validation; do not treat this workbook as valid."
+    }
+  ]
+}

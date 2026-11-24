@@ -1,0 +1,1552 @@
+{
+  "validation_run_name": "24alg_xgb_strat_yK_validation_20260831",
+  "status": "pass_with_warnings",
+  "commands": [
+    {
+      "name": "preflight",
+      "exit_status": 0,
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/preflight.json",
+      "command": "python preflight validation script embedded in Codex session; output restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/preflight.json"
+    },
+    {
+      "name": "scheme1_xgb_train",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s1_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --tol 0.0 --save-files --file-suffix 24alg_xgb_strat_yK_validation_20260831_scheme1 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "name": "scheme3_xgb_train",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s3_train /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/train.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --tol 0.0 --save-files --file-suffix 24alg_xgb_strat_yK_validation_20260831_scheme3 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "name": "scheme1_predict_test",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s1_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name 24alg_xgb_strat_yK_validation_20260831_scheme1 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "name": "scheme1_predict_entire",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s1_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme1 --model-family xgboost --variant xgb_strat_y_K --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name 24alg_xgb_strat_yK_validation_20260831_scheme1 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme1.yaml"
+    },
+    {
+      "name": "scheme3_predict_test",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s3_pred_test /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_test_set --tol 0.0 --run-name 24alg_xgb_strat_yK_validation_20260831_scheme3 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "name": "scheme3_predict_entire",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_s3_pred_entire /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/predict.py --scheme scheme3 --model-family xgboost --split-mode strat_y_K --inference-mode inference_entire_data --tol 0.0 --run-name 24alg_xgb_strat_yK_validation_20260831_scheme3 --project-config restructured_pipeline/configs/project.yaml --model-config restructured_pipeline/configs/models_scheme3.yaml"
+    },
+    {
+      "name": "compare_test_with_tolerance_and_important",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_compare_test2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file wrong_predictions_predict_inference_test_data_with_holdout_strat_y_K_scheme1_xgboost=restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1_predict_inference_test_data.xlsx --wrong-predictions-file wrong_predictions_predict_inference_test_data_with_holdout_strat_y_K_scheme3_xgboost=restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3_predict_inference_test_data.xlsx --threshold 0.5 --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_test_data.xlsx --generate-tolerance-report --tolerance-output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_test_data.xlsx --generate-important-failure-report --important-failure-output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx"
+    },
+    {
+      "name": "compare_entire_with_tolerance_and_important",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_compare_entire2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/compare_wrong_predictions.py --wrong-predictions-file wrong_predictions_predict_inference_entire_data_without_holdout_strat_y_K_scheme1_xgboost=restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1_predict_inference_entire_data.xlsx --wrong-predictions-file wrong_predictions_predict_inference_entire_data_without_holdout_strat_y_K_scheme3_xgboost=restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3_predict_inference_entire_data.xlsx --threshold 0.5 --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_entire_data.xlsx --generate-tolerance-report --tolerance-output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_entire_data.xlsx --generate-important-failure-report --important-failure-output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_important_failures_entire_data.xlsx"
+    },
+    {
+      "name": "failure_case_filter_test",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_filter_test2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_case_filter.py --input-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_test_data.xlsx --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_test_data.xlsx"
+    },
+    {
+      "name": "failure_case_filter_entire",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_filter_entire2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_case_filter.py --input-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_entire_data.xlsx --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_entire_data.xlsx"
+    },
+    {
+      "name": "failure_analysis_enrich_test",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_enrich_test2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_summary.py --mode enrich --failure-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_test_data.xlsx --enriched-failure-workbook-output restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_test_data.xlsx --project-config restructured_pipeline/configs/project.yaml"
+    },
+    {
+      "name": "failure_analysis_enrich_entire",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_enrich_entire2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_summary.py --mode enrich --failure-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_entire_data.xlsx --enriched-failure-workbook-output restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx --project-config restructured_pipeline/configs/project.yaml"
+    },
+    {
+      "name": "unfiltered_summary_test",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_unfiltered_test2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_unfiltered_summary.py --raw-glob 'restructured_pipeline/outputs/wrong_cases/scheme[13]/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme*_predict_inference_test_data.xlsx' --project-config-path restructured_pipeline/configs/project.yaml --filtered-reference-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_test_data.xlsx --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_test_data.xlsx"
+    },
+    {
+      "name": "unfiltered_summary_entire",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_unfiltered_entire2 /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/failure_analysis_unfiltered_summary.py --raw-glob 'restructured_pipeline/outputs/wrong_cases/scheme[13]/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme*_predict_inference_entire_data.xlsx' --project-config-path restructured_pipeline/configs/project.yaml --filtered-reference-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_entire_data.xlsx"
+    },
+    {
+      "name": "mixed_combinations_scoped_attempt",
+      "exit_status": 1,
+      "note": "Not cleanly applicable to Scheme 1 + Scheme 3 only; validator also requires Scheme 1 + Scheme 2 pair sheets.",
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_mixed_scoped /opt/miniconda3/envs/kpex/bin/python restructured_pipeline/src/mixed_failure_case_combinations.py --master-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_entire_data.xlsx --filtered-workbook restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx --output-path restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/mixed_failure_case_combinations_scoped_attempt.xlsx"
+    },
+    {
+      "name": "py_compile_src",
+      "exit_status": 0,
+      "command": "find restructured_pipeline/src -name '*.py' -print0 | xargs -0 /opt/miniconda3/envs/kpex/bin/python -m py_compile"
+    },
+    {
+      "name": "import_active_modules",
+      "exit_status": 0,
+      "command": "env MPLCONFIGDIR=/private/tmp/mpl_24val_import_final /opt/miniconda3/envs/kpex/bin/python -c 'import restructured_pipeline.src.train; import restructured_pipeline.src.evaluate; import restructured_pipeline.src.predict; import restructured_pipeline.src.compare_wrong_predictions; import restructured_pipeline.src.failure_case_filter; import restructured_pipeline.src.failure_analysis_summary; import restructured_pipeline.src.failure_analysis_unfiltered_summary; import restructured_pipeline.src.mixed_failure_case_combinations; print(\"imports_ok\")'"
+    }
+  ],
+  "training": {
+    "scheme1": {
+      "run_name": "24alg_xgb_strat_yK_validation_20260831_scheme1",
+      "train_rows": 9350,
+      "test_rows": 2338,
+      "classes_seen": 24,
+      "model_artifact_path": "restructured_pipeline/outputs/models/scheme1/xgboost/model_24alg_xgb_strat_yK_validation_20260831_scheme1.pkl",
+      "train_indices_path": "restructured_pipeline/data/splits/scheme1/xgboost/train_indices_24alg_xgb_strat_yK_validation_20260831_scheme1.csv",
+      "test_indices_path": "restructured_pipeline/data/splits/scheme1/xgboost/test_indices_24alg_xgb_strat_yK_validation_20260831_scheme1.csv",
+      "predictions_path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1.csv",
+      "wrong_case_workbook_path": "restructured_pipeline/outputs/wrong_cases/scheme1/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1.xlsx",
+      "confusion_matrix_path": "restructured_pipeline/outputs/metrics/scheme1/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme1.png",
+      "metrics_workbook_path": "restructured_pipeline/outputs/metrics/scheme1/xgboost/model_performance_for_all_exp.xlsx"
+    },
+    "scheme3": {
+      "run_name": "24alg_xgb_strat_yK_validation_20260831_scheme3",
+      "train_rows": 3425,
+      "test_rows": 854,
+      "classes_seen": 24,
+      "model_artifact_path": "restructured_pipeline/outputs/models/scheme3/xgboost/model_24alg_xgb_strat_yK_validation_20260831_scheme3.pkl",
+      "train_indices_path": "restructured_pipeline/data/splits/scheme3/xgboost/train_indices_24alg_xgb_strat_yK_validation_20260831_scheme3.csv",
+      "test_indices_path": "restructured_pipeline/data/splits/scheme3/xgboost/test_indices_24alg_xgb_strat_yK_validation_20260831_scheme3.csv",
+      "predictions_path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3.csv",
+      "wrong_case_workbook_path": "restructured_pipeline/outputs/wrong_cases/scheme3/xgboost/wrong_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3.xlsx",
+      "confusion_matrix_path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme3_final.png",
+      "stage_confusion_matrix_paths": [
+        "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme3_stage1.png",
+        "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme3_stage2.png",
+        "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme3_stage3.png",
+        "restructured_pipeline/outputs/metrics/scheme3/xgboost/confusion_matrix_24alg_xgb_strat_yK_validation_20260831_scheme3_stage4.png"
+      ],
+      "stage_summary_report_path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/hierarchical_summary_report_24alg_xgb_strat_yK_validation_20260831_scheme3.xlsx",
+      "stage_per_class_report_path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/hierarchical_per_class_report_24alg_xgb_strat_yK_validation_20260831_scheme3.xlsx",
+      "metrics_workbook_path": "restructured_pipeline/outputs/metrics/scheme3/xgboost/model_performance_for_all_exp.xlsx"
+    }
+  },
+  "training_metrics": {
+    "scheme1_train_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1.csv",
+      "rows": 4279,
+      "strict_accuracy": 0.18368777751811172,
+      "tolerance_accuracy": {
+        "0": 0.18368777751811172,
+        "10": 0.3556905819116616,
+        "20": 0.4730077120822622,
+        "50": 0.6162654825893901
+      },
+      "tolerance_wrong_counts": {
+        "0": 3493,
+        "10": 2757,
+        "20": 2255,
+        "50": 1642
+      },
+      "avg_time_ratio": 307.18316145471994,
+      "median_time_ratio": 1.2838892028958704,
+      "max_time_ratio": 580645.1612903225,
+      "avg_time_gap": 81.67796358962373,
+      "median_time_gap": 0.09670000000000001,
+      "wrong_predictions": 3493,
+      "predicted_unique_count": 15,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 0.99999994270087,
+      "probability_sum_median": 1.0,
+      "probability_sum_max": 1.0000000690378001,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {},
+      "top_confused_pairs": [
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 680
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 506
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 239
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP+-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 151
+        },
+        {
+          "fastest": "UMKP+-oriented-R-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 142
+        },
+        {
+          "fastest": "kPEX-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 128
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 125
+        },
+        {
+          "fastest": "UMKP+-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 116
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "af_1_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_4_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_5_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_shell10",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_shell1",
+          "failure_count": 11
+        },
+        {
+          "dataset": "consph",
+          "failure_count": 11
+        },
+        {
+          "dataset": "crankseg_2",
+          "failure_count": 11
+        },
+        {
+          "dataset": "f855_mat9_I",
+          "failure_count": 11
+        },
+        {
+          "dataset": "fcondp2",
+          "failure_count": 11
+        },
+        {
+          "dataset": "gearbox",
+          "failure_count": 11
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 20,
+          "failure_count": 392
+        },
+        {
+          "k_value": 15,
+          "failure_count": 370
+        },
+        {
+          "k_value": 10,
+          "failure_count": 346
+        },
+        {
+          "k_value": 6,
+          "failure_count": 332
+        },
+        {
+          "k_value": 5,
+          "failure_count": 328
+        },
+        {
+          "k_value": 8,
+          "failure_count": 326
+        },
+        {
+          "k_value": 9,
+          "failure_count": 321
+        },
+        {
+          "k_value": 7,
+          "failure_count": 318
+        },
+        {
+          "k_value": 4,
+          "failure_count": 305
+        },
+        {
+          "k_value": 3,
+          "failure_count": 244
+        }
+      ]
+    },
+    "scheme3_train_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3.csv",
+      "rows": 4279,
+      "strict_accuracy": 0.8041598504323441,
+      "tolerance_accuracy": {
+        "0": 0.8041598504323441,
+        "10": 0.9083898107034354,
+        "20": 0.9289553634026642,
+        "50": 0.9469502220144894
+      },
+      "tolerance_wrong_counts": {
+        "0": 838,
+        "10": 392,
+        "20": 304,
+        "50": 227
+      },
+      "avg_time_ratio": 996.7351719278199,
+      "median_time_ratio": 1.0,
+      "max_time_ratio": 2571428.5714285714,
+      "avg_time_gap": 12.614058331385838,
+      "median_time_gap": 0.0,
+      "wrong_predictions": 838,
+      "predicted_unique_count": 24,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 0.9999998413707654,
+      "probability_sum_median": 0.9999999990547074,
+      "probability_sum_max": 1.0000001551079545,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {
+        "group": 0,
+        "sparse_subgroup": 0,
+        "orientation": 0,
+        "router4": 0
+      },
+      "top_confused_pairs": [
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 32
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-P-bnb",
+          "count": 23
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 22
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP-oriented-S-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 17
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "barrier2-1",
+          "failure_count": 8
+        },
+        {
+          "dataset": "barrier2-9",
+          "failure_count": 7
+        },
+        {
+          "dataset": "pattern1",
+          "failure_count": 7
+        },
+        {
+          "dataset": "reactome",
+          "failure_count": 7
+        },
+        {
+          "dataset": "barrier2-2",
+          "failure_count": 6
+        },
+        {
+          "dataset": "barrier2-3",
+          "failure_count": 6
+        },
+        {
+          "dataset": "barrier2-4",
+          "failure_count": 6
+        },
+        {
+          "dataset": "Ga3As3H12",
+          "failure_count": 6
+        },
+        {
+          "dataset": "mip1",
+          "failure_count": 6
+        },
+        {
+          "dataset": "sc-pkustk13",
+          "failure_count": 6
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 15,
+          "failure_count": 112
+        },
+        {
+          "k_value": 10,
+          "failure_count": 107
+        },
+        {
+          "k_value": 7,
+          "failure_count": 87
+        },
+        {
+          "k_value": 20,
+          "failure_count": 81
+        },
+        {
+          "k_value": 6,
+          "failure_count": 80
+        },
+        {
+          "k_value": 5,
+          "failure_count": 71
+        },
+        {
+          "k_value": 9,
+          "failure_count": 69
+        },
+        {
+          "k_value": 3,
+          "failure_count": 65
+        },
+        {
+          "k_value": 8,
+          "failure_count": 63
+        },
+        {
+          "k_value": 4,
+          "failure_count": 59
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "scheme1_test": {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1_predict_inference_test_data.csv",
+      "rows": 1149,
+      "strict_accuracy": 0.3698868581375109,
+      "tolerance_accuracy": {
+        "0": 0.3698868581375109,
+        "10": 0.5039164490861618,
+        "20": 0.598781549173194,
+        "50": 0.7145343777197564
+      },
+      "tolerance_wrong_counts": {
+        "0": 724,
+        "10": 570,
+        "20": 461,
+        "50": 328
+      },
+      "avg_time_ratio": 809.6332868739973,
+      "median_time_ratio": 1.2371651785714286,
+      "max_time_ratio": 580645.1612903225,
+      "avg_time_gap": 59.387910791993036,
+      "median_time_gap": 0.009,
+      "wrong_predictions": 724,
+      "predicted_unique_count": 12,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 1.0,
+      "probability_sum_median": 1.0,
+      "probability_sum_max": 1.00000002,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {},
+      "top_confused_pairs": [
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 140
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 98
+        },
+        {
+          "fastest": "UMKP-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 49
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 47
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 42
+        },
+        {
+          "fastest": "UMKP+-oriented-R-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 32
+        },
+        {
+          "fastest": "kPEX-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 29
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 26
+        },
+        {
+          "fastest": "UMKP+-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 26
+        },
+        {
+          "fastest": "UMKP+-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 24
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "Hook_1498",
+          "failure_count": 6
+        },
+        {
+          "dataset": "pkustk14",
+          "failure_count": 6
+        },
+        {
+          "dataset": "barrier2-11",
+          "failure_count": 5
+        },
+        {
+          "dataset": "crankseg_1",
+          "failure_count": 5
+        },
+        {
+          "dataset": "crystk03",
+          "failure_count": 5
+        },
+        {
+          "dataset": "edit-ukwiki",
+          "failure_count": 5
+        },
+        {
+          "dataset": "f855_mat9",
+          "failure_count": 5
+        },
+        {
+          "dataset": "orkut-links",
+          "failure_count": 5
+        },
+        {
+          "dataset": "sc-pwtk",
+          "failure_count": 5
+        },
+        {
+          "dataset": "shipsec1",
+          "failure_count": 5
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 15,
+          "failure_count": 79
+        },
+        {
+          "k_value": 20,
+          "failure_count": 76
+        },
+        {
+          "k_value": 6,
+          "failure_count": 73
+        },
+        {
+          "k_value": 10,
+          "failure_count": 72
+        },
+        {
+          "k_value": 9,
+          "failure_count": 70
+        },
+        {
+          "k_value": 4,
+          "failure_count": 70
+        },
+        {
+          "k_value": 5,
+          "failure_count": 69
+        },
+        {
+          "k_value": 8,
+          "failure_count": 62
+        },
+        {
+          "k_value": 7,
+          "failure_count": 60
+        },
+        {
+          "k_value": 3,
+          "failure_count": 50
+        }
+      ],
+      "wrong_case_workbook_rows": 724,
+      "tolerance_report_counts": {
+        "0": 328,
+        "10": 328,
+        "20": 328,
+        "50": 328
+      },
+      "important_failure_counts": {
+        "0": 162,
+        "10": 162,
+        "20": 162,
+        "50": 162
+      },
+      "important_failures_tol0": 162
+    },
+    "scheme1_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1_predict_inference_entire_data.csv",
+      "rows": 4279,
+      "strict_accuracy": 0.18368777751811172,
+      "tolerance_accuracy": {
+        "0": 0.18368777751811172,
+        "10": 0.3556905819116616,
+        "20": 0.4730077120822622,
+        "50": 0.6162654825893901
+      },
+      "tolerance_wrong_counts": {
+        "0": 3493,
+        "10": 2757,
+        "20": 2255,
+        "50": 1642
+      },
+      "avg_time_ratio": 307.18316145471994,
+      "median_time_ratio": 1.2838892028958704,
+      "max_time_ratio": 580645.1612903225,
+      "avg_time_gap": 81.67796358962373,
+      "median_time_gap": 0.09670000000000001,
+      "wrong_predictions": 3493,
+      "predicted_unique_count": 15,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 0.99999994270087,
+      "probability_sum_median": 1.0,
+      "probability_sum_max": 1.0000000690378001,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {},
+      "top_confused_pairs": [
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 680
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 506
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 239
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 210
+        },
+        {
+          "fastest": "UMKP+-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 151
+        },
+        {
+          "fastest": "UMKP+-oriented-R-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 142
+        },
+        {
+          "fastest": "kPEX-oriented-S-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 128
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 125
+        },
+        {
+          "fastest": "UMKP+-B-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 116
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "af_1_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_4_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_5_k101",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_shell10",
+          "failure_count": 11
+        },
+        {
+          "dataset": "af_shell1",
+          "failure_count": 11
+        },
+        {
+          "dataset": "consph",
+          "failure_count": 11
+        },
+        {
+          "dataset": "crankseg_2",
+          "failure_count": 11
+        },
+        {
+          "dataset": "f855_mat9_I",
+          "failure_count": 11
+        },
+        {
+          "dataset": "fcondp2",
+          "failure_count": 11
+        },
+        {
+          "dataset": "gearbox",
+          "failure_count": 11
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 20,
+          "failure_count": 392
+        },
+        {
+          "k_value": 15,
+          "failure_count": 370
+        },
+        {
+          "k_value": 10,
+          "failure_count": 346
+        },
+        {
+          "k_value": 6,
+          "failure_count": 332
+        },
+        {
+          "k_value": 5,
+          "failure_count": 328
+        },
+        {
+          "k_value": 8,
+          "failure_count": 326
+        },
+        {
+          "k_value": 9,
+          "failure_count": 321
+        },
+        {
+          "k_value": 7,
+          "failure_count": 318
+        },
+        {
+          "k_value": 4,
+          "failure_count": 305
+        },
+        {
+          "k_value": 3,
+          "failure_count": 244
+        }
+      ],
+      "wrong_case_workbook_rows": 3493,
+      "tolerance_report_counts": {
+        "0": 1642,
+        "10": 1642,
+        "20": 1642,
+        "50": 1642
+      },
+      "important_failure_counts": {
+        "0": 888,
+        "10": 888,
+        "20": 888,
+        "50": 888
+      },
+      "important_failures_tol0": 888
+    },
+    "scheme3_test": {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3_predict_inference_test_data.csv",
+      "rows": 854,
+      "strict_accuracy": 0.4426229508196721,
+      "tolerance_accuracy": {
+        "0": 0.4426229508196721,
+        "10": 0.6943793911007026,
+        "20": 0.7540983606557377,
+        "50": 0.8161592505854801
+      },
+      "tolerance_wrong_counts": {
+        "0": 476,
+        "10": 261,
+        "20": 210,
+        "50": 157
+      },
+      "avg_time_ratio": 684.757916032977,
+      "median_time_ratio": 1.0164804326751364,
+      "max_time_ratio": 227848.10126582277,
+      "avg_time_gap": 46.64856206088994,
+      "median_time_gap": 0.001400000000000035,
+      "wrong_predictions": 476,
+      "predicted_unique_count": 24,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 0.9999998413707654,
+      "probability_sum_median": 0.9999999967603788,
+      "probability_sum_max": 1.0000001372189646,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {
+        "group": 0,
+        "sparse_subgroup": 0,
+        "orientation": 0,
+        "router4": 0
+      },
+      "top_confused_pairs": [
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 15
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 15
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 13
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 12
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "kPEX-oriented-P-bnb",
+          "count": 12
+        },
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 11
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 10
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 8
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP-oriented-S-bnb",
+          "count": 7
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "RM07R",
+          "failure_count": 5
+        },
+        {
+          "dataset": "nd3k",
+          "failure_count": 4
+        },
+        {
+          "dataset": "opt1",
+          "failure_count": 4
+        },
+        {
+          "dataset": "ship_001",
+          "failure_count": 4
+        },
+        {
+          "dataset": "soc-digg",
+          "failure_count": 4
+        },
+        {
+          "dataset": "socfb-A-anon",
+          "failure_count": 4
+        },
+        {
+          "dataset": "trdheim",
+          "failure_count": 4
+        },
+        {
+          "dataset": "barrier2-4",
+          "failure_count": 3
+        },
+        {
+          "dataset": "brock200-2",
+          "failure_count": 3
+        },
+        {
+          "dataset": "cage12",
+          "failure_count": 3
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 15,
+          "failure_count": 60
+        },
+        {
+          "k_value": 10,
+          "failure_count": 57
+        },
+        {
+          "k_value": 20,
+          "failure_count": 51
+        },
+        {
+          "k_value": 7,
+          "failure_count": 47
+        },
+        {
+          "k_value": 5,
+          "failure_count": 45
+        },
+        {
+          "k_value": 6,
+          "failure_count": 43
+        },
+        {
+          "k_value": 4,
+          "failure_count": 39
+        },
+        {
+          "k_value": 9,
+          "failure_count": 37
+        },
+        {
+          "k_value": 8,
+          "failure_count": 35
+        },
+        {
+          "k_value": 3,
+          "failure_count": 35
+        }
+      ],
+      "wrong_case_workbook_rows": 476,
+      "tolerance_report_counts": {
+        "0": 157,
+        "10": 157,
+        "20": 157,
+        "50": 157
+      },
+      "important_failure_counts": {
+        "0": 84,
+        "10": 84,
+        "20": 84,
+        "50": 84
+      },
+      "important_failures_tol0": 84
+    },
+    "scheme3_entire": {
+      "path": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3_predict_inference_entire_data.csv",
+      "rows": 4279,
+      "strict_accuracy": 0.8041598504323441,
+      "tolerance_accuracy": {
+        "0": 0.8041598504323441,
+        "10": 0.9083898107034354,
+        "20": 0.9289553634026642,
+        "50": 0.9469502220144894
+      },
+      "tolerance_wrong_counts": {
+        "0": 838,
+        "10": 392,
+        "20": 304,
+        "50": 227
+      },
+      "avg_time_ratio": 996.7351719278199,
+      "median_time_ratio": 1.0,
+      "max_time_ratio": 2571428.5714285714,
+      "avg_time_gap": 12.614058331385838,
+      "median_time_gap": 0.0,
+      "wrong_predictions": 838,
+      "predicted_unique_count": 24,
+      "fastest_unique_count": 24,
+      "invalid_predicted_labels": [],
+      "invalid_fastest_rows": 0,
+      "missing_probability_columns": [],
+      "probability_sum_min": 0.9999998413707654,
+      "probability_sum_median": 0.9999999990547074,
+      "probability_sum_max": 1.0000001551079545,
+      "invalid_top3_rows": 0,
+      "predicted_missing_from_top3_rows": 0,
+      "hierarchy_target_mismatches": {
+        "group": 0,
+        "sparse_subgroup": 0,
+        "orientation": 0,
+        "router4": 0
+      },
+      "top_confused_pairs": [
+        {
+          "fastest": "UMKP+-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 32
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 24
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-P-bnb",
+          "count": 23
+        },
+        {
+          "fastest": "kPEX-oriented-B-bnb",
+          "predicted": "UMKP-oriented-B-bnb",
+          "count": 22
+        },
+        {
+          "fastest": "UMKP-oriented-B-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP-P-bnb",
+          "predicted": "UMKP-oriented-P-bnb",
+          "count": 21
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP-oriented-S-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP-oriented-P-bnb",
+          "predicted": "kPEX-oriented-B-bnb",
+          "count": 18
+        },
+        {
+          "fastest": "UMKP+-oriented-S-bnb",
+          "predicted": "UMKP+-oriented-B-bnb",
+          "count": 17
+        }
+      ],
+      "hardest_datasets": [
+        {
+          "dataset": "barrier2-1",
+          "failure_count": 8
+        },
+        {
+          "dataset": "barrier2-9",
+          "failure_count": 7
+        },
+        {
+          "dataset": "pattern1",
+          "failure_count": 7
+        },
+        {
+          "dataset": "reactome",
+          "failure_count": 7
+        },
+        {
+          "dataset": "barrier2-2",
+          "failure_count": 6
+        },
+        {
+          "dataset": "barrier2-3",
+          "failure_count": 6
+        },
+        {
+          "dataset": "barrier2-4",
+          "failure_count": 6
+        },
+        {
+          "dataset": "Ga3As3H12",
+          "failure_count": 6
+        },
+        {
+          "dataset": "mip1",
+          "failure_count": 6
+        },
+        {
+          "dataset": "sc-pkustk13",
+          "failure_count": 6
+        }
+      ],
+      "hardest_k_values": [
+        {
+          "k_value": 15,
+          "failure_count": 112
+        },
+        {
+          "k_value": 10,
+          "failure_count": 107
+        },
+        {
+          "k_value": 7,
+          "failure_count": 87
+        },
+        {
+          "k_value": 20,
+          "failure_count": 81
+        },
+        {
+          "k_value": 6,
+          "failure_count": 80
+        },
+        {
+          "k_value": 5,
+          "failure_count": 71
+        },
+        {
+          "k_value": 9,
+          "failure_count": 69
+        },
+        {
+          "k_value": 3,
+          "failure_count": 65
+        },
+        {
+          "k_value": 8,
+          "failure_count": 63
+        },
+        {
+          "k_value": 4,
+          "failure_count": 59
+        }
+      ],
+      "wrong_case_workbook_rows": 838,
+      "tolerance_report_counts": {
+        "0": 227,
+        "10": 227,
+        "20": 227,
+        "50": 227
+      },
+      "important_failure_counts": {
+        "0": 103,
+        "10": 103,
+        "20": 103,
+        "50": 103
+      },
+      "important_failures_tol0": 103
+    },
+    "report_validation_test_data": {
+      "tolerance_counts": {
+        "scheme_1_tol_0": 328,
+        "scheme_1_tol_10": 328,
+        "scheme_1_tol_20": 328,
+        "scheme_1_tol_50": 328,
+        "scheme_2_tol_0": 0,
+        "scheme_2_tol_10": 0,
+        "scheme_2_tol_20": 0,
+        "scheme_2_tol_50": 0,
+        "scheme_3_tol_0": 157,
+        "scheme_3_tol_10": 157,
+        "scheme_3_tol_20": 157,
+        "scheme_3_tol_50": 157
+      },
+      "tolerance_monotonic": {
+        "scheme_1": true,
+        "scheme_2": true,
+        "scheme_3": true
+      },
+      "important_counts": {
+        "scheme_1_tol_0": 162,
+        "scheme_1_tol_10": 162,
+        "scheme_1_tol_20": 162,
+        "scheme_1_tol_50": 162,
+        "scheme_2_tol_0": 0,
+        "scheme_2_tol_10": 0,
+        "scheme_2_tol_20": 0,
+        "scheme_2_tol_50": 0,
+        "scheme_3_tol_0": 84,
+        "scheme_3_tol_10": 84,
+        "scheme_3_tol_20": 84,
+        "scheme_3_tol_50": 84
+      }
+    },
+    "report_validation_entire_data": {
+      "tolerance_counts": {
+        "scheme_1_tol_0": 1642,
+        "scheme_1_tol_10": 1642,
+        "scheme_1_tol_20": 1642,
+        "scheme_1_tol_50": 1642,
+        "scheme_2_tol_0": 0,
+        "scheme_2_tol_10": 0,
+        "scheme_2_tol_20": 0,
+        "scheme_2_tol_50": 0,
+        "scheme_3_tol_0": 227,
+        "scheme_3_tol_10": 227,
+        "scheme_3_tol_20": 227,
+        "scheme_3_tol_50": 227
+      },
+      "tolerance_monotonic": {
+        "scheme_1": true,
+        "scheme_2": true,
+        "scheme_3": true
+      },
+      "important_counts": {
+        "scheme_1_tol_0": 888,
+        "scheme_1_tol_10": 888,
+        "scheme_1_tol_20": 888,
+        "scheme_1_tol_50": 888,
+        "scheme_2_tol_0": 0,
+        "scheme_2_tol_10": 0,
+        "scheme_2_tol_20": 0,
+        "scheme_2_tol_50": 0,
+        "scheme_3_tol_0": 103,
+        "scheme_3_tol_10": 103,
+        "scheme_3_tol_20": 103,
+        "scheme_3_tol_50": 103
+      }
+    }
+  },
+  "compare_metadata": {
+    "test_data": {
+      "sheets": [
+        "on 20% test set"
+      ],
+      "blank_counts": {
+        "on 20% test set.scheme": 0,
+        "on 20% test set.model": 0,
+        "on 20% test set.strat_on": 0,
+        "on 20% test set.inference_on": 0
+      },
+      "values": {
+        "on 20% test set.scheme": [
+          "scheme 1",
+          "scheme 3"
+        ],
+        "on 20% test set.model": [
+          "XGB"
+        ],
+        "on 20% test set.strat_on": [
+          "y and K"
+        ],
+        "on 20% test set.inference_on": [
+          "on 20% test set"
+        ]
+      }
+    },
+    "entire_data": {
+      "sheets": [
+        "on entire dataset"
+      ],
+      "blank_counts": {
+        "on entire dataset.scheme": 0,
+        "on entire dataset.model": 0,
+        "on entire dataset.strat_on": 0,
+        "on entire dataset.inference_on": 0
+      },
+      "values": {
+        "on entire dataset.scheme": [
+          "scheme 1",
+          "scheme 3"
+        ],
+        "on entire dataset.model": [
+          "XGB"
+        ],
+        "on entire dataset.strat_on": [
+          "y and K"
+        ],
+        "on entire dataset.inference_on": [
+          "on entire dataset"
+        ]
+      }
+    }
+  },
+  "analysis_summaries": {
+    "test_data": {
+      "scheme_1_RF": 0,
+      "scheme_1_XGB": 162,
+      "scheme_2_RF": 0,
+      "scheme_2_XGB": 0,
+      "scheme_3_RF": 0,
+      "scheme_3_XGB": 84
+    },
+    "entire_data": {
+      "scheme_1_RF": 0,
+      "scheme_1_XGB": 888,
+      "scheme_2_RF": 0,
+      "scheme_2_XGB": 0,
+      "scheme_3_RF": 0,
+      "scheme_3_XGB": 103
+    }
+  },
+  "unfiltered_summaries": {
+    "test_data": {
+      "scheme_1_RF": 0,
+      "scheme_1_XGB": 724,
+      "scheme_2_RF": 0,
+      "scheme_2_XGB": 0,
+      "scheme_3_RF": 0,
+      "scheme_3_XGB": 476
+    },
+    "entire_data": {
+      "scheme_1_RF": 0,
+      "scheme_1_XGB": 3493,
+      "scheme_2_RF": 0,
+      "scheme_2_XGB": 0,
+      "scheme_3_RF": 0,
+      "scheme_3_XGB": 838
+    }
+  },
+  "output_behavior": {
+    "scheme1": {
+      "entire_prediction_export_behavior": "wrote_entire_data_export",
+      "entire_prediction_is_symlink": false,
+      "entire_prediction_hash_matches_training_canonical": true
+    },
+    "scheme3": {
+      "entire_prediction_export_behavior": "wrote_entire_data_export",
+      "entire_prediction_is_symlink": false,
+      "entire_prediction_hash_matches_training_canonical": true
+    }
+  },
+  "inconsistencies": [
+    {
+      "scope": "scheme1",
+      "issue": "duplicate entire-data prediction CSV generated",
+      "details": {
+        "entire_prediction_export_behavior": "wrote_entire_data_export",
+        "entire_prediction_is_symlink": false,
+        "entire_prediction_hash_matches_training_canonical": true
+      }
+    },
+    {
+      "scope": "scheme3",
+      "issue": "duplicate entire-data prediction CSV generated",
+      "details": {
+        "entire_prediction_export_behavior": "wrote_entire_data_export",
+        "entire_prediction_is_symlink": false,
+        "entire_prediction_hash_matches_training_canonical": true
+      }
+    },
+    {
+      "scope": "mixed_failure_case_combinations",
+      "issue": "scoped Scheme 1 + Scheme 3-only run unsupported",
+      "details": "Script exits because Scheme 1 + Scheme 2 pairing sheets become one-sided when Scheme 2 is intentionally excluded."
+    }
+  ],
+  "outputs": {
+    "reports_dir": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831",
+    "compare_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_test_data.xlsx",
+    "compare_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_entire_data.xlsx",
+    "tolerance_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_test_data.xlsx",
+    "tolerance_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_entire_data.xlsx",
+    "important_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx",
+    "important_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_important_failures_entire_data.xlsx",
+    "filtered_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_test_data.xlsx",
+    "filtered_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_entire_data.xlsx",
+    "failure_summary_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_test_data.xlsx",
+    "failure_summary_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx",
+    "unfiltered_test": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_test_data.xlsx",
+    "unfiltered_entire": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_entire_data.xlsx",
+    "mixed_scoped_attempt": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/mixed_failure_case_combinations_scoped_attempt.xlsx"
+  },
+  "provenance": [
+    {
+      "output": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1.csv",
+      "generated_by": "train.py",
+      "main_function_cli_path": "main() -> train_scheme1() -> build_flat_results()",
+      "input_files": [
+        "input_data/ml-data.csv",
+        "configs/project.yaml",
+        "configs/models_scheme1.yaml"
+      ],
+      "rows_sheets": "4279 rows",
+      "notes": "Canonical training-time full-dataset prediction export."
+    },
+    {
+      "output": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3.csv",
+      "generated_by": "train.py",
+      "main_function_cli_path": "main() -> train_scheme3() -> evaluate_hierarchical_scheme3()",
+      "input_files": [
+        "input_data/ml-data.csv",
+        "configs/project.yaml",
+        "configs/models_scheme3.yaml"
+      ],
+      "rows_sheets": "4279 rows",
+      "notes": "Canonical Scheme 3 full-dataset prediction export."
+    },
+    {
+      "output": "restructured_pipeline/outputs/predictions/scheme1/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme1_predict_inference_test_data.csv",
+      "generated_by": "predict.py",
+      "main_function_cli_path": "main()",
+      "input_files": [
+        "restructured_pipeline/outputs/models/scheme1/xgboost/model_24alg_xgb_strat_yK_validation_20260831_scheme1.pkl",
+        "restructured_pipeline/data/splits/scheme1/xgboost/test_indices_24alg_xgb_strat_yK_validation_20260831_scheme1.csv"
+      ],
+      "rows_sheets": "1149 rows",
+      "notes": "Held-out test-set export."
+    },
+    {
+      "output": "restructured_pipeline/outputs/predictions/scheme3/xgboost/all_predictions_24alg_xgb_strat_yK_validation_20260831_scheme3_predict_inference_test_data.csv",
+      "generated_by": "predict.py",
+      "main_function_cli_path": "main()",
+      "input_files": [
+        "restructured_pipeline/outputs/models/scheme3/xgboost/model_24alg_xgb_strat_yK_validation_20260831_scheme3.pkl",
+        "restructured_pipeline/data/splits/scheme3/xgboost/test_indices_24alg_xgb_strat_yK_validation_20260831_scheme3.csv"
+      ],
+      "rows_sheets": "854 rows",
+      "notes": "Held-out test-set export."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_test_data.xlsx",
+      "generated_by": "compare_wrong_predictions.py",
+      "main_function_cli_path": "main() -> run_compare_mode() -> build_compare_wrong_predictions_from_files()",
+      "input_files": [
+        "scheme1/scheme3 test wrong-case workbooks"
+      ],
+      "rows_sheets": "485 rows / 1 sheet",
+      "notes": "Strict threshold >= 0.5."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_test_data.xlsx",
+      "generated_by": "compare_wrong_predictions.py",
+      "main_function_cli_path": "run_compare_mode() -> build_tolerance_sheet_frames() -> write_tolerance_sheet_frames()",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_test_data.xlsx"
+      ],
+      "rows_sheets": "12 sheets",
+      "notes": "Tolerance sheets 0/10/20/50 for scheme 1/2/3; Scheme 2 sheets empty by scope."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_important_failures_test_data.xlsx",
+      "generated_by": "compare_wrong_predictions.py",
+      "main_function_cli_path": "run_compare_mode() -> build_tolerance_important_failure_frames()",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_tolerance_report_test_data.xlsx"
+      ],
+      "rows_sheets": "12 tolerance sheets + filter_summary",
+      "notes": "Important-failure rows never exceed tolerance parent rows."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_entire_data.xlsx",
+      "generated_by": "failure_case_filter.py",
+      "main_function_cli_path": "main() -> filter_important_failures()",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/compare_wrong_predictions_entire_data.xlsx"
+      ],
+      "rows_sheets": "991 rows / 1 sheet",
+      "notes": "Single-sheet input for enrich mode."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx",
+      "generated_by": "failure_analysis_summary.py",
+      "main_function_cli_path": "main() -> run_enrichment_mode()",
+      "input_files": [
+        "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_case_analysis_important_failures_entire_data.xlsx"
+      ],
+      "rows_sheets": "6 sheets",
+      "notes": "RF/Scheme 2 sheets empty by scope."
+    },
+    {
+      "output": "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_unfiltered_entire_data.xlsx",
+      "generated_by": "failure_analysis_unfiltered_summary.py",
+      "main_function_cli_path": "main() -> load_unfiltered_records()",
+      "input_files": [
+        "scheme1/scheme3 entire-data wrong-case workbooks",
+        "restructured_pipeline/outputs/reports/24alg_xgb_strat_yK_validation_20260831/failure_analysis_summary_entire_data.xlsx"
+      ],
+      "rows_sheets": "summary + 6 sheets",
+      "notes": "RF/Scheme 2 sheets empty by scope."
+    }
+  ],
+  "catastrophic_failure_definition": null
+}

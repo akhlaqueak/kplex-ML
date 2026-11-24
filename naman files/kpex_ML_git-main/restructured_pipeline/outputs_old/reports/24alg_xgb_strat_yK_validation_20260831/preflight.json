@@ -1,0 +1,203 @@
+{
+  "dataset": "input_data/ml-data.csv",
+  "raw_target_count": 24,
+  "algorithm_count": 24,
+  "all_algos_count": 24,
+  "missing_raw_columns": [],
+  "missing_algorithm_columns": [],
+  "ignored_total_time_column_count": 24,
+  "unmapped_labels": [],
+  "scheme1_xgb_num_class_values": [
+    24,
+    24,
+    24,
+    24
+  ],
+  "scheme3_has_orientation_clf": true,
+  "scheme3_router_num_class": 4,
+  "probability_column_count": 24,
+  "top3_sample": [
+    [
+      "UMKP+-oriented-B-bnb",
+      24
+    ],
+    [
+      "UMKP+-oriented-P-bnb",
+      23
+    ],
+    [
+      "UMKP+-oriented-R-bnb",
+      22
+    ]
+  ],
+  "mappings": {
+    "kPEX-S-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "NonOriented",
+      "router4": "ClassS",
+      "y_algo": "kPEX-S-bnb"
+    },
+    "kPEX-R-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "NonOriented",
+      "router4": "ClassR",
+      "y_algo": "kPEX-R-bnb"
+    },
+    "kPEX-P-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "NonOriented",
+      "router4": "ClassP",
+      "y_algo": "kPEX-P-bnb"
+    },
+    "kPEX-B-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "NonOriented",
+      "router4": "ClassB",
+      "y_algo": "kPEX-B-bnb"
+    },
+    "kPEX-oriented-S-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "Oriented",
+      "router4": "ClassS",
+      "y_algo": "kPEX-oriented-S-bnb"
+    },
+    "kPEX-oriented-R-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "Oriented",
+      "router4": "ClassR",
+      "y_algo": "kPEX-oriented-R-bnb"
+    },
+    "kPEX-oriented-P-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "Oriented",
+      "router4": "ClassP",
+      "y_algo": "kPEX-oriented-P-bnb"
+    },
+    "kPEX-oriented-B-bnb": {
+      "group": "Dense",
+      "sparse_subgroup": null,
+      "orientation": "Oriented",
+      "router4": "ClassB",
+      "y_algo": "kPEX-oriented-B-bnb"
+    },
+    "UMKP-S-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassS",
+      "y_algo": "UMKP-S-bnb"
+    },
+    "UMKP-R-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassR",
+      "y_algo": "UMKP-R-bnb"
+    },
+    "UMKP-P-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassP",
+      "y_algo": "UMKP-P-bnb"
+    },
+    "UMKP-B-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassB",
+      "y_algo": "UMKP-B-bnb"
+    },
+    "UMKP-oriented-S-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassS",
+      "y_algo": "UMKP-oriented-S-bnb"
+    },
+    "UMKP-oriented-R-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassR",
+      "y_algo": "UMKP-oriented-R-bnb"
+    },
+    "UMKP-oriented-P-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassP",
+      "y_algo": "UMKP-oriented-P-bnb"
+    },
+    "UMKP-oriented-B-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "No-AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassB",
+      "y_algo": "UMKP-oriented-B-bnb"
+    },
+    "UMKP+-S-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassS",
+      "y_algo": "UMKP+-S-bnb"
+    },
+    "UMKP+-R-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassR",
+      "y_algo": "UMKP+-R-bnb"
+    },
+    "UMKP+-P-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassP",
+      "y_algo": "UMKP+-P-bnb"
+    },
+    "UMKP+-B-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "NonOriented",
+      "router4": "ClassB",
+      "y_algo": "UMKP+-B-bnb"
+    },
+    "UMKP+-oriented-S-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassS",
+      "y_algo": "UMKP+-oriented-S-bnb"
+    },
+    "UMKP+-oriented-R-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassR",
+      "y_algo": "UMKP+-oriented-R-bnb"
+    },
+    "UMKP+-oriented-P-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassP",
+      "y_algo": "UMKP+-oriented-P-bnb"
+    },
+    "UMKP+-oriented-B-bnb": {
+      "group": "Sparse",
+      "sparse_subgroup": "AltRB",
+      "orientation": "Oriented",
+      "router4": "ClassB",
+      "y_algo": "UMKP+-oriented-B-bnb"
+    }
+  }
+}

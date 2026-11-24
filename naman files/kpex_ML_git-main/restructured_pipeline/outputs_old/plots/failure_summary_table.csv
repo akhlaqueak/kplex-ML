@@ -1,0 +1,13 @@
+scheme,model,failure_severity,count
+scheme 1,RF,20–100%,14
+scheme 1,RF,>100%,44
+scheme 1,XGB,20–100%,11
+scheme 1,XGB,>100%,37
+scheme 2,RF,20–100%,24
+scheme 2,RF,>100%,82
+scheme 2,XGB,20–100%,9
+scheme 2,XGB,>100%,34
+scheme 3,RF,20–100%,33
+scheme 3,RF,>100%,86
+scheme 3,XGB,20–100%,4
+scheme 3,XGB,>100%,34
